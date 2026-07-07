@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 04 — Python para Dados | Victor Breia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+:root {
+  --bg:#08080f; --surface:#0f0f18; --surface2:#16161f; --surface3:#1c1c28;
+  --border:#252533; --border2:#2e2e3f;
+  --accent:#3b82f6; --accent2:#93c5fd;
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+  --text:#e2e2ee; --text2:#9898b8; --muted:#55556a;
+  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace; --serif:'Source Serif 4',serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
+.header { padding:22px 20px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:60; }
+.breadcrumb { font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px; }
+.breadcrumb a { color:var(--text2); text-decoration:none; }
+.breadcrumb a:hover { color:var(--accent2); }
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.header h1 { font-size:20px; font-weight:700; }
+.header h1 em { color:var(--accent2); font-style:normal; }
+.header-sub { font-size:12px; color:var(--muted); margin-top:4px; max-width:520px; }
+.hdr-actions { display:flex; gap:8px; flex-shrink:0; }
+.hdr-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.hdr-btn:hover { border-color:var(--accent); color:var(--text); }
+.hdr-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.hdr-btn.primary:hover { background:var(--accent2); border-color:var(--accent2); color:#1a1a1f; }
+.overall-bar { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-top:14px; max-width:520px; }
+.overall-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width .5s ease; }
+.overall-label { font-size:11px; color:var(--muted); margin-top:6px; font-family:var(--mono); }
+.layout { display:grid; grid-template-columns:260px 1fr; gap:0; max-width:1180px; margin:0 auto; align-items:start; }
+@media (max-width:860px) { .layout { grid-template-columns:1fr; } .sidebar { position:static !important; } }
+.sidebar { position:sticky; top:130px; padding:22px 14px 40px 20px; max-height:calc(100vh - 130px); overflow-y:auto; }
+.sidebar-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; padding-left:8px; }
+.toc-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; cursor:pointer; margin-bottom:2px; transition:background .15s; border-left:2px solid transparent; }
+.toc-item:hover { background:var(--surface2); }
+.toc-item.active { background:var(--surface2); border-left-color:var(--accent); }
+.toc-num { font-family:var(--mono); font-size:10px; color:var(--muted); width:16px; flex-shrink:0; }
+.toc-check { width:13px; height:13px; border-radius:4px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:8px; }
+.toc-check.done { background:var(--green); border-color:var(--green); color:#000; }
+.toc-text { font-size:12px; color:var(--text2); line-height:1.3; }
+.toc-item.active .toc-text { color:var(--text); font-weight:500; }
+.toc-tag { font-size:9px; padding:1px 5px; border-radius:3px; font-family:var(--mono); margin-left:auto; flex-shrink:0; }
+.toc-tag.critical { background:rgba(248,113,113,.15); color:var(--red); }
+.toc-tag.important { background:rgba(251,191,36,.15); color:var(--yellow); }
+.toc-tag.bonus { background:rgba(163,139,250,.15); color:#a78bfa; }
+.toc-tag.owned { background:rgba(52,211,153,.15); color:var(--green); }
+.toc-divider { height:1px; background:var(--border); margin:14px 8px; }
+.toc-item.summary-item .toc-text { font-weight:600; color:var(--text); }
+.content { padding:24px 24px 80px 20px; min-width:0; }
+.lesson-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap; }
+.lesson-nav-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
+.lesson-nav-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--text); }
+.lesson-nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+.lesson-progress-label { font-size:11px; color:var(--muted); font-family:var(--mono); }
+.lesson-card { background:#fdfcf9; color:#1a1a1f; border-radius:12px; padding:32px 36px; font-family:var(--serif); line-height:1.75; font-size:14.5px; }
+.lesson-eyebrow { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#3d5a8b; margin-bottom:6px; font-weight:500; }
+.lesson-title { font-size:25px; font-weight:700; color:#14141a; margin-bottom:6px; letter-spacing:-.3px; }
+.lesson-sub { font-family:var(--font); font-size:12.5px; color:#6b6b78; margin-bottom:20px; }
+.lesson-card hr { border:none; border-top:1px solid #e5e0d5; margin:20px 0; }
+.lesson-card h3 { font-family:var(--font); font-size:15px; font-weight:700; color:#14141a; margin:22px 0 10px; }
+.lesson-card h4 { font-family:var(--font); font-size:13px; font-weight:600; color:#2a2a30; margin:14px 0 6px; }
+.lesson-card p { margin-bottom:12px; color:#2a2a30; }
+.lesson-card ul, .lesson-card ol { margin:8px 0 14px 20px; }
+.lesson-card li { margin-bottom:6px; color:#2a2a30; }
+.lesson-card strong { color:#14141a; font-weight:700; }
+.lesson-card code { font-family:var(--mono); background:#dce7f7; color:#1e4a8a; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+.lesson-card pre { background:#14141a; color:#d8dce8; border-radius:8px; padding:14px 16px; overflow-x:auto; margin:12px 0 16px; font-family:var(--mono); font-size:12px; line-height:1.6; }
+.lesson-card pre code { background:none; color:inherit; padding:0; }
+.callout { padding:10px 14px; border-radius:0 7px 7px 0; margin:14px 0; font-family:var(--font); font-size:12.5px; border-left:3px solid #6366f1; background:#eef0fb; color:#3a3a5c; }
+.callout.warn { background:#fdf3e7; border-left-color:#d97706; color:#6b4a10; }
+.callout.tip { background:#eafaf3; border-left-color:#10b981; color:#0d5e42; }
+.nblm-box { margin-top:24px; border-radius:10px; overflow:hidden; border:1px solid #d8d0be; }
+.nblm-header { background:#14141a; color:#fff; padding:10px 16px; font-family:var(--font); font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.nblm-body { padding:16px; background:#f7f5ee; }
+.nblm-field { margin-bottom:12px; }
+.nblm-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#8b7a5e; margin-bottom:4px; font-weight:600; }
+.nblm-value { font-family:var(--font); font-size:12.5px; color:#2a2a30; }
+.nblm-questions { list-style:none; margin:0; padding:0; }
+.nblm-questions li { background:#fff; border:1px solid #e5e0d5; border-radius:6px; padding:8px 12px; margin-bottom:6px; font-size:12px; font-family:var(--font); color:#2a2a30; }
+.source-box { margin-top:16px; padding:10px 16px; background:#f2f0e8; border-radius:8px; font-family:var(--font); font-size:11.5px; color:#6b6b78; }
+.source-box strong { color:#3a3a44; }
+.recap { margin-top:18px; padding:14px 16px; background:#14141a; color:#fdfcf9; border-radius:8px; font-family:var(--font); }
+.recap .rt { font-size:12px; font-weight:700; margin-bottom:8px; color:#93c5fd; text-transform:uppercase; letter-spacing:.06em; }
+.recap ul { margin:0 0 0 16px; }
+.recap li { font-size:12.5px; margin-bottom:5px; color:#e2e2ee; }
+.quick-check { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-top:16px; }
+.qc-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.qc-q { font-size:13px; margin-bottom:10px; line-height:1.5; }
+.qc-opts { display:grid; gap:6px; }
+.qc-opt { padding:8px 12px; border-radius:7px; border:1.5px solid var(--border2); background:transparent; color:var(--text); font-family:var(--font); font-size:12px; cursor:pointer; text-align:left; transition:all .15s; }
+.qc-opt:hover:not(:disabled) { border-color:var(--accent); background:rgba(59,130,246,.08); }
+.qc-opt.correct { border-color:var(--green); background:rgba(52,211,153,.1); color:var(--green); }
+.qc-opt.wrong { border-color:var(--red); background:rgba(248,113,113,.1); color:var(--red); }
+.qc-opt:disabled { cursor:default; }
+.qc-fb { margin-top:8px; padding:8px 12px; border-radius:7px; font-size:12px; display:none; }
+.qc-fb.show { display:block; }
+.qc-fb.correct { background:rgba(52,211,153,.08); color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+.qc-fb.wrong { background:rgba(248,113,113,.08); color:#fca5a5; border:1px solid rgba(248,113,113,.2); }
+.mark-bar { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+.mark-check-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; }
+.mark-check-btn .box { width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:10px; }
+.mark-check-btn .box.done { background:var(--green); border-color:var(--green); color:#000; }
+.summary-grid { display:grid; gap:10px; }
+.summary-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+.summary-card h4 { font-size:13px; margin-bottom:4px; }
+.summary-card p { font-size:12px; color:var(--text2); }
+.toast { position:fixed; bottom:20px; right:20px; background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 14px; font-size:12px; display:flex; align-items:center; gap:8px; transform:translateY(60px); opacity:0; transition:all .25s ease; z-index:300; max-width:260px; }
+.toast.show { transform:translateY(0); opacity:1; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.video-wrap { margin-bottom:20px; border-radius:10px; overflow:hidden; background:#000; }
+.video-wrap video { width:100%; display:block; max-height:480px; background:#000; }
+.video-placeholder {
+  margin-bottom:20px; border-radius:10px; border:1.5px dashed var(--border2);
+  background:var(--surface2); padding:28px 20px; text-align:center;
+}
+.video-placeholder .vp-icon { font-size:26px; margin-bottom:8px; }
+.video-placeholder .vp-title { font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
+.video-placeholder .vp-sub { font-family:var(--mono); font-size:11px; color:var(--muted); }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="breadcrumb"><a href="data-engineer-study-system.html">← Voltar ao painel geral</a></div>
+  <div class="header-top">
+    <div>
+      <h1>Módulo 04 · <em>Python para Dados</em></h1>
+      <div class="header-sub">9 aulas individuais — Pandas, tratamento de dados, APIs e o que separa scripts de pipelines robustos.</div>
+    </div>
+    <div class="hdr-actions"><button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button></div>
+  </div>
+  <div class="overall-bar"><div class="overall-fill" id="mod-fill" style="width:0%"></div></div>
+  <div class="overall-label" id="mod-label">0 / 9 subtópicos concluídos</div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'de_module_python_v1';
+
+const LESSONS = [
+{
+  id: 'io', tag: 'owned',
+  title: 'Pandas — leitura/escrita (CSV, JSON, Parquet)',
+  eyebrow: 'Aula 1 de 9 · Fundamentos',
+  sub: 'A porta de entrada e saída de qualquer pipeline de dados em Python',
+  body: `
+<p>Pandas abstrai a leitura e escrita de praticamente qualquer formato tabular com uma interface consistente: <code>pd.read_X()</code> para entrada, <code>df.to_X()</code> para saída. Entender as diferenças entre os formatos mais comuns — e quando usar cada um — é uma decisão de design que aparece constantemente em pipelines reais.</p>
+<h3>CSV — o formato universal, mas limitado</h3>
+<pre><code>import pandas as pd
+
+df = pd.read_csv('dados.csv')
+df.to_csv('saida.csv', index=False)</code></pre>
+<p>CSV é legível por humanos e aberto por qualquer ferramenta, mas não guarda informação de tipo — tudo é lido como texto e o Pandas precisa inferir tipos numéricos, datas, etc. Isso pode gerar surpresas: uma coluna de CEP como "01310-100" pode virar número e perder o zero à esquerda se não for tratada como string explicitamente.</p>
+<pre><code>df = pd.read_csv('dados.csv', dtype={'cep': str})</code></pre>
+<h3>JSON — bom para dados semi-estruturados</h3>
+<pre><code>df = pd.read_json('dados.json')
+df.to_json('saida.json', orient='records', force_ascii=False)</code></pre>
+<p>JSON lida naturalmente com estruturas aninhadas (listas dentro de campos, dicionários dentro de dicionários) — comum em respostas de APIs. Para "achatar" estruturas aninhadas em colunas planas, <code>pd.json_normalize()</code> é a ferramenta certa:</p>
+<pre><code>import json
+with open('resposta_api.json') as f:
+    dados = json.load(f)
+df = pd.json_normalize(dados, record_path=['pedidos'], meta=['cliente_id'])</code></pre>
+<h3>Parquet — o formato de produção</h3>
+<pre><code>df.to_parquet('saida.parquet', index=False)
+df = pd.read_parquet('dados.parquet')</code></pre>
+<div class="callout tip">💡 Parquet é colunar (armazena dados por coluna, não por linha), comprimido, e guarda schema/tipos junto com os dados. Isso o torna dramaticamente mais rápido para leitura seletiva de colunas em tabelas largas, e elimina os problemas de inferência de tipo do CSV — é o formato padrão nas camadas Silver e Gold de arquiteturas Medallion.</div>
+<h3>Lendo apenas parte de um arquivo grande</h3>
+<p>Para CSVs muito grandes que não cabem inteiros em memória, <code>chunksize</code> permite processar em blocos:</p>
+<pre><code>for chunk in pd.read_csv('arquivo_grande.csv', chunksize=100_000):
+    processar(chunk)</code></pre>
+<p>Parquet, por ser colunar, já permite ler apenas as colunas necessárias sem carregar o arquivo inteiro:</p>
+<pre><code>df = pd.read_parquet('dados.parquet', columns=['id', 'valor'])</code></pre>
+<h3>Encoding — o erro silencioso mais comum com dados brasileiros</h3>
+<div class="callout warn">⚠️ Arquivos CSV com acentuação (nomes de cidades, categorias em português) frequentemente vêm em encoding <code>latin-1</code> (ISO-8859-1) em vez de <code>UTF-8</code>, especialmente quando exportados de sistemas legados ou Excel. Isso gera caracteres corrompidos ("São Paulo" virando "SÃ£o Paulo") em vez de erro explícito, o que torna o problema mais traiçoeiro.</div>
+<pre><code>df = pd.read_csv('dados_legado.csv', encoding='latin-1')</code></pre>
+<h3>Qual formato escolher, na prática</h3>
+<p>CSV para intercâmbio simples e legibilidade humana; JSON quando a estrutura de origem já é aninhada (respostas de API); Parquet sempre que o dado vai circular entre etapas de um pipeline de produção — a diferença de performance e confiabilidade de tipo compensa o fato de não ser legível a olho nu.</p>
+`,
+  recap: [
+    'CSV não guarda tipo — cuidado com colunas tipo CEP que perdem zeros à esquerda sem dtype explícito',
+    'JSON lida naturalmente com estruturas aninhadas; json_normalize achata isso em colunas planas',
+    'Parquet é colunar, comprimido e guarda schema — padrão para pipelines de produção (Silver/Gold)',
+    'chunksize processa CSVs grandes em blocos; Parquet permite ler só as colunas necessárias nativamente',
+    'Encoding latin-1 vs UTF-8 é a causa mais comum de caracteres corrompidos em dados brasileiros'
+  ],
+  nblm: {
+    subject: 'Leitura e escrita de dados com Pandas: CSV, JSON e Parquet, e quando usar cada formato em um pipeline.',
+    questions: [
+      'Compare CSV, JSON e Parquet em termos de performance, legibilidade e preservação de tipo.',
+      'Por que Parquet é preferido nas camadas Silver e Gold de uma arquitetura Medallion?',
+      'Como json_normalize lida com estruturas aninhadas de uma resposta de API real?',
+      'Explique o problema de encoding latin-1 vs UTF-8 com um exemplo de dado brasileiro corrompido.'
+    ],
+    source: 'Cruzar com a documentação oficial do Pandas sobre IO Tools (pandas.pydata.org/docs/user_guide/io.html).'
+  },
+  quiz: {
+    q: 'Por que uma coluna de CEP como "01310-100" pode virar número e perder o zero à esquerda ao ler um CSV com Pandas?',
+    options: ['Porque CSV não suporta strings', 'Porque Pandas infere tipos automaticamente e, sem dtype explícito, pode interpretar o valor como numérico', 'Porque CEPs brasileiros não podem ser lidos por Pandas', 'Isso nunca acontece na prática'],
+    correct: 1,
+    explanation: 'CSV não guarda informação de tipo — Pandas infere o tipo de cada coluna ao ler. Se o valor "parece" numérico (mesmo com hífen em alguns casos, ou sem ele), pode ser convertido incorretamente. A solução é especificar dtype={"cep": str} explicitamente.'
+  }
+},
+{
+  id: 'groupby', tag: 'critical',
+  title: 'Pandas — merge, groupby, pivot_table',
+  eyebrow: 'Aula 2 de 9 · Transformação de dados',
+  sub: 'As três operações que fazem 80% do trabalho analítico em qualquer pipeline',
+  body: `
+<p>merge, groupby e pivot_table cobrem a maior parte das transformações que aparecem em pipelines de dados reais — combinar tabelas, agregar por grupo, e reorganizar formato para relatório.</p>
+<h3>merge — o equivalente do JOIN em SQL</h3>
+<pre><code>pedidos_com_cliente = pd.merge(
+    pedidos, clientes,
+    on='cliente_id',
+    how='left'
+)</code></pre>
+<p>O parâmetro <code>how</code> funciona exatamente como os tipos de JOIN em SQL: <code>'inner'</code> (padrão) mantém só correspondências, <code>'left'</code> preserva todas as linhas do DataFrame à esquerda, <code>'outer'</code> preserva ambos os lados.</p>
+<div class="callout warn">⚠️ Quando as colunas-chave têm nomes diferentes nos dois DataFrames, use <code>left_on</code> e <code>right_on</code> em vez de <code>on</code>. Esquecer isso é uma fonte comum de erro silencioso — o merge pode "funcionar" sem erro, mas produzir zero linhas de resultado.</p>
+<pre><code>pd.merge(pedidos, clientes, left_on='id_cliente', right_on='cliente_id')</code></pre>
+<h3>groupby — agregação por grupo</h3>
+<pre><code>df.groupby('categoria')['valor'].sum()
+df.groupby('categoria').agg({'valor': 'sum', 'quantidade': 'mean'})
+df.groupby(['regiao', 'categoria'])['valor'].sum().reset_index()</code></pre>
+<p><code>groupby</code> ignora valores <code>NaN</code> por padrão nas agregações — assim como <code>GROUP BY</code> + funções de agregação em SQL. O método <code>.agg()</code> permite aplicar agregações diferentes por coluna em uma única chamada.</p>
+<div class="callout tip">💡 Sempre chame <code>.reset_index()</code> depois de um groupby com múltiplas colunas se quiser o resultado como um DataFrame "normal" em vez de um objeto com índice multinível (MultiIndex) — isso evita confusão em operações seguintes.</div>
+<h3>Agregações customizadas com apply dentro de groupby</h3>
+<pre><code>df.groupby('categoria')['valor'].apply(lambda x: x.max() - x.min())
+# Amplitude (max - min) por categoria, sem função de agregação pronta</code></pre>
+<h3>pivot_table — reorganizando para relatório</h3>
+<pre><code>df.pivot_table(
+    index='regiao',
+    columns='mes',
+    values='vendas',
+    aggfunc='sum',
+    fill_value=0
+)</code></pre>
+<p>Transforma valores únicos de uma coluna (<code>mes</code>) em novas colunas, com os valores agregados no cruzamento de linha e coluna. <code>fill_value=0</code> evita <code>NaN</code> em combinações que não têm dado — importante para relatórios que serão somados ou usados em gráficos.</p>
+<h3>pivot vs pivot_table — a diferença que confunde</h3>
+<p><code>pivot()</code> (sem "_table") assume que não há valores duplicados na combinação índice+coluna — e falha com erro se houver. <code>pivot_table()</code> aceita duplicatas porque exige um <code>aggfunc</code> para combiná-las. Na prática, <code>pivot_table</code> é a escolha mais segura por padrão, a menos que você tenha certeza de que os dados já são únicos por combinação.</p>
+<h3>Combinando os três em um fluxo real</h3>
+<pre><code>resultado = (
+    pd.merge(vendas, produtos, on='produto_id')
+    .groupby(['categoria', 'mes'])['valor']
+    .sum()
+    .reset_index()
+    .pivot_table(index='categoria', columns='mes', values='valor', fill_value=0)
+)</code></pre>
+`,
+  recap: [
+    'merge(how=...) espelha os tipos de JOIN do SQL (inner, left, outer)',
+    'left_on/right_on são necessários quando as colunas-chave têm nomes diferentes nos dois DataFrames',
+    'groupby ignora NaN por padrão; .agg() permite agregações diferentes por coluna em uma chamada',
+    'reset_index() depois de groupby com múltiplas colunas evita confusão com MultiIndex',
+    'pivot_table aceita duplicatas (exige aggfunc); pivot() falha se houver duplicatas na combinação'
+  ],
+  nblm: {
+    subject: 'merge, groupby e pivot_table no Pandas: equivalências com SQL e armadilhas comuns.',
+    questions: [
+      'Compare merge() do Pandas com JOIN do SQL, incluindo os parâmetros how, on, left_on e right_on.',
+      'Por que reset_index() é frequentemente necessário depois de um groupby com múltiplas colunas?',
+      'Qual é a diferença prática entre pivot() e pivot_table(), e quando cada um falha?',
+      'Construa um exemplo de pipeline combinando merge + groupby + pivot_table para um relatório de vendas por categoria e mês.'
+    ],
+    source: 'Cruzar com a documentação oficial do Pandas sobre Merge, Join and Concatenate e GroupBy (pandas.pydata.org/docs/user_guide/merging.html e groupby.html).'
+  },
+  quiz: {
+    q: 'Por que um merge pode "funcionar" sem erro mas retornar zero linhas de resultado?',
+    options: ['Isso nunca acontece com merge', 'Frequentemente porque as colunas-chave têm nomes diferentes e foram usadas incorretamente com "on" em vez de left_on/right_on, ou os valores das chaves não coincidem', 'Porque merge sempre requer how="outer"', 'Porque Pandas exige que os DataFrames tenham o mesmo número de linhas'],
+    correct: 1,
+    explanation: 'Um merge sem correspondências reais (seja por nomes de coluna errados, tipos diferentes nas chaves, ou valores que realmente não coincidem) não gera erro — apenas retorna um resultado vazio ou menor que o esperado, o que pode passar despercebido se não for validado.'
+  }
+},
+{
+  id: 'apply', tag: 'critical',
+  title: 'Pandas — apply, map, lambda',
+  eyebrow: 'Aula 3 de 9 · Transformações customizadas',
+  sub: 'Quando as funções prontas do Pandas não bastam — e como não sacrificar performance',
+  body: `
+<p>Quando uma transformação não existe como função pronta do Pandas, <code>apply</code>, <code>map</code> e funções <code>lambda</code> permitem aplicar lógica customizada — mas usados sem cuidado, também são a forma mais comum de degradar performance em um pipeline.</p>
+<h3>apply — em Series (uma coluna)</h3>
+<pre><code>df['categoria_normalizada'] = df['categoria'].apply(lambda x: x.strip().lower())</code></pre>
+<h3>apply — em DataFrame inteiro, linha a linha</h3>
+<pre><code>df['score_total'] = df.apply(
+    lambda row: row['nota1'] * 0.6 + row['nota2'] * 0.4, axis=1
+)</code></pre>
+<p><code>axis=1</code> indica que a função recebe cada <em>linha</em> como argumento (permitindo acessar múltiplas colunas); <code>axis=0</code> (padrão) aplicaria coluna por coluna.</p>
+<div class="callout warn">⚠️ <code>apply</code> com <code>axis=1</code> é conhecido por ser lento em DataFrames grandes, porque internamente ele ainda itera linha por linha em Python puro, perdendo a vetorização que faz o Pandas ser rápido. Para tabelas com milhões de linhas, prefira operações vetorizadas nativas quando possível.</div>
+<pre><code>-- Lento (apply linha a linha):
+df['score_total'] = df.apply(lambda row: row['nota1'] * 0.6 + row['nota2'] * 0.4, axis=1)
+
+-- Rápido (vetorizado):
+df['score_total'] = df['nota1'] * 0.6 + df['nota2'] * 0.4</code></pre>
+<h3>map — mais rápido, mas só em Series</h3>
+<p><code>map()</code> aplica uma função ou substitui valores usando um dicionário, elemento a elemento, mas funciona apenas em uma Series (uma coluna), não em DataFrames inteiros. É mais rápido que <code>apply</code> em Series porque tem uma implementação mais direta:</p>
+<pre><code>mapa_status = {'A': 'Ativo', 'I': 'Inativo', 'P': 'Pendente'}
+df['status_legivel'] = df['status_codigo'].map(mapa_status)</code></pre>
+<h3>applymap — elemento a elemento em todo o DataFrame</h3>
+<p>Menos comum, mas útil quando a mesma transformação simples precisa ser aplicada a <em>todas</em> as células de um DataFrame (por exemplo, formatação):</p>
+<pre><code>df_formatado = df.applymap(lambda x: f"{x:.2f}" if isinstance(x, float) else x)</code></pre>
+<h3>lambda vs função nomeada — quando cada uma é melhor</h3>
+<p>Funções <code>lambda</code> são convenientes para transformações de uma linha, mas se a lógica cresce (múltiplas condições, tratamento de erro), uma função nomeada é mais legível e testável:</p>
+<pre><code>def classificar_score(score):
+    if score >= 20:
+        return 'Ótimo'
+    elif score >= 10:
+        return 'Bom'
+    else:
+        return 'Regular'
+
+df['classificacao'] = df['score'].apply(classificar_score)</code></pre>
+<h3>O padrão vetorizado que substitui a maioria dos casos condicionais</h3>
+<p><code>np.select</code> ou <code>np.where</code> (do NumPy) frequentemente substituem <code>apply</code> com <code>if/elif</code> de forma muito mais rápida, porque operam de forma vetorizada:</p>
+<pre><code>import numpy as np
+condicoes = [df['score'] >= 20, df['score'] >= 10]
+valores = ['Ótimo', 'Bom']
+df['classificacao'] = np.select(condicoes, valores, default='Regular')</code></pre>
+<div class="callout tip">💡 Regra prática: sempre pergunte "existe uma forma vetorizada de fazer isso?" antes de recorrer a apply com axis=1. Na maioria dos casos de transformação numérica ou condicional simples, existe — e o ganho de performance em tabelas grandes é significativo.</div>
+`,
+  recap: [
+    'apply com axis=1 itera linha a linha em Python puro — lento em tabelas grandes comparado a operações vetorizadas',
+    'map() é mais rápido que apply() mas só funciona em Series, não em DataFrames inteiros',
+    'applymap() aplica uma transformação elemento a elemento em todo o DataFrame',
+    'Funções nomeadas são preferíveis a lambda quando a lógica cresce em complexidade',
+    'np.select/np.where substituem apply com condicionais de forma vetorizada e mais rápida'
+  ],
+  nblm: {
+    subject: 'apply, map e lambda no Pandas: quando usar cada um e como evitar armadilhas de performance.',
+    questions: [
+      'Por que apply com axis=1 é considerado lento em DataFrames grandes, comparado a operações vetorizadas?',
+      'Compare map() e apply() em termos de onde cada um funciona e a diferença de performance.',
+      'Reescreva um exemplo de apply com if/elif usando np.select de forma vetorizada.',
+      'Quando faz sentido usar uma função nomeada em vez de lambda dentro de um apply?'
+    ],
+    source: 'Cruzar com a documentação oficial do Pandas sobre Essential Basic Functionality e a documentação do NumPy sobre np.select/np.where.'
+  },
+  quiz: {
+    q: 'Por que "df.apply(lambda row: row["a"] * 0.6 + row["b"] * 0.4, axis=1)" costuma ser mais lento que a alternativa vetorizada equivalente?',
+    options: ['Porque axis=1 não é um parâmetro válido', 'Porque, internamente, apply com axis=1 ainda itera linha por linha em Python puro, perdendo a vetorização nativa do Pandas', 'Porque lambda é sempre mais lento que funções nomeadas', 'Não há diferença de performance real entre as duas abordagens'],
+    correct: 1,
+    explanation: 'Operações vetorizadas do Pandas (como df["a"] * 0.6 + df["b"] * 0.4 diretamente) são executadas em código otimizado em C por baixo dos panos. apply com axis=1 percorre linha por linha usando o interpretador Python, o que é ordens de magnitude mais lento em tabelas grandes.'
+  }
+},
+{
+  id: 'nulos', tag: 'critical',
+  title: 'Tratamento de nulos e casting de tipos',
+  eyebrow: 'Aula 4 de 9 · Qualidade de dados',
+  sub: 'A etapa menos glamurosa do pipeline — e a que mais evita bugs em produção',
+  body: `
+<p>Dados reais quase sempre chegam sujos: valores ausentes, tipos inconsistentes, formatos variados de data. Tratar isso corretamente antes de aplicar qualquer lógica de negócio é o que separa um pipeline confiável de um que "funciona até quebrar silenciosamente".</p>
+<h3>Identificando nulos</h3>
+<pre><code>df.isnull().sum()          # conta nulos por coluna
+df.isnull().mean() * 100   # percentual de nulos por coluna
+df[df['coluna'].isnull()]  # linhas onde a coluna é nula</code></pre>
+<h3>Estratégias para lidar com nulos</h3>
+<pre><code>df.dropna(subset=['coluna_critica'])       # remove linhas com nulo em coluna específica
+df.dropna(thresh=5)                        # mantém linhas com pelo menos 5 valores não-nulos
+df.fillna({'valor': 0, 'categoria': 'Sem categoria'})   # preenche com valores padrão por coluna
+df['valor'].fillna(df['valor'].median(), inplace=True)  # preenche com a mediana</code></pre>
+<div class="callout warn">⚠️ A escolha entre remover (dropna) e preencher (fillna) não é técnica, é de negócio: remover uma linha descarta informação potencialmente importante; preencher com um valor "neutro" pode distorcer análises se a proporção de nulos for alta. Sempre documente qual estratégia foi usada e por quê.</div>
+<h3>Casting de tipos — conversões explícitas</h3>
+<pre><code>df['data'] = pd.to_datetime(df['data'], format='%d/%m/%Y', errors='coerce')
+df['id'] = df['id'].astype(str)
+df['valor'] = pd.to_numeric(df['valor'], errors='coerce')</code></pre>
+<p><code>errors='coerce'</code> é essencial em dados reais: em vez de lançar exceção ao encontrar um valor que não pode ser convertido, ele vira <code>NaN</code> (ou <code>NaT</code> para datas) — permitindo que você trate esses casos depois, em vez de o pipeline inteiro quebrar por um único valor mal formatado.</p>
+<h3>O padrão de validação pós-conversão</h3>
+<pre><code>df['valor'] = pd.to_numeric(df['valor'], errors='coerce')
+linhas_invalidas = df[df['valor'].isnull()]
+if len(linhas_invalidas) > 0:
+    logger.warning(f"{len(linhas_invalidas)} linhas com valor inválido descartadas")
+    df = df.dropna(subset=['valor'])</code></pre>
+<div class="callout tip">💡 Esse padrão — converter com coerce, logar quantas linhas viraram nulas, e então decidir o que fazer com elas — é o que diferencia um pipeline que "silenciosamente perde dados" de um que é auditável e transparente sobre qualidade de dados.</div>
+<h3>Duplicatas — outra fonte comum de sujeira</h3>
+<pre><code>df.duplicated().sum()                     # conta linhas totalmente duplicadas
+df.drop_duplicates(subset=['id_pedido'])  # remove duplicatas por uma chave específica
+df.drop_duplicates(subset=['id_pedido'], keep='last')  # mantém a última ocorrência</code></pre>
+<h3>Onde isso se conecta com Medallion Architecture</h3>
+<p>Esse tratamento de nulos, tipos e duplicatas é, por definição, o trabalho central da transformação Bronze → Silver: o dado bruto chega exatamente como veio da fonte, e a camada Silver é onde ele se torna confiável para consumo por outras equipes ou processos.</p>
+`,
+  recap: [
+    'isnull().sum() e isnull().mean() ajudam a quantificar o problema antes de decidir a estratégia',
+    'Escolher entre dropna e fillna é uma decisão de negócio, não só técnica — documente a escolha',
+    'errors="coerce" converte valores inválidos em NaN/NaT em vez de quebrar o pipeline inteiro',
+    'Logar quantas linhas viraram nulas após conversão é o que torna o pipeline auditável',
+    'Esse tratamento é, por definição, o trabalho central da transformação Bronze → Silver'
+  ],
+  nblm: {
+    subject: 'Tratamento de nulos e casting de tipos no Pandas: estratégias e o padrão de validação pós-conversão.',
+    questions: [
+      'Compare dropna vs fillna como estratégias, e quando cada uma é apropriada do ponto de vista de negócio.',
+      'Por que errors="coerce" é preferível a deixar o pipeline lançar exceção em conversões de tipo?',
+      'Descreva o padrão de "converter, logar, decidir" para tratamento de dados inválidos após casting.',
+      'Como esse tratamento de qualidade de dados se conecta com a transformação Bronze → Silver em Medallion Architecture?'
+    ],
+    source: 'Cruzar com a documentação oficial do Pandas sobre Working with missing data (pandas.pydata.org/docs/user_guide/missing_data.html).'
+  },
+  quiz: {
+    q: 'Por que usar errors="coerce" em pd.to_numeric() é geralmente preferível ao comportamento padrão em pipelines de produção?',
+    options: ['Porque é mais rápido computacionalmente', 'Porque converte valores inválidos em NaN em vez de lançar uma exceção que quebraria o pipeline inteiro por causa de um único valor mal formatado', 'Porque coerce é obrigatório em todas as versões do Pandas', 'Não há diferença de comportamento'],
+    correct: 1,
+    explanation: 'Sem errors="coerce", um único valor que não pode ser convertido (ex: um texto em uma coluna que deveria ser numérica) lança uma exceção e interrompe todo o processamento. Com coerce, esse valor vira NaN e o pipeline pode continuar, permitindo tratar os casos problemáticos separadamente.'
+  }
+},
+{
+  id: 'requests', tag: 'important',
+  title: 'Requests — consumo de APIs REST',
+  eyebrow: 'Aula 5 de 9 · Integração externa',
+  sub: 'Como consumir dados de fontes externas de forma robusta, não só funcional',
+  body: `
+<p>A biblioteca <code>requests</code> é o padrão de fato para chamadas HTTP em Python. A diferença entre um consumo de API "que funciona no seu teste local" e um "pronto para rodar em produção todo mês sem supervisão" está inteiramente em como você trata erros, timeouts e limites de taxa.</p>
+<h3>Uma chamada básica</h3>
+<pre><code>import requests
+
+resp = requests.get('https://api.exemplo.com/dados')
+dados = resp.json()</code></pre>
+<h3>Por que isso não é suficiente para produção</h3>
+<div class="callout warn">⚠️ Essa chamada básica não tem timeout (pode travar indefinidamente se a API não responder), não verifica se a resposta foi bem-sucedida (um erro 500 não gera exceção automaticamente), e não trata falhas de rede.</div>
+<pre><code>import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
+def buscar_dados(url, timeout=10):
+    try:
+        resp = requests.get(url, timeout=timeout)
+        resp.raise_for_status()  # lança exceção se status for 4xx ou 5xx
+        return resp.json()
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout ao acessar {url}")
+        raise
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"Erro HTTP {resp.status_code} ao acessar {url}: {e}")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Falha de rede ao acessar {url}: {e}")
+        raise</code></pre>
+<h3>raise_for_status — o método mais esquecido</h3>
+<p>Por padrão, <code>requests</code> não lança exceção para respostas com código de erro (404, 500, etc.) — você recebe a resposta normalmente e precisaria checar <code>resp.status_code</code> manualmente. <code>raise_for_status()</code> automatiza essa checagem, lançando <code>HTTPError</code> quando o status indica falha.</p>
+<h3>Retry com backoff — lidando com falhas transitórias</h3>
+<p>Muitas falhas de API são transitórias (instabilidade momentânea, rate limit temporário) — tentar novamente após uma pequena espera resolve a maioria dos casos sem intervenção manual:</p>
+<pre><code>from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+session = requests.Session()
+retry = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503])
+session.mount('https://', HTTPAdapter(max_retries=retry))
+
+resp = session.get('https://api.exemplo.com/dados', timeout=10)</code></pre>
+<p><code>backoff_factor=1</code> significa que cada nova tentativa espera progressivamente mais (1s, 2s, 4s...) antes de tentar de novo, evitando martelar uma API já sobrecarregada.</p>
+<h3>Paginação — quando a API retorna dados em páginas</h3>
+<pre><code>def buscar_todos_os_dados(url_base):
+    dados_completos = []
+    pagina = 1
+    while True:
+        resp = requests.get(url_base, params={'page': pagina}, timeout=10)
+        resp.raise_for_status()
+        pagina_dados = resp.json()
+        if not pagina_dados:
+            break
+        dados_completos.extend(pagina_dados)
+        pagina += 1
+    return dados_completos</code></pre>
+<h3>Autenticação e headers</h3>
+<pre><code>headers = {'Authorization': f'Bearer {token}'}
+resp = requests.get(url, headers=headers, timeout=10)</code></pre>
+<div class="callout tip">💡 O token nunca deve estar hardcoded no código — carregue-o de uma variável de ambiente (assunto da próxima aula) ou de um Connection do Airflow, se o consumo estiver dentro de uma DAG.</div>
+`,
+  recap: [
+    'Sempre defina timeout explicitamente — sem isso, uma chamada pode travar indefinidamente',
+    'raise_for_status() lança exceção para respostas 4xx/5xx, que passam despercebidas por padrão',
+    'Retry com backoff progressivo lida automaticamente com falhas transitórias sem martelar a API',
+    'Paginação exige um loop que acumula resultados até a API sinalizar que não há mais páginas',
+    'Tokens de autenticação nunca devem estar hardcoded — sempre via variável de ambiente ou Connection'
+  ],
+  nblm: {
+    subject: 'Consumo robusto de APIs REST com a biblioteca requests: timeout, tratamento de erro, retry e paginação.',
+    questions: [
+      'Por que uma chamada requests.get() sem tratamento adicional não é considerada pronta para produção?',
+      'Explique como funciona o retry com backoff progressivo e por que ele evita sobrecarregar uma API instável.',
+      'Construa um exemplo de função de paginação genérica que funcione para qualquer API baseada em "page" e "results".',
+      'Como o gerenciamento seguro de tokens de API se conecta com Connections do Airflow ou variáveis de ambiente?'
+    ],
+    source: 'Cruzar com a documentação oficial da biblioteca requests (requests.readthedocs.io) e Real Python — Python Requests.'
+  },
+  quiz: {
+    q: 'O que raise_for_status() faz exatamente, e por que ele é importante?',
+    options: ['Ele verifica se a resposta é JSON válido', 'Ele lança uma exceção HTTPError quando o status da resposta indica erro (4xx ou 5xx), que de outra forma passaria despercebido', 'Ele define automaticamente um timeout para a requisição', 'Ele reformata a URL da requisição'],
+    correct: 1,
+    explanation: 'Por padrão, requests não lança exceção para respostas com código de erro — você receberia a resposta normalmente e precisaria checar resp.status_code manualmente. raise_for_status() automatiza essa checagem, garantindo que erros HTTP não passem silenciosamente.'
+  }
+},
+{
+  id: 'env', tag: 'important',
+  title: 'Variáveis de ambiente (.env / os.environ)',
+  eyebrow: 'Aula 6 de 9 · Configuração e segurança',
+  sub: 'Como manter credenciais fora do código-fonte, de forma simples e portável',
+  body: `
+<p>Credenciais, tokens, URLs sensíveis e configurações que variam entre ambientes (desenvolvimento, produção) nunca devem estar hardcoded diretamente no código Python. Variáveis de ambiente são o mecanismo mais simples e amplamente suportado para resolver isso.</p>
+<h3>Lendo variáveis de ambiente diretamente</h3>
+<pre><code>import os
+
+api_key = os.environ.get('API_KEY')
+if api_key is None:
+    raise ValueError("Variável de ambiente API_KEY não configurada")</code></pre>
+<p><code>os.environ.get()</code> retorna <code>None</code> se a variável não existir, em vez de lançar exceção — por isso é boa prática validar explicitamente se um valor obrigatório realmente veio preenchido, em vez de deixar o erro aparecer mais tarde de forma confusa.</p>
+<h3>Arquivos .env para desenvolvimento local</h3>
+<p>Em desenvolvimento, é comum manter um arquivo <code>.env</code> na raiz do projeto com pares chave-valor, carregado pela biblioteca <code>python-dotenv</code>:</p>
+<pre><code># arquivo .env
+API_KEY=abc123
+DATABASE_URL=postgresql://user:senha@localhost:5432/meudb</code></pre>
+<pre><code>from dotenv import load_dotenv
+import os
+
+load_dotenv()  # carrega o .env para os.environ
+api_key = os.environ.get('API_KEY')</code></pre>
+<div class="callout warn">⚠️ O arquivo <code>.env</code> NUNCA deve ser commitado no Git — ele deve estar listado no <code>.gitignore</code> desde o início do projeto. Um erro comum e grave é subir esse arquivo acidentalmente para um repositório público, expondo credenciais reais.</div>
+<h3>Um .env.example como documentação</h3>
+<p>Uma boa prática é versionar um arquivo <code>.env.example</code> com as chaves necessárias mas sem valores reais — isso documenta quais variáveis o projeto precisa, sem expor segredos:</p>
+<pre><code># .env.example (este SIM vai para o Git)
+API_KEY=
+DATABASE_URL=</code></pre>
+<h3>Em produção — como as variáveis realmente chegam lá</h3>
+<p>Em produção, arquivos <code>.env</code> geralmente não são usados diretamente — as variáveis são configuradas na própria infraestrutura: variáveis de ambiente do sistema operacional em uma VM, Secrets do GitHub Actions em CI/CD, ou Application Settings no Azure App Service. O código Python continua lendo com <code>os.environ.get()</code> normalmente — só a <em>origem</em> do valor muda entre ambientes.</p>
+<h3>Conectando com o que você já usa</h3>
+<div class="callout tip">💡 Essa é exatamente a lógica por trás de Connections e Variables do Airflow (vistas no módulo anterior) e do GCP Workload Identity Federation do seu pipeline-etransparente — todos são formas de manter segredos fora do código-fonte versionado, cada um adequado a um contexto de execução diferente.</div>
+<h3>Validação antecipada — falhar rápido e claro</h3>
+<pre><code>REQUIRED_VARS = ['API_KEY', 'DATABASE_URL']
+
+def validar_configuracao():
+    faltando = [v for v in REQUIRED_VARS if not os.environ.get(v)]
+    if faltando:
+        raise EnvironmentError(f"Variáveis obrigatórias não configuradas: {faltando}")</code></pre>
+<p>Rodar essa validação no início da execução (antes de qualquer processamento) faz o pipeline falhar imediatamente com uma mensagem clara, em vez de falhar no meio do processamento com um erro genérico de "NoneType" difícil de diagnosticar.</p>
+`,
+  recap: [
+    'os.environ.get() retorna None se a variável não existir — sempre valide antes de usar valores obrigatórios',
+    'Arquivos .env são para desenvolvimento local, carregados via python-dotenv, e NUNCA devem ir para o Git',
+    '.env.example documenta as chaves necessárias sem expor valores reais',
+    'Em produção, as variáveis vêm da infraestrutura (VM, CI/CD, App Service) — o código não muda, só a origem',
+    'Validar variáveis obrigatórias no início da execução faz o pipeline falhar rápido e com mensagem clara'
+  ],
+  nblm: {
+    subject: 'Variáveis de ambiente em Python: arquivos .env, python-dotenv, e o padrão de segurança para credenciais.',
+    questions: [
+      'Explique o fluxo completo de como um arquivo .env chega até os.environ dentro de uma aplicação Python.',
+      'Por que .env nunca deve ser commitado no Git, e qual é o papel do .env.example?',
+      'Como as variáveis de ambiente são gerenciadas de forma diferente entre desenvolvimento local e produção?',
+      'Construa uma função de validação que falhe rápido se variáveis obrigatórias não estiverem configuradas.'
+    ],
+    source: 'Cruzar com a documentação da biblioteca python-dotenv (pypi.org/project/python-dotenv) e boas práticas de segurança do The Twelve-Factor App (12factor.net/config).'
+  },
+  quiz: {
+    q: 'Por que validar explicitamente se uma variável de ambiente obrigatória foi carregada é considerado boa prática?',
+    options: ['Porque os.environ.get() sempre lança exceção se a variável não existir', 'Porque os.environ.get() retorna None silenciosamente se a variável não existir, e usar esse None sem validação gera erros confusos mais tarde no processamento', 'Porque Python exige essa validação por sintaxe', 'Não há necessidade real de validar isso'],
+    correct: 1,
+    explanation: 'Sem validação explícita, um valor None se propaga pelo código até causar um erro em algum ponto posterior (por exemplo, ao tentar usar None como parte de uma URL) — um erro muito mais difícil de diagnosticar do que uma mensagem clara logo no início dizendo qual variável está faltando.'
+  }
+},
+{
+  id: 'logging', tag: 'important',
+  title: 'Logging e tratamento de exceções',
+  eyebrow: 'Aula 7 de 9 · Observabilidade',
+  sub: 'A diferença entre um script que "roda" e um pipeline que você consegue debugar às 3 da manhã',
+  body: `
+<p>Em pipelines de produção, <code>print()</code> não é suficiente — você precisa de níveis de severidade, timestamps, e rastreabilidade de onde cada mensagem veio. O módulo <code>logging</code> da biblioteca padrão do Python resolve isso de forma estruturada.</p>
+<h3>Configuração básica</h3>
+<pre><code>import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+logger.info("Iniciando processamento")
+logger.warning("Taxa de nulos acima do esperado: 15%")
+logger.error("Falha ao conectar com a API")</code></pre>
+<h3>Os níveis de severidade e quando usar cada um</h3>
+<ul>
+  <li><strong>DEBUG</strong> — detalhes técnicos úteis só durante desenvolvimento/depuração.</li>
+  <li><strong>INFO</strong> — marcos normais de execução ("iniciando extração", "processadas 500 linhas").</li>
+  <li><strong>WARNING</strong> — algo inesperado, mas que não impede a execução de continuar (ex: taxa de nulos alta).</li>
+  <li><strong>ERROR</strong> — uma falha que impede aquela operação específica de completar.</li>
+  <li><strong>CRITICAL</strong> — falha grave que compromete a aplicação inteira.</li>
+</ul>
+<div class="callout tip">💡 Configurar <code>level=logging.INFO</code> em produção (em vez de DEBUG) filtra o ruído, mostrando só o que realmente importa para acompanhar a execução — mas mantém a possibilidade de trocar para DEBUG temporariamente ao investigar um problema específico.</div>
+<h3>logger.exception — capturando o stack trace completo</h3>
+<pre><code>try:
+    processar_dados()
+except Exception:
+    logger.exception("Falha ao processar dados do pipeline")
+    raise</code></pre>
+<p><code>logger.exception()</code> (chamado dentro de um bloco <code>except</code>) automaticamente inclui o stack trace completo no log — essencial para diagnosticar exatamente onde e por que algo falhou, sem precisar adicionar <code>traceback.format_exc()</code> manualmente.</p>
+<h3>Tratamento de exceções específicas vs genéricas</h3>
+<div class="callout warn">⚠️ Capturar <code>except Exception</code> genericamente sem qualquer distinção mascara bugs reais — um erro de digitação no código pode ser silenciosamente engolido junto com falhas esperadas de rede. Sempre que possível, capture o tipo específico de exceção esperado, e deixe erros inesperados propagarem.</div>
+<pre><code>try:
+    resp = requests.get(url, timeout=10)
+    resp.raise_for_status()
+except requests.exceptions.Timeout:
+    logger.warning(f"Timeout ao acessar {url}, tentando novamente...")
+    # lógica de retry específica
+except requests.exceptions.HTTPError as e:
+    logger.error(f"Erro HTTP: {e}")
+    raise  # erro real de API, não deve ser silenciado</code></pre>
+<h3>Exceções customizadas — comunicando erros de domínio</h3>
+<pre><code>class DadosInvalidosError(Exception):
+    """Levantada quando os dados não passam na validação de schema."""
+    pass
+
+def validar_dados(df):
+    if df['score'].max() > 30:
+        raise DadosInvalidosError("Score acima do máximo permitido (30) encontrado")</code></pre>
+<p>Exceções customizadas tornam o código mais expressivo — quem lê o <code>except DadosInvalidosError</code> entende imediatamente que tipo de problema de negócio está sendo tratado, em vez de um genérico <code>ValueError</code>.</p>
+<h3>Logs estruturados — pensando além do texto livre</h3>
+<p>Em pipelines mais maduros, logs em formato JSON estruturado (em vez de texto livre) facilitam buscar e agregar informação depois, especialmente quando integrados a ferramentas de observabilidade (Azure Monitor, CloudWatch, etc.) — um passo natural de evolução conforme o pipeline cresce em criticidade.</p>
+`,
+  recap: [
+    'print() não é suficiente em produção — logging oferece níveis de severidade, timestamps e rastreabilidade',
+    'DEBUG/INFO/WARNING/ERROR/CRITICAL têm propósitos distintos — nem tudo deveria ser ERROR',
+    'logger.exception() dentro de um except captura automaticamente o stack trace completo',
+    'Capturar except Exception genericamente pode mascarar bugs reais junto com falhas esperadas',
+    'Exceções customizadas tornam o código mais expressivo sobre que tipo de erro de negócio ocorreu'
+  ],
+  nblm: {
+    subject: 'Logging e tratamento de exceções em Python: níveis de severidade, boas práticas, e exceções customizadas.',
+    questions: [
+      'Explique quando usar cada nível de logging (DEBUG, INFO, WARNING, ERROR, CRITICAL) com exemplos de um pipeline de dados.',
+      'Por que capturar "except Exception" genericamente é considerado uma má prática?',
+      'Como logger.exception() difere de logger.error() em termos de informação capturada?',
+      'Construa um exemplo de exceção customizada para validação de schema de dados, e explique a vantagem sobre usar ValueError genérico.'
+    ],
+    source: 'Cruzar com a documentação oficial do módulo logging do Python (docs.python.org/3/library/logging.html) e o Logging HOWTO oficial.'
+  },
+  quiz: {
+    q: 'Por que capturar "except Exception" de forma genérica, sem distinção de tipo, é considerado arriscado?',
+    options: ['Porque Python não permite capturar Exception genericamente', 'Porque isso pode silenciar bugs reais de programação junto com falhas esperadas (como timeout de rede), dificultando encontrar a causa real de problemas', 'Porque except Exception sempre trava o programa', 'Não há risco real nessa prática'],
+    correct: 1,
+    explanation: 'Um bloco except Exception genérico trata qualquer tipo de erro da mesma forma — incluindo bugs de programação (como acessar uma chave inexistente em um dicionário) que deveriam ser corrigidos, não silenciados junto com falhas esperadas e tratáveis como timeout de rede.'
+  }
+},
+{
+  id: 'numpy', tag: 'owned',
+  title: 'NumPy básico para transformações',
+  eyebrow: 'Aula 8 de 9 · Computação numérica',
+  sub: 'A base vetorizada sobre a qual o Pandas é construído',
+  body: `
+<p>NumPy é a biblioteca de computação numérica que serve de fundação para o Pandas — quando uma coluna do Pandas armazena números, ela internamente é um array NumPy. Entender operações básicas de NumPy ajuda a escrever transformações mais rápidas e a entender por que certas operações do Pandas se comportam do jeito que se comportam.</p>
+<h3>Arrays vs listas Python — por que a diferença importa</h3>
+<pre><code>import numpy as np
+
+precos = np.array([100, 200, 150, 300])
+precos_com_desconto = precos * 0.9  # operação vetorizada, aplica a TODOS os elementos
+</code></pre>
+<p>Em uma lista Python comum, multiplicar por 0.9 exigiria um loop explícito ou list comprehension. Em um array NumPy, a operação é vetorizada — aplicada a todos os elementos de uma vez, em código otimizado, sem loop explícito em Python.</p>
+<h3>np.where — condicional vetorizado</h3>
+<pre><code>categorias = np.where(precos > 150, 'Caro', 'Barato')
+# array(['Barato', 'Caro', 'Barato', 'Caro'])</code></pre>
+<p><code>np.where(condição, valor_se_verdadeiro, valor_se_falso)</code> é o equivalente vetorizado de um if/else aplicado elemento a elemento — muito mais rápido que <code>apply</code> com uma função condicional, como visto na Aula 3.</p>
+<h3>np.select — múltiplas condições</h3>
+<pre><code>condicoes = [precos > 250, precos > 150]
+resultados = ['Premium', 'Médio']
+categorias = np.select(condicoes, resultados, default='Básico')</code></pre>
+<h3>Funções estatísticas vetorizadas</h3>
+<pre><code>np.mean(precos)
+np.median(precos)
+np.std(precos)     # desvio padrão
+np.percentile(precos, 90)   # percentil 90</code></pre>
+<p>Essas mesmas operações existem como métodos do Pandas (<code>df['coluna'].mean()</code>), porque o Pandas usa NumPy por baixo — mas entender que a implementação vem do NumPy ajuda a entender por que Pandas é rápido em operações numéricas e lento em operações que exigem iteração linha a linha em Python puro.</p>
+<h3>NaN em NumPy — um detalhe que gera confusão</h3>
+<div class="callout warn">⚠️ <code>np.nan</code> nunca é igual a si mesmo — <code>np.nan == np.nan</code> retorna <code>False</code>. Para checar se um valor é nulo, sempre use <code>np.isnan()</code> ou o equivalente do Pandas (<code>pd.isnull()</code>), nunca uma comparação de igualdade direta.</p>
+<h3>Broadcasting — operações entre arrays de tamanhos diferentes</h3>
+<pre><code>matriz = np.array([[1, 2, 3], [4, 5, 6]])
+matriz + np.array([10, 20, 30])
+# soma [10, 20, 30] a CADA linha da matriz automaticamente</code></pre>
+<p>Broadcasting é o mecanismo que permite ao NumPy aplicar operações entre arrays de dimensões diferentes de forma automática, seguindo regras específicas de compatibilidade — é um conceito mais avançado, mas explica comportamentos que parecem "mágicos" à primeira vista em operações entre uma coluna do Pandas (1 dimensão) e um valor escalar.</p>
+<h3>Por que aprender NumPy mesmo usando Pandas o tempo todo</h3>
+<p>Boa parte da lentidão em pipelines Pandas vem de não aproveitar operações vetorizadas — entender que existe uma camada NumPy por baixo ajuda a reconhecer quando uma transformação pode (e deve) ser reescrita de forma vetorizada em vez de usar <code>apply</code> com lógica linha a linha.</p>
+`,
+  recap: [
+    'Arrays NumPy permitem operações vetorizadas — aplicadas a todos os elementos sem loop explícito em Python',
+    'np.where implementa condicional vetorizado (if/else); np.select lida com múltiplas condições',
+    'Funções estatísticas do Pandas (mean, median, std) são implementadas sobre NumPy por baixo dos panos',
+    'np.nan nunca é igual a si mesmo — sempre use isnan()/isnull() para checar nulos, nunca comparação direta',
+    'Entender NumPy ajuda a identificar quando uma transformação Pandas pode ser reescrita de forma vetorizada'
+  ],
+  nblm: {
+    subject: 'NumPy básico aplicado a transformações de dados: vetorização, np.where/np.select, e a relação com Pandas.',
+    questions: [
+      'Explique com um exemplo por que uma operação vetorizada em NumPy é mais rápida que um loop Python equivalente.',
+      'Compare np.where e np.select — quando cada um é a ferramenta certa?',
+      'Por que np.nan == np.nan retorna False, e qual é a forma correta de checar valores nulos?',
+      'Como o conceito de broadcasting explica operações entre uma coluna do Pandas e um valor escalar?'
+    ],
+    source: 'Cruzar com a documentação oficial do NumPy sobre Array Broadcasting e Universal Functions (numpy.org/doc/stable/user/basics.broadcasting.html).'
+  },
+  quiz: {
+    q: 'O que "np.nan == np.nan" retorna, e por que isso é importante saber?',
+    options: ['True, porque NaN é sempre igual a si mesmo', 'False — NaN nunca é igual a si mesmo, por isso deve-se usar np.isnan() ou pd.isnull() para checar nulos, nunca comparação direta', 'Isso gera um erro de execução', 'Depende da versão do NumPy'],
+    correct: 1,
+    explanation: 'Por definição do padrão de ponto flutuante IEEE 754, NaN (Not a Number) nunca é igual a si mesmo nem a nenhum outro valor, incluindo outro NaN. Isso é intencional e universal em linguagens que seguem esse padrão — por isso a checagem de nulos precisa usar funções específicas em vez de comparação de igualdade.'
+  }
+},
+{
+  id: 'pyspark', tag: 'bonus',
+  title: 'PySpark — RDD vs DataFrame',
+  eyebrow: 'Aula 9 de 9 · Processamento distribuído',
+  sub: 'Quando o volume de dados ultrapassa o que uma única máquina consegue processar com Pandas',
+  body: `
+<p>PySpark é a interface Python para o Apache Spark, um framework de processamento distribuído de dados. Diferente do Pandas — que processa dados inteiramente na memória de uma única máquina — o Spark distribui o processamento entre múltiplas máquinas (um cluster), permitindo lidar com volumes que não caberiam na memória de um único computador.</p>
+<h3>Quando Pandas deixa de ser suficiente</h3>
+<p>Como regra prática: enquanto o dado cabe confortavelmente na memória RAM disponível (geralmente até alguns gigabytes, dependendo da máquina), Pandas é mais simples e rápido de usar. Quando o volume cresce para dezenas ou centenas de gigabytes — ou mais — processamento distribuído se torna necessário, e é aí que Spark entra.</p>
+<h3>RDD — a estrutura original e de baixo nível</h3>
+<p>RDD (Resilient Distributed Dataset) foi a abstração original do Spark: uma coleção distribuída e imutável de objetos, particionada entre os nós do cluster. Operações em RDD são baseadas em transformações funcionais (<code>map</code>, <code>filter</code>, <code>reduce</code>):</p>
+<pre><code>rdd = sc.textFile("dados.txt")
+palavras = rdd.flatMap(lambda linha: linha.split(" "))
+contagem = palavras.map(lambda p: (p, 1)).reduceByKey(lambda a, b: a + b)</code></pre>
+<div class="callout warn">⚠️ RDDs são de baixo nível — você controla exatamente como a computação acontece, mas o Spark não consegue otimizar automaticamente o plano de execução, porque não entende a estrutura (schema) dos dados, só objetos genéricos.</div>
+<h3>DataFrame — a abstração moderna e recomendada</h3>
+<p>DataFrames no Spark trazem uma estrutura tabular com schema explícito (nomes e tipos de coluna), similar a um DataFrame do Pandas ou uma tabela SQL — e, crucialmente, permitem que o Spark otimize automaticamente o plano de execução através do Catalyst Optimizer.</p>
+<pre><code>df = spark.read.parquet("s3://bucket/dados/")
+df_filtrado = df.filter(df.valor > 1000).groupBy("categoria").sum("valor")
+df_filtrado.show()</code></pre>
+<div class="callout tip">💡 Para a esmagadora maioria dos casos de uso modernos, a documentação e a comunidade Spark recomendam DataFrames (ou a API SQL equivalente) em vez de RDDs diretamente — RDDs continuam existindo, mas como uma camada de baixo nível usada internamente ou para casos muito específicos que fogem do modelo tabular.</p>
+<h3>Sintaxe familiar para quem já sabe Pandas e SQL</h3>
+<pre><code>-- Sintaxe estilo DataFrame
+df.select("nome", "valor").filter(df.valor > 100)
+
+-- Sintaxe SQL equivalente, direto no Spark
+df.createOrReplaceTempView("tabela")
+spark.sql("SELECT nome, valor FROM tabela WHERE valor > 100")</code></pre>
+<p>Essa familiaridade é intencional — quem já domina Pandas e SQL (como você) tem uma curva de aprendizado relativamente suave para migrar para PySpark quando o volume de dados exigir.</p>
+<h3>Lazy evaluation — uma diferença conceitual importante</h3>
+<p>Operações em DataFrames Spark são "preguiçosas" (lazy): escrever <code>df.filter(...).groupBy(...)</code> não executa nada imediatamente — o Spark constrói um plano de execução e só processa de fato quando uma "ação" é chamada (como <code>.show()</code>, <code>.collect()</code>, ou salvar em disco). Isso permite ao Catalyst Optimizer analisar a cadeia inteira de transformações antes de decidir a forma mais eficiente de executá-la.</p>
+<h3>Por que isso vale a pena conhecer mesmo sem usar ainda</h3>
+<p>Mencionar que você entende a diferença conceitual entre RDD e DataFrame — e por que DataFrames são preferidos hoje — demonstra que você acompanha a evolução do ecossistema de processamento de dados, mesmo que seu dia a dia atual seja com Pandas em volumes menores.</p>
+`,
+  recap: [
+    'Pandas processa em memória de uma única máquina; Spark distribui processamento entre um cluster',
+    'RDD é a abstração original e de baixo nível, sem otimização automática de plano de execução',
+    'DataFrame traz schema explícito e permite ao Catalyst Optimizer otimizar automaticamente',
+    'A sintaxe de DataFrame Spark é familiar para quem já conhece Pandas e SQL',
+    'Lazy evaluation permite ao Spark analisar toda a cadeia de transformações antes de executar de fato'
+  ],
+  nblm: {
+    subject: 'PySpark: a diferença entre RDD e DataFrame, e quando processamento distribuído se torna necessário.',
+    questions: [
+      'Em que ponto (volume de dados) faz sentido migrar de Pandas para Spark, e por quê?',
+      'Explique por que DataFrames permitem otimização automática (Catalyst Optimizer) enquanto RDDs não permitem.',
+      'O que significa "lazy evaluation" em Spark, e como isso se diferencia da execução imediata do Pandas?',
+      'Compare a sintaxe de filtro e agregação entre Pandas, Spark DataFrame API, e Spark SQL para a mesma operação.'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Spark sobre RDD Programming Guide e Spark SQL, DataFrames and Datasets Guide (spark.apache.org/docs/latest/).'
+  },
+  quiz: {
+    q: 'Por que DataFrames são geralmente recomendados sobre RDDs em código Spark moderno?',
+    options: ['Porque RDDs foram descontinuados e não funcionam mais', 'Porque DataFrames têm schema explícito, o que permite ao Spark otimizar automaticamente o plano de execução via Catalyst Optimizer', 'Porque RDDs só funcionam com dados em formato texto', 'Não há diferença prática relevante entre os dois'],
+    correct: 1,
+    explanation: 'RDDs operam sobre objetos genéricos sem que o Spark saiba sua estrutura interna, impedindo otimizações automáticas. DataFrames têm schema explícito (nomes e tipos de coluna), permitindo que o Catalyst Optimizer analise e otimize o plano de execução antes de rodar, de forma similar a um otimizador de banco de dados relacional.'
+  }
+}
+];
+
+function htmlToMarkdown(html) {
+  let md = html;
+  md = md.replace(/<div class="callout[^"]*">\s*([\s\S]*?)\s*<\/div>/g, (m, p1) => '> ' + p1.replace(/<[^>]+>/g,'').trim() + '\n\n');
+  md = md.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, p1) => '```python\n' + p1.trim() + '\n```\n\n');
+  md = md.replace(/<h3>(.*?)<\/h3>/g, '\n### $1\n\n');
+  md = md.replace(/<h4>(.*?)<\/h4>/g, '\n#### $1\n\n');
+  md = md.replace(/<hr>/g, '\n---\n\n');
+  md = md.replace(/<ul>/g, '\n').replace(/<\/ul>/g, '\n');
+  md = md.replace(/<li>\s*([\s\S]*?)\s*<\/li>/g, '- $1\n');
+  md = md.replace(/<p>\s*([\s\S]*?)\s*<\/p>/g, '$1\n\n');
+  md = md.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+  md = md.replace(/<em>(.*?)<\/em>/g, '_$1_');
+  md = md.replace(/<code>(.*?)<\/code>/g, '`$1`');
+  md = md.replace(/<[^>]+>/g, '');
+  md = md.replace(/\n{3,}/g, '\n\n');
+  return md.trim();
+}
+
+function generateLessonMarkdown(lesson, moduleTitle) {
+  let md = `# ${lesson.title}\n\n`;
+  md += `_${lesson.eyebrow} — ${moduleTitle}_\n\n`;
+  md += `> ${lesson.sub}\n\n`;
+  md += '---\n\n';
+  md += htmlToMarkdown(lesson.body);
+  md += '\n\n## Recapitulando\n\n';
+  lesson.recap.forEach(r => md += `- ${r}\n`);
+  md += '\n## Aprofundar no NotebookLM\n\n';
+  md += `**Assunto do notebook:** ${lesson.nblm.subject}\n\n`;
+  md += `**Perguntas-guia para o Audio Overview:**\n\n`;
+  lesson.nblm.questions.forEach(q => md += `- ${q}\n`);
+  md += `\n**Fonte complementar sugerida:** ${lesson.nblm.source}\n\n`;
+  md += '---\n\n';
+  md += `**Teste rápido:** ${lesson.quiz.q}\n\n`;
+  lesson.quiz.options.forEach((o,i) => md += `${i === lesson.quiz.correct ? '- [x]' : '- [ ]'} ${o}\n`);
+  md += `\n> **Explicação:** ${lesson.quiz.explanation}\n`;
+  return md;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return { done: {}, quizResults: {} };
+}
+function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e){} }
+let APP = loadData();
+let currentLesson = 0;
+function showToast(msg, emoji='✅') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${emoji} ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function updateModuleProgress() {
+  const total = LESSONS.length;
+  const done = LESSONS.filter(l => APP.done[l.id]).length;
+  document.getElementById('mod-fill').style.width = Math.round((done/total)*100) + '%';
+  document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
+}
+function renderSidebar() {
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  let html = `<div class="sidebar-title">Módulo 04 · Python</div>`;
+  html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
+  html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
+  LESSONS.forEach((l, i) => {
+    const done = !!APP.done[l.id];
+    html += `<div class="toc-item ${currentLesson===i+1?'active':''}" onclick="goTo(${i+1})">
+      <span class="toc-num">${i+1}</span>
+      <span class="toc-check ${done?'done':''}">${done?'✓':''}</span>
+      <span class="toc-text">${l.title}</span>
+      <span class="toc-tag ${l.tag}">${tagLabel[l.tag]}</span>
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); window.scrollTo({top:0,behavior:'smooth'}); }
+function toggleDone(lessonId) {
+  APP.done[lessonId] = !APP.done[lessonId];
+  saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function answerQuiz(lessonIdx, chosen) {
+  const lesson = LESSONS[lessonIdx];
+  const opts = document.querySelectorAll(`#qc-opts-${lesson.id} .qc-opt`);
+  if (opts[0].disabled) return;
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === lesson.quiz.correct) o.classList.add('correct');
+    if (i === chosen && chosen !== lesson.quiz.correct) o.classList.add('wrong');
+  });
+  const ok = chosen === lesson.quiz.correct;
+  APP.quizResults[lesson.id] = ok;
+  saveData();
+  const fb = document.getElementById(`qc-fb-${lesson.id}`);
+  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + lesson.quiz.explanation;
+  fb.className = `qc-fb show ${ok ? 'correct' : 'wrong'}`;
+}
+function exportLessonMD(lessonIdx) {
+  const lesson = LESSONS[lessonIdx];
+  const md = generateLessonMarkdown(lesson, "Python para Dados");
+  downloadFile(`python_aula${lessonIdx+1}_${lesson.id}_victor_breia.md`, md);
+  showToast('Markdown exportado! Pronto pro NotebookLM.', '📄');
+}
+function exportModuleMD() {
+  let full = `# Python para Dados\n\n_Módulo completo — exportado para estudo no NotebookLM_\n\n---\n\n`;
+  LESSONS.forEach((l) => {
+    full += generateLessonMarkdown(l, "Python para Dados");
+    full += '\n\n---\n\n';
+  });
+  downloadFile(`python_modulo_completo_victor_breia.md`, full);
+  showToast('Markdown do módulo completo exportado!', '📄');
+}
+function renderSummary() {
+  let html = `<div style="margin-bottom:20px">
+    <h2 style="font-size:20px;margin-bottom:6px">Visão geral — Módulo Python para Dados</h2>
+    <p style="font-size:13px;color:var(--text2);max-width:620px;line-height:1.6">
+      Este módulo cobre os 9 subtópicos de Python aplicado a dados — Pandas, tratamento de qualidade,
+      integração com APIs, e uma introdução a PySpark para quando o volume ultrapassa uma única máquina.
+      Cada aula tem conteúdo completo, teste de fixação, e seção pronta para o NotebookLM.
+    </p>
+  </div><div class="summary-grid">`;
+  LESSONS.forEach((l, i) => {
+    const d = !!APP.done[l.id];
+    const q = APP.quizResults[l.id];
+    html += `<div class="summary-card" onclick="goTo(${i+1})" style="cursor:pointer">
+      <h4>${i+1}. ${l.title} ${d ? '✅' : ''}</h4>
+      <p>${l.sub}${q !== undefined ? (q ? ' · Quiz: acertou ✅' : ' · Quiz: errou — revisar 🔴') : ''}</p>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+const VIDEO_FOLDER = 'python';
+const VIDEO_PREFIX = 'py';
+
+function renderVideoBlock(lesson, lessonNum) {
+  if (lesson.video) {
+    const src = lesson.video;
+    return `<div class="video-wrap">
+      <video controls preload="metadata">
+        <source src="${encodeURI(src)}" type="video/mp4">
+        Seu navegador não suporta vídeo HTML5.
+      </video>
+    </div>`;
+  }
+  return `<div class="video-placeholder">
+    <div class="vp-icon">🎬</div>
+    <div class="vp-title">Vídeo ainda não adicionado</div>
+    <div class="vp-sub">Salve como ${VIDEO_FOLDER}/${VIDEO_PREFIX}${lessonNum}.Titulo_Do_Video.mp4</div>
+  </div>`;
+}
+
+function renderContent() {
+  if (currentLesson === 0) { renderSummary(); return; }
+  const lesson = LESSONS[currentLesson - 1];
+  const done = !!APP.done[lesson.id];
+  const idx = currentLesson - 1;
+  const nblmQuestionsHtml = lesson.nblm.questions.map(q => `<li>${q}</li>`).join('');
+  document.getElementById('content').innerHTML = `
+    <div class="lesson-nav">
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson-1})" ${currentLesson<=1?'disabled':''}>← Anterior</button>
+      <span class="lesson-progress-label">Aula ${idx+1} de ${LESSONS.length}</span>
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson+1<=LESSONS.length?currentLesson+1:0})">${currentLesson<LESSONS.length?'Próxima →':'Ver resumo →'}</button>
+    </div>
+    <div class="lesson-card" id="lesson-print-${lesson.id}">
+      <div class="lesson-eyebrow">${lesson.eyebrow}</div>
+      <h2 class="lesson-title">${lesson.title}</h2>
+      <div class="lesson-sub">${lesson.sub}</div>
+      <hr>
+      ${renderVideoBlock(lesson, idx+1)}
+      ${lesson.body}
+      <div class="recap"><div class="rt">Recapitulando</div><ul>${lesson.recap.map(r => `<li>${r}</li>`).join('')}</ul></div>
+      <div class="nblm-box">
+        <div class="nblm-header">🎙️ Aprofundar no NotebookLM</div>
+        <div class="nblm-body">
+          <div class="nblm-field"><div class="nblm-label">Assunto do notebook</div><div class="nblm-value">${lesson.nblm.subject}</div></div>
+          <div class="nblm-field"><div class="nblm-label">Perguntas-guia para o Audio Overview</div><ul class="nblm-questions">${nblmQuestionsHtml}</ul></div>
+          <div class="nblm-field"><div class="nblm-label">Fonte complementar sugerida</div><div class="nblm-value">${lesson.nblm.source}</div></div>
+        </div>
+      </div>
+      <div class="source-box"><strong>Como usar:</strong> exporte esta aula em Markdown, suba no NotebookLM junto com a fonte complementar sugerida, e cole as perguntas-guia no campo de customização do Audio Overview.</div>
+    </div>
+    <div class="mark-bar">
+      <button class="mark-check-btn" onclick="toggleDone('${lesson.id}')"><span class="box ${done?'done':''}">${done?'✓':''}</span>Marcar esta aula como concluída</button>
+      <button class="hdr-btn primary" onclick="exportLessonMD(${idx})">⬇ Exportar esta aula (.md)</button>
+    </div>
+    <div class="quick-check">
+      <div class="qc-title">🧪 Teste rápido de fixação</div>
+      <div class="qc-q">${lesson.quiz.q}</div>
+      ${lesson.quiz.code ? `<div class="test-code">${lesson.quiz.code}</div>` : ''}
+      <div class="qc-opts" id="qc-opts-${lesson.id}">${lesson.quiz.options.map((o,i) => `<button class="qc-opt" onclick="answerQuiz(${idx},${i})">${o}</button>`).join('')}</div>
+      <div class="qc-fb" id="qc-fb-${lesson.id}"></div>
+    </div>
+  `;
+}
+updateModuleProgress();
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>

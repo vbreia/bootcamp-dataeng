@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 06 — Processos Seletivos | Victor Breia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+:root {
+  --bg:#08080f; --surface:#0f0f18; --surface2:#16161f; --surface3:#1c1c28;
+  --border:#252533; --border2:#2e2e3f;
+  --accent:#f59e0b; --accent2:#fcd34d;
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+  --text:#e2e2ee; --text2:#9898b8; --muted:#55556a;
+  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace; --serif:'Source Serif 4',serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
+.header { padding:22px 20px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:60; }
+.breadcrumb { font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px; }
+.breadcrumb a { color:var(--text2); text-decoration:none; }
+.breadcrumb a:hover { color:var(--accent2); }
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.header h1 { font-size:20px; font-weight:700; }
+.header h1 em { color:var(--accent2); font-style:normal; }
+.header-sub { font-size:12px; color:var(--muted); margin-top:4px; max-width:520px; }
+.hdr-actions { display:flex; gap:8px; flex-shrink:0; }
+.hdr-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.hdr-btn:hover { border-color:var(--accent); color:var(--text); }
+.hdr-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.hdr-btn.primary:hover { background:var(--accent2); border-color:var(--accent2); color:#1a1a1f; }
+.overall-bar { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-top:14px; max-width:520px; }
+.overall-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width .5s ease; }
+.overall-label { font-size:11px; color:var(--muted); margin-top:6px; font-family:var(--mono); }
+.layout { display:grid; grid-template-columns:260px 1fr; gap:0; max-width:1180px; margin:0 auto; align-items:start; }
+@media (max-width:860px) { .layout { grid-template-columns:1fr; } .sidebar { position:static !important; } }
+.sidebar { position:sticky; top:130px; padding:22px 14px 40px 20px; max-height:calc(100vh - 130px); overflow-y:auto; }
+.sidebar-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; padding-left:8px; }
+.toc-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; cursor:pointer; margin-bottom:2px; transition:background .15s; border-left:2px solid transparent; }
+.toc-item:hover { background:var(--surface2); }
+.toc-item.active { background:var(--surface2); border-left-color:var(--accent); }
+.toc-num { font-family:var(--mono); font-size:10px; color:var(--muted); width:16px; flex-shrink:0; }
+.toc-check { width:13px; height:13px; border-radius:4px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:8px; }
+.toc-check.done { background:var(--green); border-color:var(--green); color:#000; }
+.toc-text { font-size:12px; color:var(--text2); line-height:1.3; }
+.toc-item.active .toc-text { color:var(--text); font-weight:500; }
+.toc-tag { font-size:9px; padding:1px 5px; border-radius:3px; font-family:var(--mono); margin-left:auto; flex-shrink:0; }
+.toc-tag.critical { background:rgba(248,113,113,.15); color:var(--red); }
+.toc-tag.important { background:rgba(251,191,36,.15); color:var(--yellow); }
+.toc-tag.bonus { background:rgba(163,139,250,.15); color:#a78bfa; }
+.toc-tag.owned { background:rgba(52,211,153,.15); color:var(--green); }
+.toc-divider { height:1px; background:var(--border); margin:14px 8px; }
+.toc-item.summary-item .toc-text { font-weight:600; color:var(--text); }
+.content { padding:24px 24px 80px 20px; min-width:0; }
+.lesson-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap; }
+.lesson-nav-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
+.lesson-nav-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--text); }
+.lesson-nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+.lesson-progress-label { font-size:11px; color:var(--muted); font-family:var(--mono); }
+.lesson-card { background:#fdfcf9; color:#1a1a1f; border-radius:12px; padding:32px 36px; font-family:var(--serif); line-height:1.75; font-size:14.5px; }
+.lesson-eyebrow { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#8a6a1f; margin-bottom:6px; font-weight:500; }
+.lesson-title { font-size:25px; font-weight:700; color:#14141a; margin-bottom:6px; letter-spacing:-.3px; }
+.lesson-sub { font-family:var(--font); font-size:12.5px; color:#6b6b78; margin-bottom:20px; }
+.lesson-card hr { border:none; border-top:1px solid #e5e0d5; margin:20px 0; }
+.lesson-card h3 { font-family:var(--font); font-size:15px; font-weight:700; color:#14141a; margin:22px 0 10px; }
+.lesson-card h4 { font-family:var(--font); font-size:13px; font-weight:600; color:#2a2a30; margin:14px 0 6px; }
+.lesson-card p { margin-bottom:12px; color:#2a2a30; }
+.lesson-card ul, .lesson-card ol { margin:8px 0 14px 20px; }
+.lesson-card li { margin-bottom:6px; color:#2a2a30; }
+.lesson-card strong { color:#14141a; font-weight:700; }
+.lesson-card code { font-family:var(--mono); background:#fbeecb; color:#8a5a10; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+.lesson-card pre { background:#14141a; color:#d8dce8; border-radius:8px; padding:14px 16px; overflow-x:auto; margin:12px 0 16px; font-family:var(--mono); font-size:12px; line-height:1.6; }
+.lesson-card pre code { background:none; color:inherit; padding:0; }
+.callout { padding:10px 14px; border-radius:0 7px 7px 0; margin:14px 0; font-family:var(--font); font-size:12.5px; border-left:3px solid #6366f1; background:#eef0fb; color:#3a3a5c; }
+.callout.warn { background:#fdf3e7; border-left-color:#d97706; color:#6b4a10; }
+.callout.tip { background:#eafaf3; border-left-color:#10b981; color:#0d5e42; }
+.callout.example { background:#fef9e7; border-left-color:#f59e0b; color:#7a5a0a; }
+.nblm-box { margin-top:24px; border-radius:10px; overflow:hidden; border:1px solid #d8d0be; }
+.nblm-header { background:#14141a; color:#fff; padding:10px 16px; font-family:var(--font); font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.nblm-body { padding:16px; background:#f7f5ee; }
+.nblm-field { margin-bottom:12px; }
+.nblm-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#8b7a5e; margin-bottom:4px; font-weight:600; }
+.nblm-value { font-family:var(--font); font-size:12.5px; color:#2a2a30; }
+.nblm-questions { list-style:none; margin:0; padding:0; }
+.nblm-questions li { background:#fff; border:1px solid #e5e0d5; border-radius:6px; padding:8px 12px; margin-bottom:6px; font-size:12px; font-family:var(--font); color:#2a2a30; }
+.source-box { margin-top:16px; padding:10px 16px; background:#f2f0e8; border-radius:8px; font-family:var(--font); font-size:11.5px; color:#6b6b78; }
+.source-box strong { color:#3a3a44; }
+.recap { margin-top:18px; padding:14px 16px; background:#14141a; color:#fdfcf9; border-radius:8px; font-family:var(--font); }
+.recap .rt { font-size:12px; font-weight:700; margin-bottom:8px; color:#fcd34d; text-transform:uppercase; letter-spacing:.06em; }
+.recap ul { margin:0 0 0 16px; }
+.recap li { font-size:12.5px; margin-bottom:5px; color:#e2e2ee; }
+.quick-check { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-top:16px; }
+.qc-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.qc-q { font-size:13px; margin-bottom:10px; line-height:1.5; }
+.qc-opts { display:grid; gap:6px; }
+.qc-opt { padding:8px 12px; border-radius:7px; border:1.5px solid var(--border2); background:transparent; color:var(--text); font-family:var(--font); font-size:12px; cursor:pointer; text-align:left; transition:all .15s; }
+.qc-opt:hover:not(:disabled) { border-color:var(--accent); background:rgba(245,158,11,.08); }
+.qc-opt.correct { border-color:var(--green); background:rgba(52,211,153,.1); color:var(--green); }
+.qc-opt.wrong { border-color:var(--red); background:rgba(248,113,113,.1); color:var(--red); }
+.qc-opt:disabled { cursor:default; }
+.qc-fb { margin-top:8px; padding:8px 12px; border-radius:7px; font-size:12px; display:none; }
+.qc-fb.show { display:block; }
+.qc-fb.correct { background:rgba(52,211,153,.08); color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+.qc-fb.wrong { background:rgba(248,113,113,.08); color:#fca5a5; border:1px solid rgba(248,113,113,.2); }
+.mark-bar { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+.mark-check-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; }
+.mark-check-btn .box { width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:10px; }
+.mark-check-btn .box.done { background:var(--green); border-color:var(--green); color:#000; }
+.summary-grid { display:grid; gap:10px; }
+.summary-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+.summary-card h4 { font-size:13px; margin-bottom:4px; }
+.summary-card p { font-size:12px; color:var(--text2); }
+.toast { position:fixed; bottom:20px; right:20px; background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 14px; font-size:12px; display:flex; align-items:center; gap:8px; transform:translateY(60px); opacity:0; transition:all .25s ease; z-index:300; max-width:260px; }
+.toast.show { transform:translateY(0); opacity:1; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.video-wrap { margin-bottom:20px; border-radius:10px; overflow:hidden; background:#000; }
+.video-wrap video { width:100%; display:block; max-height:480px; background:#000; }
+.video-placeholder {
+  margin-bottom:20px; border-radius:10px; border:1.5px dashed var(--border2);
+  background:var(--surface2); padding:28px 20px; text-align:center;
+}
+.video-placeholder .vp-icon { font-size:26px; margin-bottom:8px; }
+.video-placeholder .vp-title { font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
+.video-placeholder .vp-sub { font-family:var(--mono); font-size:11px; color:var(--muted); }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="breadcrumb"><a href="data-engineer-study-system.html">← Voltar ao painel geral</a></div>
+  <div class="header-top">
+    <div>
+      <h1>Módulo 06 · <em>Processos Seletivos</em></h1>
+      <div class="header-sub">6 aulas individuais — cases, testes técnicos, e como apresentar seus projetos reais.</div>
+    </div>
+    <div class="hdr-actions"><button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button></div>
+  </div>
+  <div class="overall-bar"><div class="overall-fill" id="mod-fill" style="width:0%"></div></div>
+  <div class="overall-label" id="mod-label">0 / 6 subtópicos concluídos</div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'de_module_processos_v1';
+
+const LESSONS = [
+{
+  id: 'sql_challenges', tag: 'critical',
+  title: 'SQL challenges — LeetCode / HackerRank',
+  eyebrow: 'Aula 1 de 6 · Preparação técnica',
+  sub: 'Como treinar de forma deliberada para o filtro mais comum de qualquer processo seletivo',
+  body: `
+<p>Plataformas como LeetCode (categoria Database) e HackerRank (domínio SQL) simulam o formato mais comum de teste técnico em processos seletivos de dados. Entender o padrão de dificuldade e os tipos de problema que aparecem permite treinar de forma deliberada, em vez de resolver exercícios aleatórios sem direção.</p>
+<h3>Os quatro tipos de problema que dominam os testes</h3>
+<ul>
+  <li><strong>JOINs com múltiplas tabelas e filtros condicionais</strong> — o tipo mais comum, testando se você entende relacionamento entre entidades (visto em detalhe na Aula 2 do Módulo de SQL).</li>
+  <li><strong>Window functions para ranking</strong> — "encontre o top N por grupo" é uma das perguntas mais recicladas em processos seletivos de qualquer nível.</li>
+  <li><strong>Subqueries para comparação com agregados</strong> — "funcionários que ganham acima da média do próprio departamento" e variações.</li>
+  <li><strong>Detecção de duplicatas e deduplicação</strong> — geralmente resolvido com ROW_NUMBER() particionado pela chave de duplicidade.</li>
+</ul>
+<h3>Um padrão de deduplicação que vale memorizar</h3>
+<pre><code>WITH ranked AS (
+  SELECT *,
+    ROW_NUMBER() OVER (PARTITION BY email ORDER BY data_cadastro DESC) AS rn
+  FROM usuarios
+)
+SELECT * FROM ranked WHERE rn = 1;
+-- Mantém apenas o cadastro mais recente por email, remove duplicatas</code></pre>
+<div class="callout tip">💡 Esse padrão — ROW_NUMBER particionado pela chave de duplicidade, ordenado pelo critério de "qual manter", seguido de filtro rn = 1 — resolve a maioria dos problemas de deduplicação que aparecem em testes técnicos.</div>
+<h3>Como praticar de forma deliberada, não apenas repetitiva</h3>
+<p>Resolver 100 exercícios aleatórios é menos eficiente do que: <strong>(1)</strong> identificar os padrões recorrentes (os quatro tipos acima), <strong>(2)</strong> praticar cada padrão até reconhecê-lo instantaneamente no enunciado, <strong>(3)</strong> cronometrar-se para simular a pressão real de um teste técnico com tempo limitado.</p>
+<h3>Lendo o enunciado com atenção — onde a maioria erra</h3>
+<div class="callout warn">⚠️ Um erro comum sob pressão de tempo: não verificar se o problema pede "todos os X" (LEFT JOIN) ou "apenas X com correspondência" (INNER JOIN). Enunciados de teste técnico costumam ter uma palavra-chave sutil ("incluindo aqueles sem...", "apenas os que...") que determina o tipo de JOIN correto — ler rápido demais é uma causa comum de erro, não falta de conhecimento técnico.</div>
+<h3>O ambiente de teste real vs a plataforma de prática</h3>
+<p>Muitas empresas usam plataformas próprias (Coderbyte, CodeSignal) ou compartilham a tela em uma chamada ao vivo em vez de LeetCode/HackerRank diretamente. Praticar em mais de uma plataforma ajuda a não depender de recursos específicos (como autocomplete) que podem não estar disponíveis no ambiente real da entrevista.</p>
+<h3>Uma lista de prática estruturada</h3>
+<p>O "LeetCode SQL 50" é uma lista curada especificamente para cobrir os padrões mais testados em entrevistas, organizada por dificuldade crescente — uma boa estrutura para progressão deliberada em vez de exercícios aleatórios sem sequência lógica.</p>
+`,
+  recap: [
+    'Quatro padrões dominam os testes técnicos: JOINs, window functions de ranking, subqueries com agregados, deduplicação',
+    'ROW_NUMBER particionado + filtro rn=1 é o padrão mais reciclado para resolver deduplicação',
+    'Praticar de forma deliberada (por padrão, cronometrado) é mais eficiente que resolver exercícios aleatórios',
+    'Ler o enunciado com atenção a palavras-chave que definem o tipo de JOIN é tão importante quanto saber a sintaxe',
+    'Praticar em mais de uma plataforma evita depender de recursos que podem não existir no ambiente real da entrevista'
+  ],
+  nblm: {
+    subject: 'Preparação estruturada para testes técnicos de SQL em processos seletivos: padrões recorrentes e estratégia de prática.',
+    questions: [
+      'Quais são os quatro padrões de problema SQL mais recorrentes em testes técnicos, com um exemplo de cada?',
+      'Explique passo a passo o padrão de deduplicação com ROW_NUMBER particionado.',
+      'Como diferenciar, pela leitura do enunciado, se um problema pede LEFT JOIN ou INNER JOIN?',
+      'Monte um plano de estudo de 2 semanas usando a lista LeetCode SQL 50, organizado por padrão de dificuldade.'
+    ],
+    source: 'Cruzar com a lista curada LeetCode SQL 50 (leetcode.com/studyplan/top-sql-50) e o domínio SQL do HackerRank (hackerrank.com/domains/sql).'
+  },
+  quiz: {
+    q: 'Qual é o padrão de query que resolve a maioria dos problemas de deduplicação em testes técnicos?',
+    options: ['DISTINCT seguido de GROUP BY', 'ROW_NUMBER() particionado pela chave de duplicidade, ordenado pelo critério de desempate, filtrado por rn = 1 em uma CTE', 'DELETE com subquery correlacionada', 'HAVING COUNT(*) > 1'],
+    correct: 1,
+    explanation: 'Esse padrão permite escolher exatamente qual linha manter entre duplicatas (via ORDER BY dentro do OVER) e é o mais flexível e reciclado em testes técnicos, porque também funciona quando "qual manter" depende de um critério específico, não apenas "remover repetição".'
+  }
+},
+{
+  id: 'case_etl', tag: 'critical',
+  title: 'Case de ETL — dado bruto → insight',
+  eyebrow: 'Aula 2 de 6 · Design de solução',
+  sub: 'O que avaliadores realmente procuram quando pedem para você desenhar um pipeline',
+  body: `
+<p>Um case de ETL típico apresenta uma fonte de dados bruta (um CSV, uma API, um conjunto de arquivos JSON) e pede para você desenhar — ou às vezes implementar — um pipeline que transforma isso em algo utilizável. O que diferencia uma resposta boa de uma excelente não é a complexidade técnica, é a qualidade do raciocínio demonstrado.</p>
+<h3>O primeiro passo que a maioria pula: fazer perguntas</h3>
+<div class="callout tip">💡 Antes de propor qualquer arquitetura, pergunte: qual é o volume de dados (megabytes ou terabytes muda tudo)? Com que frequência os dados são atualizados? Existe um SLA de disponibilidade dos dados processados? Quem vai consumir o resultado final (um dashboard, um modelo de ML, um relatório mensal)? Pular direto para a solução sem entender o contexto é o erro mais comum — e mais penalizado — em cases de design.</div>
+<h3>Um roteiro de resposta estruturado</h3>
+<ol>
+  <li><strong>Esclarecer requisitos</strong> — volume, frequência, SLA, consumidor final.</li>
+  <li><strong>Propor a arquitetura em alto nível</strong> — camadas (Bronze/Silver/Gold ou equivalente), ferramenta de orquestração, onde os dados residem.</li>
+  <li><strong>Detalhar decisões-chave e seus trade-offs</strong> — por que essa ferramenta, por que essa frequência de execução.</li>
+  <li><strong>Mencionar tratamento de erro e observabilidade</strong> — o que acontece quando algo falha, como você saberia.</li>
+</ol>
+<h3>Elementos que elevam uma resposta de boa para excelente</h3>
+<ul>
+  <li><strong>Idempotência</strong> — mencionar explicitamente que rodar o pipeline duas vezes para o mesmo período não deve duplicar dados.</li>
+  <li><strong>Separação em camadas</strong> — mesmo em um desenho simples, falar em "bruto → limpo → agregado" demonstra pensamento arquitetural, não só execução de tarefa.</li>
+  <li><strong>Qualidade de dados</strong> — mencionar validação de schema, tratamento de nulos, e o que fazer quando dados chegam fora do formato esperado.</li>
+  <li><strong>Escalabilidade futura</strong> — reconhecer explicitamente os limites da solução proposta ("isso funciona bem até X volume; acima disso, eu consideraria Y").</li>
+</ul>
+<h3>Um exemplo de resposta aplicada</h3>
+<div class="callout example">📋 <strong>Case:</strong> "Desenhe um pipeline para processar dados de vendas de um e-commerce, disponibilizados via API, atualizados diariamente."<br><br><strong>Resposta estruturada:</strong> "Primeiro eu confirmaria o volume diário esperado e se existe rate limit na API. Assumindo volume moderado (até alguns GB/dia): uma DAG do Airflow rodando diariamente, com uma task de extração salvando o retorno bruto da API na camada Bronze do Data Lake (particionado por data), uma task de validação/limpeza gerando a camada Silver em Parquet, e uma task de agregação gerando métricas de negócio na camada Gold, já em formato Star Schema para consumo do time de BI. Cada task seria idempotente, sobrescrevendo a partição do dia em vez de fazer append, para permitir reprocessamento seguro em caso de falha."</div>
+<h3>Quando o case pede implementação, não só desenho</h3>
+<p>Se o case exigir código real (não só descrição da arquitetura), priorize: código que funciona e é legível, sobre código "elegante" mas incompleto. Comentários breves explicando decisões não-óbvias valem mais que documentação extensa que você não terá tempo de escrever completamente.</p>
+`,
+  recap: [
+    'Fazer perguntas sobre volume, frequência, SLA e consumidor final antes de propor solução é o passo mais frequentemente pulado',
+    'Roteiro estruturado: esclarecer requisitos → arquitetura em alto nível → decisões-chave e trade-offs → tratamento de erro',
+    'Mencionar idempotência, separação em camadas e qualidade de dados eleva a resposta de boa para excelente',
+    'Reconhecer explicitamente os limites da solução proposta demonstra maturidade de engenharia',
+    'Em cases de implementação, priorize código funcional e legível sobre elegância incompleta'
+  ],
+  nblm: {
+    subject: 'Como responder cases de design de pipeline ETL em entrevistas técnicas de engenharia de dados.',
+    questions: [
+      'Quais perguntas eu deveria fazer antes de propor qualquer arquitetura em um case de ETL?',
+      'Monte um roteiro de resposta estruturado de 4 passos para um case de design de pipeline.',
+      'Como eu demonstro que entendo idempotência dentro da resposta de um case, sem escrever código?',
+      'Pratique comigo: me dê um case de ETL realista e eu vou estruturar minha resposta seguindo o roteiro.'
+    ],
+    source: 'Sem fonte externa formal necessária — esta aula sintetiza boas práticas de comunicação técnica com base nos conceitos de Medallion Architecture e idempotência vistos em módulos anteriores.'
+  },
+  quiz: {
+    q: 'Qual é o erro mais comum e mais penalizado em cases de design de pipeline?',
+    options: ['Usar Airflow em vez de outra ferramenta de orquestração', 'Propor uma arquitetura diretamente, sem antes esclarecer requisitos como volume, frequência e consumidor final', 'Mencionar arquitetura Medallion', 'Escrever muito código durante a resposta'],
+    correct: 1,
+    explanation: 'Pular direto para uma solução sem entender o contexto (volume de dados, frequência de atualização, SLA, quem consome o resultado) é o erro mais comum — a mesma "solução técnica" pode ser certa ou errada dependendo desses fatores, e propor sem perguntar sinaliza falta de maturidade de design, não apenas falta de sorte na escolha.'
+  }
+},
+{
+  id: 'comportamental', tag: 'important',
+  title: 'Perguntas comportamentais sobre projetos',
+  eyebrow: 'Aula 3 de 6 · Comunicação e storytelling técnico',
+  sub: 'Como transformar experiência real em histórias memoráveis, não respostas genéricas',
+  body: `
+<p>Perguntas como "conte sobre um desafio técnico que você enfrentou" ou "descreva uma vez que você discordou de uma decisão técnica" são melhor respondidas com histórias estruturadas e específicas — não com respostas genéricas que poderiam se aplicar a qualquer pessoa.</p>
+<h3>O método STAR — Situação, Tarefa, Ação, Resultado</h3>
+<ul>
+  <li><strong>Situação</strong> — o contexto específico, em poucas frases (não um histórico completo do projeto).</li>
+  <li><strong>Tarefa</strong> — o que especificamente precisava ser resolvido ou decidido.</li>
+  <li><strong>Ação</strong> — o que VOCÊ fez, especificamente (não "nós decidimos", mas "eu propus/implementei/investiguei").</li>
+  <li><strong>Resultado</strong> — o desfecho, idealmente com algum indicador concreto (tempo economizado, problema resolvido, métrica melhorada).</li>
+</ul>
+<div class="callout warn">⚠️ Um erro recorrente: falar em "nós" o tempo todo, deixando ambíguo qual foi sua contribuição individual específica dentro de um esforço de equipe. Entrevistadores frequentemente perguntam "mas o que EXATAMENTE você fez?" quando a resposta é vaga demais nesse ponto.</div>
+<h3>Prepare 2-3 histórias reais antes da entrevista, não durante</h3>
+<p>Histórias construídas na hora tendem a ser desorganizadas e a esquecer detalhes importantes. Preparar previamente 2-3 histórias reais dos seus próprios projetos — cada uma cobrindo um tipo diferente de situação — permite adaptar a mesma história-base para perguntas formuladas de formas diferentes.</p>
+<h3>Histórias aplicáveis aos seus projetos reais</h3>
+<div class="callout example">📋 <strong>Desafio técnico resolvido:</strong> Automatizar o liga/desliga da VM do pipeline-etransparente via Logic Apps para controlar custo — Situação (processamento mensal, mas VM ficava ligada o mês todo), Tarefa (reduzir custo sem comprometer a execução mensal), Ação (desenhei um fluxo de Logic Apps com trigger recorrente + start/stop automático), Resultado (redução de custo de computação ociosa, sem intervenção manual necessária).</div>
+<div class="callout example">📋 <strong>Trabalho com stakeholder não-técnico:</strong> Apresentar a metodologia de score de transparência (0-30 pts) para a presidência do IDC — Situação (necessidade de validar critérios de pontuação com quem entende o contexto de negócio, não só técnico), Tarefa (traduzir lógica técnica em critérios compreensíveis), Ação (documentei a metodologia com exemplos concretos em vez de jargão técnico), Resultado (metodologia aprovada e adotada oficialmente).</div>
+<h3>Perguntas sobre falhas e aprendizado</h3>
+<p>"Conte sobre um erro que você cometeu" não busca uma resposta perfeita sem erro real — busca capacidade de reconhecer, corrigir e aprender. Uma resposta honesta sobre uma decisão técnica que precisou ser revisada, com foco no que mudou depois (processo, verificação, decisão), é mais forte que negar ter cometido erros ou minimizar a situação.</p>
+<h3>Adaptando a mesma história para perguntas diferentes</h3>
+<p>A mesma experiência (por exemplo, o overhaul do LinkedIn e reposicionamento profissional) pode responder "conte sobre uma iniciativa que você tomou por conta própria", "conte sobre como você lida com ambiguidade" ou "conte sobre um objetivo de carreira que você perseguiu" — dependendo de qual ângulo da mesma história você enfatiza.</p>
+`,
+  recap: [
+    'Método STAR (Situação, Tarefa, Ação, Resultado) estrutura respostas comportamentais de forma clara e específica',
+    'Evite "nós" ambíguo — seja específico sobre sua contribuição individual dentro de um esforço de equipe',
+    'Prepare 2-3 histórias reais antes da entrevista, cobrindo tipos diferentes de situação',
+    'Perguntas sobre erros buscam capacidade de aprendizado, não ausência de falhas',
+    'A mesma história pode responder perguntas formuladas de formas diferentes, dependendo do ângulo enfatizado'
+  ],
+  nblm: {
+    subject: 'Perguntas comportamentais em entrevistas técnicas: o método STAR e como estruturar histórias de projetos reais.',
+    questions: [
+      'Explique o método STAR com um exemplo aplicado a um desafio técnico de automação de infraestrutura.',
+      'Por que "nós decidimos" é considerado uma resposta fraca em perguntas comportamentais, e como corrigir isso?',
+      'Ajude-me a estruturar 3 histórias diferentes dos meus projetos (IDC e etransparente) usando o método STAR.',
+      'Como devo responder a uma pergunta sobre um erro cometido, sem parecer que estou minimizando ou inventando uma falha superficial?'
+    ],
+    source: 'Sem fonte externa formal necessária — o método STAR é um framework consolidado de entrevista comportamental, e esta aula aplica os conceitos aos projetos reais do usuário.'
+  },
+  quiz: {
+    q: 'Por que responder "nós decidimos fazer X" de forma consistente é considerado um ponto fraco em uma resposta comportamental?',
+    options: ['Porque trabalho em equipe é visto negativamente em entrevistas', 'Porque deixa ambígua qual foi a contribuição individual específica da pessoa dentro do esforço coletivo', 'Porque "nós" é gramaticalmente incorreto em entrevistas', 'Não há problema real com essa formulação'],
+    correct: 1,
+    explanation: 'Entrevistadores querem entender especificamente o que VOCÊ fez, pensou ou decidiu — não apenas que um grupo chegou a um resultado. Usar "eu propus", "eu implementei", "eu identifiquei" torna sua contribuição individual clara, mesmo dentro de um trabalho coletivo.'
+  }
+},
+{
+  id: 'apresentar_projeto', tag: 'critical',
+  title: 'Como apresentar o etransparente para recrutador',
+  eyebrow: 'Aula 4 de 6 · Comunicação de projeto',
+  sub: 'Transformando seu maior diferencial em uma apresentação que qualquer avaliador entende',
+  body: `
+<p>Você tem algo que a maioria dos candidatos jr não tem: um projeto real em produção, com stack de mercado, resolvendo um problema de negócio genuíno (transparência de ONGs). O desafio não é ter o projeto — é comunicá-lo de forma que tanto um recrutador não-técnico quanto um engenheiro sênior entendam igualmente bem seu valor.</p>
+<h3>A estrutura de 30-45 segundos</h3>
+<p>Um roteiro eficaz segue três partes: <strong>(1) o que o projeto faz</strong>, em termos de impacto/negócio primeiro, não só técnico; <strong>(2) como foi construído</strong>, com palavras-chave relevantes de stack e arquitetura; <strong>(3) um desafio real que você resolveu</strong>, demonstrando profundidade além de seguir um tutorial.</p>
+<div class="callout example">📋 <strong>Versão completa:</strong> "É um pipeline ETL open source que monitora transparência de ONGs brasileiras — coleta dados públicos, processa em uma arquitetura Medallion com Airflow rodando em uma VM Azure, e gera relatórios com score de transparência de 0 a 30 pontos. Um desafio real que resolvi foi automatizar o liga/desliga da VM via Logic Apps, já que o processamento roda só uma vez por mês — isso reduziu custo de computação ociosa sem precisar de intervenção manual todo mês."</div>
+<h3>Adaptando a profundidade para a audiência</h3>
+<p>Para um recrutador de RH: enfatize impacto e clareza ("monitora transparência de ONGs, ajudando doadores a tomarem decisões informadas"), minimize jargão técnico. Para um engenheiro sênior na entrevista técnica: pode aprofundar em decisões de arquitetura (por que Medallion, por que particionamento, trade-offs de custo) — a mesma base de projeto, profundidade adaptada à audiência.</p>
+<h3>Antecipando perguntas de aprofundamento técnico</h3>
+<ul>
+  <li><strong>"Por que Airflow e não outra ferramenta de orquestração?"</strong> — tenha uma resposta que mencione o que você avaliou, não apenas "porque é popular".</li>
+  <li><strong>"Como você garante que o pipeline não falha silenciosamente?"</strong> — mencione logging, tratamento de erro, e o que aconteceria em caso de falha.</li>
+  <li><strong>"Qual foi o maior desafio técnico?"</strong> — tenha uma resposta específica e honesta preparada, não genérica.</li>
+  <li><strong>"Como você decidiu a metodologia de score?"</strong> — conecta com a validação junto à presidência do IDC, mostrando trabalho com stakeholder de negócio.</li>
+</ul>
+<h3>O código aberto como diferencial adicional</h3>
+<div class="callout tip">💡 Mencionar que o projeto é open source e mantido com um time de voluntários (Lutiano, Giovanna) demonstra, além de competência técnica, capacidade de colaboração e liderança técnica informal — um sinal valorizado mesmo em vagas jr, porque indica potencial de crescimento além da execução individual.</div>
+<h3>Evite o erro de subestimar o próprio projeto</h3>
+<p>Um erro comum de candidatos com projetos reais (mas ainda em início de carreira): minimizar o próprio trabalho por comparação com o que grandes empresas fazem em escala. Um projeto real, em produção, resolvendo um problema genuíno — mesmo em escala menor — é mais valioso para avaliação de potencial do que reconhece à primeira vista, especialmente vindo de alguém ainda na graduação.</p>
+`,
+  recap: [
+    'Estrutura de 30-45s: o que faz (impacto primeiro) → como foi construído (stack) → um desafio real resolvido',
+    'Adapte a profundidade técnica à audiência — recrutador de RH quer clareza de impacto, engenheiro sênior quer profundidade de decisão',
+    'Prepare respostas específicas para perguntas de aprofundamento previsíveis (por que essa ferramenta, como evita falha silenciosa)',
+    'Mencionar a natureza open source e colaborativa do projeto é um diferencial além da competência puramente técnica',
+    'Não subestime o valor de um projeto real em produção só porque é menor em escala que projetos corporativos'
+  ],
+  nblm: {
+    subject: 'Como apresentar um projeto pessoal real (pipeline-etransparente) de forma eficaz em diferentes contextos de entrevista.',
+    questions: [
+      'Ajude-me a refinar minha apresentação de 30 segundos do pipeline-etransparente para um recrutador não-técnico.',
+      'Quais perguntas de aprofundamento técnico um entrevistador sênior provavelmente faria sobre esse projeto, e como eu responderia cada uma?',
+      'Como eu conecto a validação da metodologia de score junto à presidência do IDC como evidência de trabalho com stakeholders?',
+      'Por que mencionar que um projeto é open source e colaborativo é um diferencial em uma entrevista jr/pleno?'
+    ],
+    source: 'Sem fonte externa formal necessária — esta aula é aplicada diretamente ao contexto real do pipeline-etransparente do usuário.'
+  },
+  quiz: {
+    q: 'Qual é a estrutura recomendada para apresentar um projeto técnico em 30-45 segundos em entrevista?',
+    options: ['Começar pela stack técnica detalhada, depois explicar o que o projeto faz', 'O que o projeto faz (impacto/negócio primeiro) → como foi construído (stack) → um desafio real resolvido', 'Apenas listar todas as tecnologias usadas em ordem alfabética', 'Focar exclusivamente em métricas de código (linhas, commits, etc.)'],
+    correct: 1,
+    explanation: 'Começar pelo impacto/negócio torna a apresentação compreensível tanto para audiências técnicas quanto não-técnicas antes de entrar em detalhes de stack. Terminar com um desafio real resolvido demonstra profundidade além de apenas seguir um tutorial ou reproduzir um projeto de curso.'
+  }
+},
+{
+  id: 'explicar_medallion', tag: 'important',
+  title: 'Explicar Medallion Architecture de forma simples',
+  eyebrow: 'Aula 5 de 6 · Simplificação técnica',
+  sub: 'Como traduzir um conceito técnico em uma explicação que qualquer pessoa entende',
+  body: `
+<p>Saber explicar Medallion Architecture (ou qualquer conceito técnico) para uma audiência não-técnica é uma habilidade avaliada tanto quanto o conhecimento técnico em si — muitas entrevistas incluem explicitamente uma etapa de "explique X para alguém sem contexto técnico", justamente porque comunicação clara é parte do trabalho real de um engenheiro de dados que interage com áreas de negócio.</p>
+<h3>A analogia da cozinha profissional</h3>
+<div class="callout example">📋 "É como organizar uma cozinha profissional em três estações. A primeira é o recebimento — os ingredientes chegam exatamente como vieram do fornecedor, sem nenhum preparo. A segunda é o preparo — os ingredientes são limpos, cortados, organizados, prontos para cozinhar, mas ainda não é o prato final. A terceira é a finalização — o prato pronto para servir ao cliente. Cada estação existe separada porque, se algo der errado no preparo, você não quer ter que ir comprar tudo de novo — só refazer aquela etapa específica."</div>
+<h3>Por que essa analogia funciona</h3>
+<p>Uma boa analogia técnica precisa de três características: <strong>(1)</strong> mapeamento direto e claro entre os elementos (recebimento=Bronze, preparo=Silver, finalização=Gold), <strong>(2)</strong> familiaridade universal (a maioria das pessoas entende como uma cozinha funciona), <strong>(3)</strong> capacidade de responder "por quê" através da própria analogia (as estações existem separadas por uma razão prática compreensível, não arbitrária).</p>
+<h3>Uma segunda analogia — para reforçar de ângulo diferente</h3>
+<p>Outra opção, mais próxima de um contexto de escritório: "é como o processo de escrever um documento importante — primeiro um rascunho bruto com todas as ideias sem filtro (Bronze), depois uma revisão que organiza e corrige (Silver), e por fim a versão final polida que vai para o cliente (Gold). Guardamos o rascunho original porque, se a revisão introduzir um erro, você quer poder voltar ao ponto de partida sem perder o trabalho original."</p>
+<h3>Adaptando a explicação ao nível de profundidade necessário</h3>
+<p>Para uma explicação de 30 segundos (recrutador, primeira etapa): use só a analogia, sem termos técnicos. Para uma explicação técnica mais profunda (entrevista com engenheiro): use a analogia como abertura, depois aprofunde com termos reais (Bronze/Silver/Gold, particionamento, formatos de arquivo) — a analogia serve de ponte, não substitui a explicação técnica completa quando ela é esperada.</p>
+<h3>Erros comuns ao simplificar demais ou de menos</h3>
+<div class="callout warn">⚠️ Dois erros opostos são comuns: simplificar tanto que a explicação perde precisão técnica real (fazendo parecer que você não entende os detalhes), ou usar jargão técnico mesmo quando pediram uma explicação simples (não demonstrando capacidade real de adaptação de comunicação). O objetivo é calibrar a resposta ao que foi pedido, não sempre usar o nível máximo de detalhe técnico disponível.</div>
+<h3>Praticando a habilidade de simplificar</h3>
+<p>Um exercício útil: pegue 3-4 conceitos técnicos que você domina (Medallion, Star Schema, Window Functions) e escreva uma explicação de uma frase para cada um, sem nenhum termo técnico — isso força clareza de entendimento real, já que você só consegue simplificar bem algo que compreende profundamente.</p>
+`,
+  recap: [
+    'Uma boa analogia técnica tem mapeamento claro, familiaridade universal, e explica o "porquê" através de si mesma',
+    'A analogia da cozinha profissional (recebimento/preparo/finalização) mapeia diretamente para Bronze/Silver/Gold',
+    'Adapte a profundidade da explicação ao contexto — analogia pura para recrutador, analogia + termos técnicos para engenheiro',
+    'Simplificar demais perde precisão; usar jargão quando pediram simplicidade não demonstra adaptação de comunicação',
+    'Praticar explicações de uma frase sem termos técnicos força clareza real de entendimento'
+  ],
+  nblm: {
+    subject: 'Como explicar conceitos técnicos de engenharia de dados (Medallion Architecture) para audiências não-técnicas.',
+    questions: [
+      'Crie 2-3 analogias alternativas para explicar Medallion Architecture além da analogia da cozinha profissional.',
+      'Como eu adapto a mesma explicação de Medallion Architecture para um recrutador de RH vs um engenheiro sênior?',
+      'Ajude-me a criar explicações de uma frase, sem jargão técnico, para Star Schema, Window Functions e Particionamento.',
+      'Quais são os sinais de que estou simplificando demais uma explicação técnica, a ponto de parecer que não entendo os detalhes?'
+    ],
+    source: 'Sem fonte externa formal necessária — esta aula aplica princípios de comunicação técnica aos conceitos já vistos no Módulo de Modelagem de Dados.'
+  },
+  quiz: {
+    q: 'Quais são as três características de uma boa analogia técnica, segundo o framework apresentado nesta aula?',
+    options: ['Ser engraçada, curta, e usar termos técnicos', 'Mapeamento direto entre elementos, familiaridade universal, e capacidade de explicar o "porquê" através de si mesma', 'Ser sempre relacionada a comida', 'Não ter nenhuma relação lógica com o conceito técnico original'],
+    correct: 1,
+    explanation: 'Uma analogia eficaz precisa mapear claramente cada elemento técnico a um elemento da analogia, usar uma referência que a audiência já entende naturalmente, e — o ponto mais frequentemente esquecido — conseguir explicar por que aquela estrutura existe, não só o que ela é.'
+  }
+},
+{
+  id: 'design_pipeline', tag: 'bonus',
+  title: 'Design de pipeline em entrevista técnica',
+  eyebrow: 'Aula 6 de 6 · Entrevista de sistema avançada',
+  sub: 'O nível mais avançado de avaliação técnica — pensar em escala, não só em código',
+  body: `
+<p>Entrevistas de "system design" para dados — mais comuns em vagas pleno/sênior, mas ocasionalmente presentes mesmo em processos jr mais rigorosos — avaliam como você pensa sobre um sistema de dados completo em escala, não apenas se você sabe escrever uma query ou uma DAG isolada.</p>
+<h3>A estrutura típica de uma pergunta de design</h3>
+<div class="callout example">📋 Exemplo: "Desenhe um sistema que processa eventos de clique de um site com 10 milhões de usuários ativos diários, disponibilizando métricas de engajamento atualizadas a cada hora para o time de produto."</div>
+<h3>Um framework de resposta em camadas</h3>
+<ol>
+  <li><strong>Esclarecer escala e requisitos</strong> — volume de eventos por segundo, latência tolerável (hora, minuto, tempo real), consumidores do dado final.</li>
+  <li><strong>Ingestão</strong> — como os eventos chegam ao sistema (streaming via Kafka/Event Hubs, ou batch via arquivo).</li>
+  <li><strong>Processamento</strong> — streaming (Spark Structured Streaming, Flink) vs batch (Airflow + Spark/Pandas), dependendo da latência exigida.</li>
+  <li><strong>Armazenamento</strong> — camadas (Bronze/Silver/Gold), formato de arquivo, estratégia de particionamento.</li>
+  <li><strong>Serving</strong> — como o resultado final chega até quem consome (Data Warehouse consultável, API, dashboard).</li>
+  <li><strong>Observabilidade</strong> — como você saberia se o sistema parou de funcionar ou está atrasado.</li>
+</ol>
+<h3>Streaming vs Batch — a decisão central em escala</h3>
+<div class="callout tip">💡 Uma métrica "atualizada a cada hora" para 10 milhões de usuários diários provavelmente não exige streaming real — um pipeline batch rodando de hora em hora já atenderia o requisito, com muito menos complexidade operacional que uma arquitetura de streaming full-time. Reconhecer quando streaming é realmente necessário (latência de segundos, não horas) versus quando batch é suficiente demonstra maturidade — streaming não é automaticamente "melhor", é mais complexo e caro operacionalmente.</div>
+<h3>Pensando em pontos de falha</h3>
+<p>Uma resposta madura antecipa: o que acontece se a ingestão cair por 1 hora? Os dados são perdidos ou há um buffer/fila que retém e reprocessa depois? O que acontece se uma partição de processamento falhar no meio — o sistema todo trava, ou só aquela partição é reprocessada isoladamente?</p>
+<h3>Escala não é sempre o problema real</h3>
+<div class="callout warn">⚠️ Um erro comum em entrevistas de design: assumir que "mais volume sempre exige mais complexidade tecnológica" (Kafka, Spark distribuído, múltiplas regiões). Muitas vezes, uma solução mais simples (Airflow + Parquet particionado + queries SQL bem otimizadas) atende perfeitamente volumes que parecem grandes à primeira vista — a habilidade real sendo avaliada é reconhecer QUANDO a complexidade adicional se justifica, não aplicá-la por padrão.</div>
+<h3>Conectando com o que você já construiu</h3>
+<p>Mesmo sem experiência em sistemas de escala muito maior, você pode ancorar respostas de design no raciocínio já aplicado no etransparente: por que Medallion, por que particionamento por data, por que uma frequência de execução específica — os mesmos princípios de design escalam conceitualmente, mesmo que os números de volume sejam diferentes.</p>
+`,
+  recap: [
+    'Perguntas de design avaliam pensamento sistêmico completo, não apenas conhecimento de uma ferramenta isolada',
+    'Framework de resposta: esclarecer escala → ingestão → processamento → armazenamento → serving → observabilidade',
+    'Streaming não é automaticamente melhor que batch — a decisão depende da latência realmente exigida pelo requisito',
+    'Antecipar pontos de falha (o que acontece se X cair) demonstra maturidade de engenharia além do "caminho feliz"',
+    'Reconhecer quando uma solução simples é suficiente, em vez de aplicar complexidade por padrão, é a habilidade central avaliada'
+  ],
+  nblm: {
+    subject: 'Entrevistas de design de sistemas de dados em escala: framework de resposta e a decisão streaming vs batch.',
+    questions: [
+      'Explique o framework de 6 camadas para responder uma pergunta de design de pipeline em escala.',
+      'Quando streaming é realmente necessário versus quando batch é suficiente, mesmo em alto volume de dados?',
+      'Como eu demonstraria pensamento sobre pontos de falha em uma resposta de design sem escrever código real?',
+      'Pratique comigo: me dê uma pergunta de design de sistema de dados e me ajude a estruturar a resposta usando o framework.'
+    ],
+    source: 'Cruzar com material introdutório sobre System Design aplicado a Data Engineering — buscar exemplos de perguntas reais de entrevistas de empresas de tecnologia de médio/grande porte.'
+  },
+  quiz: {
+    q: 'Por que assumir que "mais volume sempre exige tecnologia de streaming distribuído" é considerado um erro em entrevistas de design?',
+    options: ['Porque streaming nunca é a resposta correta em nenhum cenário', 'Porque a decisão deveria se basear na latência realmente exigida, e muitas vezes uma solução batch mais simples atende perfeitamente o requisito com menos complexidade operacional', 'Porque ferramentas de streaming são sempre mais baratas', 'Não há problema real com essa suposição'],
+    correct: 1,
+    explanation: 'A habilidade avaliada em entrevistas de design não é conhecer a tecnologia mais complexa disponível, mas saber quando ela realmente se justifica. Um requisito de "atualização a cada hora" raramente exige streaming real — reconhecer isso e propor a solução mais simples que atende o requisito demonstra mais maturidade do que aplicar complexidade por padrão.'
+  }
+}
+];
+
+function htmlToMarkdown(html) {
+  let md = html;
+  md = md.replace(/<div class="callout[^"]*">\s*([\s\S]*?)\s*<\/div>/g, (m, p1) => '> ' + p1.replace(/<[^>]+>/g,'').trim() + '\n\n');
+  md = md.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, p1) => '```sql\n' + p1.trim() + '\n```\n\n');
+  md = md.replace(/<h3>(.*?)<\/h3>/g, '\n### $1\n\n');
+  md = md.replace(/<h4>(.*?)<\/h4>/g, '\n#### $1\n\n');
+  md = md.replace(/<hr>/g, '\n---\n\n');
+  md = md.replace(/<ol>/g, '\n').replace(/<\/ol>/g, '\n');
+  md = md.replace(/<ul>/g, '\n').replace(/<\/ul>/g, '\n');
+  md = md.replace(/<li>\s*([\s\S]*?)\s*<\/li>/g, '- $1\n');
+  md = md.replace(/<p>\s*([\s\S]*?)\s*<\/p>/g, '$1\n\n');
+  md = md.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+  md = md.replace(/<em>(.*?)<\/em>/g, '_$1_');
+  md = md.replace(/<code>(.*?)<\/code>/g, '`$1`');
+  md = md.replace(/<[^>]+>/g, '');
+  md = md.replace(/\n{3,}/g, '\n\n');
+  return md.trim();
+}
+
+function generateLessonMarkdown(lesson, moduleTitle) {
+  let md = `# ${lesson.title}\n\n`;
+  md += `_${lesson.eyebrow} — ${moduleTitle}_\n\n`;
+  md += `> ${lesson.sub}\n\n`;
+  md += '---\n\n';
+  md += htmlToMarkdown(lesson.body);
+  md += '\n\n## Recapitulando\n\n';
+  lesson.recap.forEach(r => md += `- ${r}\n`);
+  md += '\n## Aprofundar no NotebookLM\n\n';
+  md += `**Assunto do notebook:** ${lesson.nblm.subject}\n\n`;
+  md += `**Perguntas-guia para o Audio Overview:**\n\n`;
+  lesson.nblm.questions.forEach(q => md += `- ${q}\n`);
+  md += `\n**Fonte complementar sugerida:** ${lesson.nblm.source}\n\n`;
+  md += '---\n\n';
+  md += `**Teste rápido:** ${lesson.quiz.q}\n\n`;
+  lesson.quiz.options.forEach((o,i) => md += `${i === lesson.quiz.correct ? '- [x]' : '- [ ]'} ${o}\n`);
+  md += `\n> **Explicação:** ${lesson.quiz.explanation}\n`;
+  return md;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return { done: {}, quizResults: {} };
+}
+function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e){} }
+let APP = loadData();
+let currentLesson = 0;
+function showToast(msg, emoji='✅') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${emoji} ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function updateModuleProgress() {
+  const total = LESSONS.length;
+  const done = LESSONS.filter(l => APP.done[l.id]).length;
+  document.getElementById('mod-fill').style.width = Math.round((done/total)*100) + '%';
+  document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
+}
+function renderSidebar() {
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  let html = `<div class="sidebar-title">Módulo 06 · Processos</div>`;
+  html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
+  html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
+  LESSONS.forEach((l, i) => {
+    const done = !!APP.done[l.id];
+    html += `<div class="toc-item ${currentLesson===i+1?'active':''}" onclick="goTo(${i+1})">
+      <span class="toc-num">${i+1}</span>
+      <span class="toc-check ${done?'done':''}">${done?'✓':''}</span>
+      <span class="toc-text">${l.title}</span>
+      <span class="toc-tag ${l.tag}">${tagLabel[l.tag]}</span>
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); window.scrollTo({top:0,behavior:'smooth'}); }
+function toggleDone(lessonId) {
+  APP.done[lessonId] = !APP.done[lessonId];
+  saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function answerQuiz(lessonIdx, chosen) {
+  const lesson = LESSONS[lessonIdx];
+  const opts = document.querySelectorAll(`#qc-opts-${lesson.id} .qc-opt`);
+  if (opts[0].disabled) return;
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === lesson.quiz.correct) o.classList.add('correct');
+    if (i === chosen && chosen !== lesson.quiz.correct) o.classList.add('wrong');
+  });
+  const ok = chosen === lesson.quiz.correct;
+  APP.quizResults[lesson.id] = ok;
+  saveData();
+  const fb = document.getElementById(`qc-fb-${lesson.id}`);
+  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + lesson.quiz.explanation;
+  fb.className = `qc-fb show ${ok ? 'correct' : 'wrong'}`;
+}
+function exportLessonMD(lessonIdx) {
+  const lesson = LESSONS[lessonIdx];
+  const md = generateLessonMarkdown(lesson, "Processos Seletivos");
+  downloadFile(`processos_aula${lessonIdx+1}_${lesson.id}_victor_breia.md`, md);
+  showToast('Markdown exportado! Pronto pro NotebookLM.', '📄');
+}
+function exportModuleMD() {
+  let full = `# Processos Seletivos\n\n_Módulo completo — exportado para estudo no NotebookLM_\n\n---\n\n`;
+  LESSONS.forEach((l) => {
+    full += generateLessonMarkdown(l, "Processos Seletivos");
+    full += '\n\n---\n\n';
+  });
+  downloadFile(`processos_modulo_completo_victor_breia.md`, full);
+  showToast('Markdown do módulo completo exportado!', '📄');
+}
+function renderSummary() {
+  let html = `<div style="margin-bottom:20px">
+    <h2 style="font-size:20px;margin-bottom:6px">Visão geral — Módulo Processos Seletivos</h2>
+    <p style="font-size:13px;color:var(--text2);max-width:620px;line-height:1.6">
+      Este módulo fecha o sistema conectando tudo que você estudou nos módulos anteriores com a aplicação
+      prática em entrevistas — desde testes técnicos de SQL até como apresentar seus projetos reais e
+      responder perguntas de design de sistema em escala.
+    </p>
+  </div><div class="summary-grid">`;
+  LESSONS.forEach((l, i) => {
+    const d = !!APP.done[l.id];
+    const q = APP.quizResults[l.id];
+    html += `<div class="summary-card" onclick="goTo(${i+1})" style="cursor:pointer">
+      <h4>${i+1}. ${l.title} ${d ? '✅' : ''}</h4>
+      <p>${l.sub}${q !== undefined ? (q ? ' · Quiz: acertou ✅' : ' · Quiz: errou — revisar 🔴') : ''}</p>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+const VIDEO_FOLDER = 'processos';
+const VIDEO_PREFIX = 'proc';
+
+function renderVideoBlock(lesson, lessonNum) {
+  if (lesson.video) {
+    const src = lesson.video;
+    return `<div class="video-wrap">
+      <video controls preload="metadata">
+        <source src="${encodeURI(src)}" type="video/mp4">
+        Seu navegador não suporta vídeo HTML5.
+      </video>
+    </div>`;
+  }
+  return `<div class="video-placeholder">
+    <div class="vp-icon">🎬</div>
+    <div class="vp-title">Vídeo ainda não adicionado</div>
+    <div class="vp-sub">Salve como ${VIDEO_FOLDER}/${VIDEO_PREFIX}${lessonNum}.Titulo_Do_Video.mp4</div>
+  </div>`;
+}
+
+function renderContent() {
+  if (currentLesson === 0) { renderSummary(); return; }
+  const lesson = LESSONS[currentLesson - 1];
+  const done = !!APP.done[lesson.id];
+  const idx = currentLesson - 1;
+  const nblmQuestionsHtml = lesson.nblm.questions.map(q => `<li>${q}</li>`).join('');
+  document.getElementById('content').innerHTML = `
+    <div class="lesson-nav">
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson-1})" ${currentLesson<=1?'disabled':''}>← Anterior</button>
+      <span class="lesson-progress-label">Aula ${idx+1} de ${LESSONS.length}</span>
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson+1<=LESSONS.length?currentLesson+1:0})">${currentLesson<LESSONS.length?'Próxima →':'Ver resumo →'}</button>
+    </div>
+    <div class="lesson-card" id="lesson-print-${lesson.id}">
+      <div class="lesson-eyebrow">${lesson.eyebrow}</div>
+      <h2 class="lesson-title">${lesson.title}</h2>
+      <div class="lesson-sub">${lesson.sub}</div>
+      <hr>
+      ${renderVideoBlock(lesson, idx+1)}
+      ${lesson.body}
+      <div class="recap"><div class="rt">Recapitulando</div><ul>${lesson.recap.map(r => `<li>${r}</li>`).join('')}</ul></div>
+      <div class="nblm-box">
+        <div class="nblm-header">🎙️ Aprofundar no NotebookLM</div>
+        <div class="nblm-body">
+          <div class="nblm-field"><div class="nblm-label">Assunto do notebook</div><div class="nblm-value">${lesson.nblm.subject}</div></div>
+          <div class="nblm-field"><div class="nblm-label">Perguntas-guia para o Audio Overview</div><ul class="nblm-questions">${nblmQuestionsHtml}</ul></div>
+          <div class="nblm-field"><div class="nblm-label">Fonte complementar sugerida</div><div class="nblm-value">${lesson.nblm.source}</div></div>
+        </div>
+      </div>
+      <div class="source-box"><strong>Como usar:</strong> exporte esta aula em Markdown, suba no NotebookLM junto com a fonte complementar sugerida, e cole as perguntas-guia no campo de customização do Audio Overview.</div>
+    </div>
+    <div class="mark-bar">
+      <button class="mark-check-btn" onclick="toggleDone('${lesson.id}')"><span class="box ${done?'done':''}">${done?'✓':''}</span>Marcar esta aula como concluída</button>
+      <button class="hdr-btn primary" onclick="exportLessonMD(${idx})">⬇ Exportar esta aula (.md)</button>
+    </div>
+    <div class="quick-check">
+      <div class="qc-title">🧪 Teste rápido de fixação</div>
+      <div class="qc-q">${lesson.quiz.q}</div>
+      ${lesson.quiz.code ? `<div class="test-code">${lesson.quiz.code}</div>` : ''}
+      <div class="qc-opts" id="qc-opts-${lesson.id}">${lesson.quiz.options.map((o,i) => `<button class="qc-opt" onclick="answerQuiz(${idx},${i})">${o}</button>`).join('')}</div>
+      <div class="qc-fb" id="qc-fb-${lesson.id}"></div>
+    </div>
+  `;
+}
+updateModuleProgress();
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>

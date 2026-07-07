@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 02 — Modelagem de Dados | Victor Breia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+:root {
+  --bg:#08080f; --surface:#0f0f18; --surface2:#16161f; --surface3:#1c1c28;
+  --border:#252533; --border2:#2e2e3f;
+  --accent:#8b5cf6; --accent2:#c4b5fd;
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+  --text:#e2e2ee; --text2:#9898b8; --muted:#55556a;
+  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace; --serif:'Source Serif 4',serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
+.header { padding:22px 20px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:60; }
+.breadcrumb { font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px; }
+.breadcrumb a { color:var(--text2); text-decoration:none; }
+.breadcrumb a:hover { color:var(--accent2); }
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.header h1 { font-size:20px; font-weight:700; }
+.header h1 em { color:var(--accent2); font-style:normal; }
+.header-sub { font-size:12px; color:var(--muted); margin-top:4px; max-width:520px; }
+.hdr-actions { display:flex; gap:8px; flex-shrink:0; }
+.hdr-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.hdr-btn:hover { border-color:var(--accent); color:var(--text); }
+.hdr-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.hdr-btn.primary:hover { background:var(--accent2); border-color:var(--accent2); color:#1a1a1f; }
+.overall-bar { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-top:14px; max-width:520px; }
+.overall-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width .5s ease; }
+.overall-label { font-size:11px; color:var(--muted); margin-top:6px; font-family:var(--mono); }
+.layout { display:grid; grid-template-columns:260px 1fr; gap:0; max-width:1180px; margin:0 auto; align-items:start; }
+@media (max-width:860px) { .layout { grid-template-columns:1fr; } .sidebar { position:static !important; } }
+.sidebar { position:sticky; top:130px; padding:22px 14px 40px 20px; max-height:calc(100vh - 130px); overflow-y:auto; }
+.sidebar-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; padding-left:8px; }
+.toc-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; cursor:pointer; margin-bottom:2px; transition:background .15s; border-left:2px solid transparent; }
+.toc-item:hover { background:var(--surface2); }
+.toc-item.active { background:var(--surface2); border-left-color:var(--accent); }
+.toc-num { font-family:var(--mono); font-size:10px; color:var(--muted); width:16px; flex-shrink:0; }
+.toc-check { width:13px; height:13px; border-radius:4px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:8px; }
+.toc-check.done { background:var(--green); border-color:var(--green); color:#000; }
+.toc-text { font-size:12px; color:var(--text2); line-height:1.3; }
+.toc-item.active .toc-text { color:var(--text); font-weight:500; }
+.toc-tag { font-size:9px; padding:1px 5px; border-radius:3px; font-family:var(--mono); margin-left:auto; flex-shrink:0; }
+.toc-tag.critical { background:rgba(248,113,113,.15); color:var(--red); }
+.toc-tag.important { background:rgba(251,191,36,.15); color:var(--yellow); }
+.toc-tag.bonus { background:rgba(163,139,250,.15); color:#a78bfa; }
+.toc-tag.owned { background:rgba(52,211,153,.15); color:var(--green); }
+.toc-divider { height:1px; background:var(--border); margin:14px 8px; }
+.toc-item.summary-item .toc-text { font-weight:600; color:var(--text); }
+.content { padding:24px 24px 80px 20px; min-width:0; }
+.lesson-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap; }
+.lesson-nav-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
+.lesson-nav-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--text); }
+.lesson-nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+.lesson-progress-label { font-size:11px; color:var(--muted); font-family:var(--mono); }
+.lesson-card { background:#fdfcf9; color:#1a1a1f; border-radius:12px; padding:32px 36px; font-family:var(--serif); line-height:1.75; font-size:14.5px; }
+.lesson-eyebrow { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#6b5a8b; margin-bottom:6px; font-weight:500; }
+.lesson-title { font-size:25px; font-weight:700; color:#14141a; margin-bottom:6px; letter-spacing:-.3px; }
+.lesson-sub { font-family:var(--font); font-size:12.5px; color:#6b6b78; margin-bottom:20px; }
+.lesson-card hr { border:none; border-top:1px solid #e5e0d5; margin:20px 0; }
+.lesson-card h3 { font-family:var(--font); font-size:15px; font-weight:700; color:#14141a; margin:22px 0 10px; }
+.lesson-card h4 { font-family:var(--font); font-size:13px; font-weight:600; color:#2a2a30; margin:14px 0 6px; }
+.lesson-card p { margin-bottom:12px; color:#2a2a30; }
+.lesson-card ul, .lesson-card ol { margin:8px 0 14px 20px; }
+.lesson-card li { margin-bottom:6px; color:#2a2a30; }
+.lesson-card strong { color:#14141a; font-weight:700; }
+.lesson-card code { font-family:var(--mono); background:#ece5f7; color:#5b3d8a; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+.lesson-card pre { background:#14141a; color:#d8dce8; border-radius:8px; padding:14px 16px; overflow-x:auto; margin:12px 0 16px; font-family:var(--mono); font-size:12px; line-height:1.6; }
+.lesson-card pre code { background:none; color:inherit; padding:0; }
+.lesson-card table { border-collapse:collapse; width:100%; margin:12px 0; font-size:13px; }
+.lesson-card table td, .lesson-card table th { padding:8px; border-top:1px solid #e5e0d5; text-align:left; }
+.lesson-card table tr:first-child td, .lesson-card table th { background:#ece5f7; font-weight:600; border-top:none; }
+.callout { padding:10px 14px; border-radius:0 7px 7px 0; margin:14px 0; font-family:var(--font); font-size:12.5px; border-left:3px solid #6366f1; background:#eef0fb; color:#3a3a5c; }
+.callout.warn { background:#fdf3e7; border-left-color:#d97706; color:#6b4a10; }
+.callout.tip { background:#eafaf3; border-left-color:#10b981; color:#0d5e42; }
+.nblm-box { margin-top:24px; border-radius:10px; overflow:hidden; border:1px solid #d8d0be; }
+.nblm-header { background:#14141a; color:#fff; padding:10px 16px; font-family:var(--font); font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.nblm-body { padding:16px; background:#f7f5ee; }
+.nblm-field { margin-bottom:12px; }
+.nblm-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#8b7a5e; margin-bottom:4px; font-weight:600; }
+.nblm-value { font-family:var(--font); font-size:12.5px; color:#2a2a30; }
+.nblm-questions { list-style:none; margin:0; padding:0; }
+.nblm-questions li { background:#fff; border:1px solid #e5e0d5; border-radius:6px; padding:8px 12px; margin-bottom:6px; font-size:12px; font-family:var(--font); color:#2a2a30; }
+.source-box { margin-top:16px; padding:10px 16px; background:#f2f0e8; border-radius:8px; font-family:var(--font); font-size:11.5px; color:#6b6b78; }
+.source-box strong { color:#3a3a44; }
+.recap { margin-top:18px; padding:14px 16px; background:#14141a; color:#fdfcf9; border-radius:8px; font-family:var(--font); }
+.recap .rt { font-size:12px; font-weight:700; margin-bottom:8px; color:#c4b5fd; text-transform:uppercase; letter-spacing:.06em; }
+.recap ul { margin:0 0 0 16px; }
+.recap li { font-size:12.5px; margin-bottom:5px; color:#e2e2ee; }
+.quick-check { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-top:16px; }
+.qc-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.qc-q { font-size:13px; margin-bottom:10px; line-height:1.5; }
+.qc-opts { display:grid; gap:6px; }
+.qc-opt { padding:8px 12px; border-radius:7px; border:1.5px solid var(--border2); background:transparent; color:var(--text); font-family:var(--font); font-size:12px; cursor:pointer; text-align:left; transition:all .15s; }
+.qc-opt:hover:not(:disabled) { border-color:var(--accent); background:rgba(139,92,246,.08); }
+.qc-opt.correct { border-color:var(--green); background:rgba(52,211,153,.1); color:var(--green); }
+.qc-opt.wrong { border-color:var(--red); background:rgba(248,113,113,.1); color:var(--red); }
+.qc-opt:disabled { cursor:default; }
+.qc-fb { margin-top:8px; padding:8px 12px; border-radius:7px; font-size:12px; display:none; }
+.qc-fb.show { display:block; }
+.qc-fb.correct { background:rgba(52,211,153,.08); color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+.qc-fb.wrong { background:rgba(248,113,113,.08); color:#fca5a5; border:1px solid rgba(248,113,113,.2); }
+.mark-bar { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+.mark-check-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; }
+.mark-check-btn .box { width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:10px; }
+.mark-check-btn .box.done { background:var(--green); border-color:var(--green); color:#000; }
+.summary-grid { display:grid; gap:10px; }
+.summary-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+.summary-card h4 { font-size:13px; margin-bottom:4px; }
+.summary-card p { font-size:12px; color:var(--text2); }
+.toast { position:fixed; bottom:20px; right:20px; background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 14px; font-size:12px; display:flex; align-items:center; gap:8px; transform:translateY(60px); opacity:0; transition:all .25s ease; z-index:300; max-width:260px; }
+.toast.show { transform:translateY(0); opacity:1; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.video-wrap { margin-bottom:20px; border-radius:10px; overflow:hidden; background:#000; }
+.video-wrap video { width:100%; display:block; max-height:480px; background:#000; }
+.video-placeholder {
+  margin-bottom:20px; border-radius:10px; border:1.5px dashed var(--border2);
+  background:var(--surface2); padding:28px 20px; text-align:center;
+}
+.video-placeholder .vp-icon { font-size:26px; margin-bottom:8px; }
+.video-placeholder .vp-title { font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
+.video-placeholder .vp-sub { font-family:var(--mono); font-size:11px; color:var(--muted); }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="breadcrumb"><a href="data-engineer-study-system.html">← Voltar ao painel geral</a></div>
+  <div class="header-top">
+    <div>
+      <h1>Módulo 02 · <em>Modelagem de Dados</em></h1>
+      <div class="header-sub">7 aulas individuais — do Star Schema à Medallion Architecture. O que separa engenheiros de analistas.</div>
+    </div>
+    <div class="hdr-actions"><button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button></div>
+  </div>
+  <div class="overall-bar"><div class="overall-fill" id="mod-fill" style="width:0%"></div></div>
+  <div class="overall-label" id="mod-label">0 / 7 subtópicos concluídos</div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'de_module_modelagem_v1';
+
+const LESSONS = [
+{
+  id: 'medallion', tag: 'owned',
+  title: 'Medallion Architecture (Bronze/Silver/Gold)',
+  eyebrow: 'Aula 1 de 7 · Arquitetura de camadas',
+  sub: 'O padrão que organiza um Data Lake em estágios de confiabilidade crescente',
+  body: `
+<p>Medallion Architecture é um padrão de organização de dados dentro de um Data Lake em três camadas progressivas de qualidade e confiabilidade, popularizado pela comunidade Databricks/Spark, mas aplicável em qualquer stack — incluindo Azure Data Lake com Airflow, como no seu pipeline-etransparente.</p>
+<h3>As três camadas, em detalhe</h3>
+<p><strong>Bronze</strong> — dado bruto, exatamente como chegou da fonte (API, scraping, upload manual). Sem nenhuma transformação, sem limpeza, sem validação de schema. Serve como registro histórico auditável e ponto de reprocessamento: se uma regra de negócio mudar ou um bug for encontrado na Silver, você reprocessa a partir da Bronze sem precisar re-extrair da fonte original.</p>
+<p><strong>Silver</strong> — dado limpo, validado e padronizado. Tipos corrigidos, duplicatas removidas, nulos tratados, nomes de coluna padronizados. Ainda granular (uma linha por evento/registro), mas já confiável o suficiente para ser consultado por outras equipes técnicas.</p>
+<p><strong>Gold</strong> — dado agregado e modelado especificamente para consumo: dashboards, relatórios, modelos de Machine Learning. Geralmente já estruturado como Star Schema (fatos e dimensões), otimizado para leitura analítica.</p>
+<pre><code>storage/
+  bronze/
+    ongs_raw_2026_01.json      -- exatamente como veio do scraping
+  silver/
+    ongs_clean.parquet         -- tipado, sem duplicatas, validado
+  gold/
+    score_transparencia.parquet -- agregado, pronto para o dashboard</code></pre>
+<h3>Por que não processar tudo direto na camada final?</h3>
+<div class="callout tip">💡 Essa é a pergunta mais comum em entrevista sobre o tema. A resposta: separar em camadas permite reprocessamento sem re-extrair da fonte, isolamento de falhas (um bug na transformação não corrompe o dado bruto), e auditoria histórica de exatamente o que foi recebido em cada momento.</div>
+<h3>Idempotência entre camadas</h3>
+<p>Um pipeline bem desenhado entre camadas é idempotente: rodar o processo Bronze→Silver duas vezes para o mesmo período não deve duplicar dados nem gerar resultado diferente. Isso geralmente é resolvido com estratégias de <em>upsert</em> (inserir ou atualizar) em vez de <em>append</em> puro, ou particionando por data de processamento e sobrescrevendo a partição inteira a cada execução.</p>
+<h3>Onde a Medallion se conecta com Orquestração</h3>
+<p>Cada camada tipicamente corresponde a uma ou mais tasks dentro de uma DAG do Airflow — uma task de extração escreve na Bronze, uma task de limpeza lê da Bronze e escreve na Silver, e assim por diante. Isso naturalmente cria pontos de checkpoint: se a task de limpeza falhar, você não perde o dado bruto já extraído.</p>
+<h3>Medallion não é exclusivo de nenhuma cloud ou ferramenta</h3>
+<p>Apesar de populaizada pelo ecossistema Databricks, a arquitetura em si é um padrão conceitual — pode ser implementada com Azure Data Lake + Airflow + Pandas (como no seu caso), com AWS S3 + Glue, ou com qualquer outra combinação de storage e processamento.</p>
+`,
+  recap: [
+    'Bronze = dado bruto, sem transformação; Silver = limpo e validado; Gold = agregado para consumo',
+    'Separar em camadas permite reprocessamento sem re-extrair da fonte e isola falhas',
+    'Idempotência entre camadas evita duplicação ao reprocessar o mesmo período',
+    'Cada camada geralmente corresponde a uma ou mais tasks numa DAG de orquestração',
+    'Medallion é um padrão conceitual, não exclusivo de nenhuma cloud ou ferramenta específica'
+  ],
+  nblm: {
+    subject: 'Medallion Architecture: as camadas Bronze, Silver e Gold, e o raciocínio de design por trás da separação.',
+    questions: [
+      'Por que separar dados em Bronze/Silver/Gold em vez de processar tudo direto na camada final?',
+      'Como a Medallion Architecture se conecta com a orquestração de pipelines no Airflow?',
+      'O que significa idempotência entre camadas, e como isso é implementado na prática?',
+      'Compare a Medallion Architecture com a alternativa mais simples de "uma camada só" — quais problemas reais ela evita?'
+    ],
+    source: 'Cruzar com o material oficial da Databricks sobre Medallion Architecture (databricks.com/glossary/medallion-architecture).'
+  },
+  quiz: {
+    q: 'Qual é o principal argumento para manter a camada Bronze mesmo depois de já ter a Silver processada?',
+    options: ['Bronze é mais rápida de consultar', 'Bronze permite reprocessamento sem re-extrair da fonte original, servindo como histórico auditável', 'Bronze ocupa menos espaço que a Silver', 'Bronze é obrigatória por lei em dados sensíveis'],
+    correct: 1,
+    explanation: 'A Bronze funciona como um seguro: se uma regra de transformação mudar ou um bug for encontrado, você reprocessa a partir dela sem precisar re-extrair (que pode ser caro, como em scraping) da fonte original.'
+  }
+},
+{
+  id: 'star', tag: 'critical',
+  title: 'Star Schema — fatos e dimensões',
+  eyebrow: 'Aula 2 de 7 · Modelagem dimensional',
+  sub: 'O modelo mais usado em Data Warehousing — e por que ele existe',
+  body: `
+<p>Star Schema é o modelo dimensional mais usado em Data Warehousing, formalizado por Ralph Kimball. A ideia central: separar <strong>o que aconteceu</strong> (fato) de <strong>o contexto sobre quem/onde/quando/como</strong> (dimensão) — permitindo consultas analíticas rápidas e intuitivas.</p>
+<h3>Tabela Fato</h3>
+<p>Contém as métricas numéricas do negócio (valor, quantidade, duração) e chaves estrangeiras apontando para as dimensões relevantes. Tende a ter muitas linhas — uma linha por evento de negócio (uma venda, um clique, uma transação).</p>
+<pre><code>-- fato_vendas
+id_venda | id_produto (FK) | id_cliente (FK) | id_data (FK) | valor | quantidade</code></pre>
+<h3>Tabela Dimensão</h3>
+<p>Contém atributos descritivos usados para filtrar, agrupar e dar contexto às métricas do fato. Tende a ter menos linhas, mas mais colunas descritivas.</p>
+<pre><code>-- dim_produto
+id_produto (PK) | nome | categoria | marca | preco_lista
+
+-- dim_data
+id_data (PK) | data_completa | dia_semana | mes | trimestre | ano | eh_feriado</code></pre>
+<h3>Por que "Star" (estrela)</h3>
+<p>O nome vem do desenho visual: uma tabela fato central conectada a várias dimensões ao redor, como os raios de uma estrela. Essa estrutura simples é o que torna as queries analíticas intuitivas — você praticamente sempre faz JOIN do fato com uma ou mais dimensões:</p>
+<pre><code>SELECT d.mes, p.categoria, SUM(f.valor) AS total_vendido
+FROM fato_vendas f
+JOIN dim_data d ON d.id_data = f.id_data
+JOIN dim_produto p ON p.id_produto = f.id_produto
+GROUP BY d.mes, p.categoria;</code></pre>
+<h3>Dimensão Data — um caso especial e onipresente</h3>
+<p>Praticamente todo Star Schema tem uma <code>dim_data</code>, mesmo que pareça redundante com um campo de data simples. Ela existe porque permite atributos derivados (dia da semana, trimestre, feriado) sem recalculá-los toda vez na query — e esses atributos são extremamente comuns em análises de negócio ("vendas por dia da semana", "comparação com o mesmo trimestre do ano anterior").</p>
+<h3>Granularidade — a decisão mais importante do fato</h3>
+<p>Antes de desenhar uma tabela fato, é preciso definir sua granularidade: o que representa exatamente uma linha? "Um item de um pedido" é diferente de "um pedido inteiro" — a primeira granularidade permite analisar produtos individualmente dentro de um pedido; a segunda, não. Errar a granularidade é o erro de design mais caro de corrigir depois, porque frequentemente exige reconstruir o fato do zero.</p>
+<div class="callout warn">⚠️ Regra prática: escolha sempre a granularidade mais fina que faça sentido para o negócio. É fácil agregar de fino para grosso numa query; é difícil (ou impossível, se o detalhe já foi perdido) desagregar de grosso para fino depois.</div>
+`,
+  recap: [
+    'Fato = métricas numéricas + FKs para dimensões; Dimensão = atributos descritivos',
+    'O desenho em "estrela" reflete o padrão de JOIN: fato central ligado a dimensões ao redor',
+    'dim_data é quase universal — evita recalcular atributos derivados (trimestre, feriado) em toda query',
+    'Granularidade define o que representa uma linha do fato — a decisão de design mais cara de errar',
+    'Prefira sempre a granularidade mais fina que fizer sentido; agregar depois é fácil, desagregar não é'
+  ],
+  nblm: {
+    subject: 'Star Schema: tabelas fato e dimensão, granularidade, e o papel da dimensão de data.',
+    questions: [
+      'Explique com um exemplo de e-commerce a diferença entre granularidade "por pedido" e "por item de pedido".',
+      'Por que praticamente todo Star Schema tem uma dim_data, mesmo parecendo redundante com um campo de data simples?',
+      'Desenhe (em texto) um Star Schema simples para um sistema de streaming de música, com fato e pelo menos 3 dimensões.',
+      'Quais são os custos de corrigir um erro de granularidade depois que o fato já está em produção?'
+    ],
+    source: 'Cruzar com o material do Kimball Group sobre The Data Warehouse Toolkit (kimballgroup.com/data-warehouse-business-intelligence-resources/books/data-warehouse-dw-toolkit/).'
+  },
+  quiz: {
+    q: 'Por que a decisão de granularidade da tabela fato é considerada a mais cara de errar?',
+    options: ['Porque muda o nome das colunas', 'Porque agregar de fino para grosso é fácil, mas desagregar de grosso para fino pode ser impossível se o detalhe já foi perdido', 'Porque afeta apenas a performance, nunca a análise possível', 'Granularidade não afeta o design do fato'],
+    correct: 1,
+    explanation: 'Se a tabela fato já agrega "por pedido" e depois você precisa analisar produtos individuais dentro do pedido, esse detalhe pode já ter sido perdido — exigindo reconstruir o fato do zero a partir da fonte original, se ainda existir.'
+  }
+},
+{
+  id: 'snowflake', tag: 'important',
+  title: 'Snowflake Schema — quando usar vs Star',
+  eyebrow: 'Aula 3 de 7 · Variações de modelagem',
+  sub: 'A variação normalizada do Star Schema — e o trade-off que ela representa',
+  body: `
+<p>Snowflake Schema é uma variação do Star Schema onde as tabelas de dimensão são normalizadas em sub-tabelas relacionadas, em vez de manter todos os atributos descritivos em uma única tabela plana.</p>
+<h3>Star vs Snowflake — a diferença visual</h3>
+<pre><code>-- STAR: dimensão desnormalizada (tudo em uma tabela)
+dim_produto: id_produto | nome | categoria | subcategoria | marca
+
+-- SNOWFLAKE: dimensão normalizada em sub-tabelas
+dim_produto: id_produto | nome | id_categoria (FK) | id_marca (FK)
+dim_categoria: id_categoria | nome_categoria | id_subcategoria (FK)
+dim_subcategoria: id_subcategoria | nome_subcategoria
+dim_marca: id_marca | nome_marca</code></pre>
+<p>No Snowflake, para saber a categoria de um produto, você precisa de um JOIN adicional através de <code>dim_categoria</code> — daí o nome, porque o desenho visual se ramifica como os cristais de um floco de neve, em vez de manter o formato simples de estrela.</p>
+<h3>O trade-off central</h3>
+<p>Normalizar as dimensões reduz redundância de armazenamento (o nome de uma categoria fica escrito uma única vez, não repetido em cada produto), mas aumenta a quantidade de JOINs necessários em cada query analítica — o que geralmente piora a performance de leitura e a simplicidade das queries.</p>
+<div class="callout tip">💡 Em Data Warehouses analíticos, onde o objetivo principal é performance de leitura para relatórios e dashboards, o Star Schema costuma ser preferido — o espaço extra de armazenamento raramente é um problema real com os custos de storage atuais, mas a complexidade de múltiplos JOINs em toda query analítica é um custo real e recorrente.</div>
+<h3>Quando Snowflake ainda faz sentido</h3>
+<p>Snowflake pode ser justificado quando: a dimensão tem hierarquias profundas e claramente definidas que mudam com frequência independente (por exemplo, uma estrutura organizacional com muitos níveis), ou quando o volume de dados de dimensão é grande o suficiente para que a redundância do Star Schema realmente pese no armazenamento e na manutenção de consistência.</p>
+<h3>Uma decisão que raramente é tudo-ou-nada</h3>
+<p>Na prática, muitos Data Warehouses usam um modelo híbrido: a maioria das dimensões desnormalizadas (Star), mas uma ou duas dimensões específicas com hierarquia complexa normalizadas (Snowflake) — otimizando caso a caso em vez de aplicar uma regra rígida ao esquema inteiro.</p>
+`,
+  recap: [
+    'Snowflake normaliza dimensões em sub-tabelas relacionadas; Star mantém tudo em uma tabela plana',
+    'Trade-off: Snowflake reduz redundância de armazenamento, mas exige mais JOINs por query',
+    'Star Schema é preferido quando performance de leitura analítica é a prioridade',
+    'Snowflake se justifica em hierarquias profundas e voláteis, ou dimensões muito grandes',
+    'Modelos híbridos (Star na maioria, Snowflake pontual) são comuns na prática'
+  ],
+  nblm: {
+    subject: 'Snowflake Schema comparado ao Star Schema: normalização de dimensões e o trade-off de performance.',
+    questions: [
+      'Desenhe (em texto) a mesma dimensão de produto em versão Star e versão Snowflake, mostrando as tabelas resultantes.',
+      'Por que o Star Schema costuma ser preferido em Data Warehouses analíticos, apesar da redundância?',
+      'Em que cenário real um Snowflake Schema resolveria um problema que o Star Schema não resolveria bem?',
+      'O que significa um "modelo híbrido" entre Star e Snowflake, e quando isso é uma boa prática?'
+    ],
+    source: 'Cruzar com material comparativo sobre Star Schema vs Snowflake Schema em dbt Docs (docs.getdbt.com/docs/build/models) e Kimball Group.'
+  },
+  quiz: {
+    q: 'Qual é o principal custo de usar um Snowflake Schema em vez de Star Schema?',
+    options: ['Ocupa mais espaço em disco', 'Exige mais JOINs em cada query analítica, o que geralmente piora performance de leitura', 'Não permite usar chaves estrangeiras', 'É incompatível com arquitetura Medallion'],
+    correct: 1,
+    explanation: 'A normalização das dimensões em sub-tabelas reduz redundância de armazenamento, mas exige que queries analíticas façam JOINs adicionais para reconstruir os atributos completos — o oposto do Star Schema, que já tem tudo em uma única tabela de dimensão.'
+  }
+},
+{
+  id: 'scd', tag: 'important',
+  title: 'SCD Tipo 1, 2 e 3',
+  eyebrow: 'Aula 4 de 7 · Histórico de dimensões',
+  sub: 'O que fazer quando um atributo de dimensão muda com o tempo',
+  body: `
+<p>Slowly Changing Dimensions (SCD) resolve um problema muito comum: o que fazer quando um atributo de uma dimensão muda — por exemplo, um cliente muda de cidade, ou um produto muda de categoria. A resposta depende de uma pergunta de negócio: você precisa saber o valor histórico (como era antes) ou só o valor atual importa?</p>
+<h3>SCD Tipo 1 — sobrescrever</h3>
+<p>A abordagem mais simples: quando o atributo muda, você simplesmente atualiza o valor na linha existente, perdendo o valor anterior.</p>
+<pre><code>-- Antes: id_cliente=1, nome=Ana, cidade=Rio
+UPDATE dim_cliente SET cidade = 'São Paulo' WHERE id_cliente = 1;
+-- Depois: id_cliente=1, nome=Ana, cidade=São Paulo (Rio não existe mais em lugar nenhum)</code></pre>
+<div class="callout warn">⚠️ Toda análise histórica que já foi feita usando esse atributo passa a "mentir" retroativamente — se você somar vendas por cidade do ano passado, as vendas antigas da Ana em "Rio" agora aparecem como se sempre tivessem sido em "São Paulo".</div>
+<h3>SCD Tipo 2 — preservar histórico completo</h3>
+<p>A abordagem mais usada quando o histórico importa: em vez de atualizar, você insere uma <strong>nova linha</strong> com o valor novo, e marca a linha antiga como "não mais atual", geralmente com colunas de data de início/fim e uma flag.</p>
+<pre><code>id_cliente | nome | cidade | data_inicio  | data_fim    | atual
+1          | Ana  | Rio    | 2024-01-01   | 2025-06-01  | false
+1          | Ana  | SP     | 2025-06-01   | NULL        | true</code></pre>
+<p>Agora, uma query que junta o fato de vendas com essa dimensão usando a data da venda (em vez de sempre pegar a linha "atual") reflete corretamente o histórico: vendas antigas continuam associadas a "Rio", vendas novas a "SP".</p>
+<pre><code>SELECT dc.cidade, SUM(f.valor)
+FROM fato_vendas f
+JOIN dim_cliente dc ON dc.id_cliente = f.id_cliente
+  AND f.data_venda BETWEEN dc.data_inicio AND COALESCE(dc.data_fim, '9999-12-31')
+GROUP BY dc.cidade;</code></pre>
+<h3>SCD Tipo 3 — manter só o valor anterior</h3>
+<p>Um meio-termo raramente usado: em vez de criar uma nova linha, você adiciona uma coluna extra para guardar apenas o valor <em>imediatamente anterior</em>, sem histórico completo de todas as mudanças.</p>
+<pre><code>id_cliente | nome | cidade_atual | cidade_anterior
+1          | Ana  | SP           | Rio</code></pre>
+<p>Isso só funciona bem quando você sabe, de antemão, que só precisa comparar "antes vs depois" da mudança mais recente — qualquer mudança adicional sobrescreve a anterior, perdendo o histórico mais antigo.</p>
+<h3>Escolhendo entre os três</h3>
+<div class="callout tip">💡 Pergunta prática para decidir: "se esse atributo mudar, alguém vai querer analisar dados históricos considerando o valor de <em>na época</em>, ou só o valor atual importa daqui pra frente?" Se a resposta é "histórico importa", SCD Tipo 2 é quase sempre a escolha certa em produção.</div>
+`,
+  recap: [
+    'SCD Tipo 1 sobrescreve o valor antigo — simples, mas perde histórico e distorce análises passadas',
+    'SCD Tipo 2 cria uma nova linha com datas de validade, preservando o histórico completo',
+    'SCD Tipo 3 mantém apenas o valor "anterior" — meio-termo raramente usado na prática',
+    'Joins com dimensões SCD Tipo 2 devem usar a data do evento, não sempre a linha "atual"',
+    'A pergunta certa para decidir o tipo: "análises históricas precisam refletir o valor de na época?"'
+  ],
+  nblm: {
+    subject: 'Slowly Changing Dimensions (SCD): Tipo 1, 2 e 3, e como preservar histórico em dimensões.',
+    questions: [
+      'Explique com um exemplo numérico como SCD Tipo 1 distorce retroativamente uma análise histórica.',
+      'Desenhe o fluxo completo de como uma nova linha SCD Tipo 2 é criada quando um atributo muda.',
+      'Por que o JOIN entre fato e uma dimensão SCD Tipo 2 precisa considerar a data do evento, e não a flag "atual"?',
+      'Em que cenário raro o SCD Tipo 3 seria suficiente, sem precisar do histórico completo do Tipo 2?'
+    ],
+    source: 'Cruzar com o material do Kimball Group sobre Slowly Changing Dimensions (kimballgroup.com).'
+  },
+  quiz: {
+    q: 'Por que um JOIN entre uma tabela fato e uma dimensão SCD Tipo 2 deve considerar a data do evento em vez de sempre usar a linha marcada como "atual"?',
+    options: ['Porque a linha "atual" nunca existe em SCD Tipo 2', 'Porque usar sempre a linha atual faria vendas antigas aparecerem associadas ao valor mais recente do atributo, distorcendo o histórico', 'Porque SCD Tipo 2 não permite JOIN com tabela fato', 'Porque a coluna "atual" é apenas decorativa'],
+    correct: 1,
+    explanation: 'O objetivo do SCD Tipo 2 é justamente preservar o valor histórico correto para cada período. Se o JOIN sempre pegasse a linha "atual", perderíamos exatamente o benefício de ter capturado o histórico — as vendas antigas apareceriam com o valor mais recente do atributo.'
+  }
+},
+{
+  id: 'normalizacao', tag: 'critical',
+  title: 'Normalização (1FN, 2FN, 3FN)',
+  eyebrow: 'Aula 5 de 7 · Fundamentos de modelagem relacional',
+  sub: 'Como sistemas transacionais evitam redundância — e por que Data Warehouses fazem o oposto',
+  body: `
+<p>Normalização é o processo de organizar tabelas em um banco relacional para reduzir redundância de dados, principalmente em sistemas transacionais (OLTP) como o backend de um e-commerce ou de um sistema de cadastro. As três primeiras formas normais são a base conceitual mais cobrada.</p>
+<h3>Primeira Forma Normal (1FN)</h3>
+<p>Toda coluna deve conter um valor atômico — sem listas, arrays ou valores compostos em uma única célula.</p>
+<pre><code>-- VIOLA 1FN: telefones como lista numa única coluna
+id_cliente | nome | telefones
+1          | Ana  | "11999990000, 11988880000"
+
+-- RESPEITA 1FN: uma linha por telefone
+id_cliente | nome | telefone
+1          | Ana  | 11999990000
+1          | Ana  | 11988880000</code></pre>
+<h3>Segunda Forma Normal (2FN)</h3>
+<p>Além de estar em 1FN, toda coluna não-chave deve depender da <strong>chave primária inteira</strong> — relevante especificamente quando a chave primária é composta (mais de uma coluna).</p>
+<pre><code>-- VIOLA 2FN: 'nome_produto' depende só de id_produto, não da chave composta inteira
+pedido_item: id_pedido, id_produto, nome_produto, quantidade
+-- (chave composta: id_pedido + id_produto)
+
+-- RESPEITA 2FN: nome_produto vai para uma tabela separada, dependendo só de id_produto
+pedido_item: id_pedido, id_produto, quantidade
+produto: id_produto, nome_produto</code></pre>
+<h3>Terceira Forma Normal (3FN)</h3>
+<p>Além de estar em 2FN, nenhuma coluna não-chave pode depender de <em>outra coluna não-chave</em> — eliminando dependências transitivas.</p>
+<pre><code>-- VIOLA 3FN: cidade_estado depende de cidade, que não é chave
+cliente: id_cliente, nome, cidade, cidade_estado
+
+-- RESPEITA 3FN: informação de estado fica associada à cidade numa tabela própria
+cliente: id_cliente, nome, id_cidade
+cidade: id_cidade, nome_cidade, estado</code></pre>
+<h3>O propósito prático da normalização</h3>
+<p>Evitar anomalias de atualização: sem normalização, corrigir o nome de uma cidade exigiria atualizar múltiplas linhas de clientes que moram nela — esquecer uma linha gera inconsistência de dados. A normalização garante que cada fato seja armazenado em um único lugar.</p>
+<h3>O ponto que costuma confundir: Data Warehouses são desnormalizados de propósito</h3>
+<div class="callout warn">⚠️ Um Star Schema (visto na Aula 2) é propositalmente <strong>desnormalizado</strong> em relação às regras acima — uma dimensão de produto guarda categoria, marca e outros atributos todos juntos, mesmo que isso repita informação. Essa é uma escolha consciente: sistemas OLTP priorizam integridade e evitar duplicação (muitas escritas pequenas); Data Warehouses priorizam performance de leitura analítica (poucas escritas, muitas leituras agregando grandes volumes) — para isso, menos JOINs é mais importante que evitar redundância.</div>
+<h3>Como isso aparece em entrevista</h3>
+<p>Uma pergunta comum: "por que seu Data Warehouse não está na 3FN?". A resposta correta demonstra que você entende que normalização e modelagem dimensional resolvem problemas diferentes — não é um erro, é uma escolha de design apropriada ao contexto de uso.</p>
+`,
+  recap: [
+    '1FN: valores atômicos, sem listas ou valores compostos em uma célula',
+    '2FN: 1FN + toda coluna não-chave depende da chave primária inteira (relevante em chaves compostas)',
+    '3FN: 2FN + nenhuma coluna não-chave depende de outra coluna não-chave (sem dependências transitivas)',
+    'Normalização evita anomalias de atualização em sistemas transacionais (OLTP)',
+    'Data Warehouses são desnormalizados de propósito — trade-off consciente para priorizar performance de leitura'
+  ],
+  nblm: {
+    subject: 'Normalização de bancos de dados: 1FN, 2FN, 3FN, e por que Data Warehouses fazem o oposto de propósito.',
+    questions: [
+      'Dê um exemplo de tabela que viola cada uma das três formas normais, e mostre como corrigir cada uma.',
+      'O que é uma "anomalia de atualização" e como a normalização evita esse problema?',
+      'Por que um Star Schema em um Data Warehouse é considerado desnormalizado de propósito, e isso é um problema?',
+      'Como eu explicaria essa diferença (OLTP normalizado vs DW desnormalizado) para um entrevistador de forma concisa?'
+    ],
+    source: 'Cruzar com material de referência acadêmica sobre Formas Normais em bancos de dados relacionais (qualquer material de banco de dados de graduação em Ciência da Computação é uma boa fonte complementar aqui).'
+  },
+  quiz: {
+    q: 'Por que um Star Schema em um Data Warehouse costuma violar a 3ª Forma Normal de propósito?',
+    options: ['Porque foi mal desenhado por erro', 'Porque desnormalizar as dimensões reduz a quantidade de JOINs necessários, priorizando performance de leitura analítica sobre economia de espaço', 'Porque bancos analíticos não suportam chaves estrangeiras', 'A 3FN não se aplica a nenhum tipo de banco de dados'],
+    correct: 1,
+    explanation: 'É uma escolha de design consciente: sistemas OLTP normalizam para evitar anomalias de atualização em muitas escritas pequenas; Data Warehouses desnormalizam para reduzir JOINs em consultas analíticas de grande volume, onde a leitura é a operação dominante.'
+  }
+},
+{
+  id: 'datavault', tag: 'bonus',
+  title: 'Data Vault 2.0 — conceitos básicos',
+  eyebrow: 'Aula 6 de 7 · Modelagem avançada',
+  sub: 'Uma alternativa ao Star Schema para ambientes com múltiplas fontes e mudanças frequentes de escopo',
+  body: `
+<p>Data Vault 2.0 é uma metodologia de modelagem de dados voltada para Data Warehouses que precisam integrar múltiplas fontes de dados heterogêneas e evoluir rapidamente sem quebrar o histórico já carregado. É um tema mais avançado — mencionar que você conhece o conceito já demonstra visão além do Star Schema tradicional.</p>
+<h3>O problema que o Data Vault resolve</h3>
+<p>O Star Schema tradicional assume um modelo de negócio relativamente estável. Em ambientes onde novas fontes de dados aparecem com frequência, ou onde regras de negócio mudam rapidamente, alterar um Star Schema já em produção pode ser custoso e arriscado. Data Vault separa estrutura de negócio (que muda pouco) de contexto descritivo (que muda com frequência), tornando o modelo mais resiliente a mudanças.</p>
+<h3>Os três blocos de construção</h3>
+<ul>
+  <li><strong>Hub</strong> — armazena apenas a lista de chaves de negócio únicas de uma entidade (por exemplo, todos os IDs de cliente que já existiram), sem nenhum atributo descritivo.</li>
+  <li><strong>Link</strong> — representa relacionamentos entre Hubs (por exemplo, a relação entre cliente e pedido).</li>
+  <li><strong>Satellite</strong> — armazena os atributos descritivos e o histórico de mudanças de um Hub ou Link, com data de carregamento e origem da informação.</li>
+</ul>
+<pre><code>hub_cliente:      hash_key_cliente | id_cliente_negocio | data_carga | origem
+sat_cliente_info: hash_key_cliente | nome | email | data_carga | origem
+hub_pedido:       hash_key_pedido | id_pedido_negocio | data_carga | origem
+link_cliente_pedido: hash_key_cliente | hash_key_pedido | data_carga</code></pre>
+<h3>Vantagem central: auditoria e rastreabilidade nativas</h3>
+<p>Toda informação carregada num Satellite carrega metadados de origem e data — isso torna o modelo naturalmente auditável, o que é valioso em contextos regulatórios (bancário, saúde) onde é preciso provar exatamente de onde cada dado veio e quando mudou.</p>
+<h3>O custo: complexidade e volume de tabelas</h3>
+<div class="callout warn">⚠️ Data Vault gera significativamente mais tabelas do que um Star Schema equivalente, e queries analíticas diretas sobre o Data Vault tendem a ser mais verbosas e exigir mais JOINs. Por isso, na prática, o Data Vault costuma servir como uma camada intermediária de integração — e uma camada Star Schema (a "camada de apresentação") é construída em cima dele especificamente para consumo por dashboards e relatórios.</div>
+<h3>Quando vale considerar</h3>
+<p>Faz sentido em organizações grandes, com múltiplas fontes de dados legadas sendo integradas continuamente, ou em setores fortemente regulados que exigem auditoria detalhada de origem de dados. Para a maioria dos times pequenos ou pipelines com poucas fontes bem definidas, um Star Schema direto costuma ser suficiente e mais simples de manter.</p>
+`,
+  recap: [
+    'Data Vault separa estrutura de negócio (Hub/Link) de contexto descritivo (Satellite), tornando o modelo resiliente a mudanças',
+    'Hub armazena apenas chaves de negócio únicas; Link representa relacionamentos; Satellite guarda atributos e histórico',
+    'Vantagem central: auditoria e rastreabilidade nativas de origem e data de cada dado',
+    'Custo: mais tabelas e queries mais verbosas — geralmente serve de camada de integração, não de consumo direto',
+    'Faz mais sentido em organizações grandes com múltiplas fontes ou setores fortemente regulados'
+  ],
+  nblm: {
+    subject: 'Data Vault 2.0: os conceitos de Hub, Link e Satellite, e quando essa metodologia é preferível ao Star Schema.',
+    questions: [
+      'Explique com um diagrama textual como Hub, Link e Satellite se relacionam para modelar clientes e pedidos.',
+      'Por que o Data Vault é considerado mais resiliente a mudanças de escopo do que o Star Schema?',
+      'Como a rastreabilidade nativa do Data Vault ajuda em contextos regulatórios (bancário, saúde)?',
+      'Por que, na prática, muitas organizações constroem um Star Schema "por cima" de um Data Vault em vez de usar apenas um dos dois?'
+    ],
+    source: 'Buscar documentação e artigos introdutórios sobre Data Vault 2.0 (o conceito foi formalizado por Dan Linstedt) como fonte complementar externa.'
+  },
+  quiz: {
+    q: 'Qual é a principal razão para separar Hub, Link e Satellite em Data Vault, em vez de manter tudo em uma única tabela como no Star Schema?',
+    options: ['Para economizar espaço de armazenamento', 'Para separar estrutura de negócio (que muda pouco) de contexto descritivo (que muda com frequência), tornando o modelo mais resiliente a mudanças de escopo', 'Porque bancos relacionais não suportam tabelas com muitas colunas', 'Não há vantagem real — é apenas uma preferência estilística'],
+    correct: 1,
+    explanation: 'Essa separação é o que permite adicionar novas fontes de dados ou mudar atributos descritivos sem precisar redesenhar a estrutura central de relacionamento entre entidades — o principal ponto de dor que o Data Vault resolve em ambientes de integração complexos.'
+  }
+},
+{
+  id: 'explicar', tag: 'critical',
+  title: 'Explicar escolhas de modelagem em entrevista',
+  eyebrow: 'Aula 7 de 7 · Comunicação técnica',
+  sub: 'De nada adianta saber modelar se você não consegue justificar a escolha para quem está avaliando',
+  body: `
+<p>Em processos seletivos de nível jr a pleno, raramente pedem para você desenhar um modelo do zero sob pressão de tempo — mas é muito comum pedirem para você <strong>explicar e justificar</strong> escolhas de modelagem já feitas em um projeto seu, ou reagir a um modelo hipotético proposto pelo entrevistador. Comunicar bem essas escolhas é uma habilidade tão importante quanto saber fazer a modelagem em si.</p>
+<h3>O roteiro de resposta que funciona</h3>
+<p>Um padrão eficaz de resposta para "por que você modelou assim?" segue três passos: <strong>(1)</strong> qual problema essa escolha resolve, <strong>(2)</strong> por que essa opção específica e não uma alternativa óbvia, <strong>(3)</strong> qual trade-off você aceitou conscientemente.</p>
+<div class="callout tip">💡 Exemplo aplicado ao seu pipeline-etransparente: "Usei Medallion Architecture porque preciso reprocessar sem re-extrair dos sites das ONGs — scraping é custoso e às vezes as páginas mudam de estrutura. A camada Bronze me dá esse seguro, mesmo custando espaço extra de storage, que no meu caso é barato o suficiente para não ser um problema real."</div>
+<h3>Antecipando a pergunta "e se fosse diferente?"</h3>
+<p>Entrevistadores frequentemente seguem sua explicação com uma variação: "e se o volume de dados fosse 100x maior, você modelaria diferente?" ou "e se precisasse de dado em tempo real?". Preparar-se para essas variações — mesmo sem uma resposta perfeita — demonstra que você entende que modelagem é sempre uma resposta a um contexto específico, não uma verdade universal.</p>
+<h3>Erros comuns ao explicar modelagem em entrevista</h3>
+<ul>
+  <li><strong>Falar só em jargão sem aterrar no problema</strong> — dizer "usei Star Schema" sem explicar por quê soa como repetição de termo, não como entendimento.</li>
+  <li><strong>Não admitir trade-offs</strong> — toda escolha de modelagem tem um custo. Fingir que sua escolha não tem desvantagem nenhuma é um sinal de alerta para quem está avaliando.</li>
+  <li><strong>Não conectar com o negócio</strong> — a melhor resposta técnica ainda conecta a decisão a um impacto real (custo, velocidade de consulta, facilidade de manutenção), não só à ferramenta em si.</li>
+</ul>
+<h3>Analogias ajudam — mas precisam ser precisas</h3>
+<p>Para explicar Medallion Architecture a um entrevistador não-técnico ou a um stakeholder de negócio: "é como organizar uma cozinha profissional em três estações — recebimento (ingredientes brutos, do jeito que chegam), preparo (ingredientes limpos e cortados) e finalização (o prato pronto). Cada estação existe separada porque, se algo der errado no preparo, você não quer ter que comprar tudo de novo — só refazer aquela etapa."</p>
+<h3>Praticando antes da entrevista</h3>
+<p>Um exercício útil: escolha 2-3 decisões de modelagem reais dos seus próprios projetos e escreva (ou grave em áudio) a explicação de 30-45 segundos para cada uma, seguindo o roteiro problema → escolha → trade-off. Isso transforma conhecimento passivo em resposta pronta, sem hesitação no momento da entrevista.</p>
+`,
+  recap: [
+    'Roteiro de resposta: qual problema resolve → por que essa opção e não outra → qual trade-off foi aceito',
+    'Prepare-se para variações tipo "e se o volume fosse 100x maior?" — modelagem é sempre resposta a um contexto',
+    'Nunca finja que uma escolha de modelagem não tem trade-off — isso é sinal de alerta para quem avalia',
+    'Conecte a explicação técnica a um impacto de negócio real (custo, velocidade, manutenção)',
+    'Pratique explicações de 30-45 segundos para 2-3 decisões reais dos seus próprios projetos antes da entrevista'
+  ],
+  nblm: {
+    subject: 'Como comunicar e justificar decisões de modelagem de dados em entrevistas técnicas.',
+    questions: [
+      'Monte 3 perguntas de entrevista prováveis sobre modelagem de dados e um roteiro de resposta para cada.',
+      'Como eu explico a escolha de Medallion Architecture para um entrevistador técnico vs. para um stakeholder de negócio, de forma diferente mas igualmente precisa?',
+      'Quais são os sinais de alerta que um entrevistador percebe quando alguém não entende de verdade sua própria escolha de modelagem?',
+      'Pratique comigo: eu descrevo um cenário de negócio, e você me ajuda a formular a resposta ideal de modelagem com trade-offs explícitos.'
+    ],
+    source: 'Sem fonte externa formal necessária para esta aula — o conteúdo é sobre comunicação técnica aplicada aos conceitos das aulas anteriores deste módulo.'
+  },
+  quiz: {
+    q: 'Qual é o principal problema em responder "usei Star Schema porque é o padrão de mercado" numa entrevista?',
+    options: ['Star Schema não é realmente um padrão de mercado', 'A resposta não demonstra entendimento real do trade-off ou do problema específico que a escolha resolveu', 'Star Schema está incorreto e nunca deveria ser usado', 'Entrevistadores nunca aceitam essa resposta, independente do contexto'],
+    correct: 1,
+    explanation: 'Repetir um termo sem explicar o raciocínio por trás da escolha — qual problema resolve, por que essa opção e não outra, qual trade-off foi aceito — não demonstra que você realmente entende a decisão, apenas que você a conhece de nome.'
+  }
+}
+];
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return { done: {}, quizResults: {} };
+}
+function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e){} }
+let APP = loadData();
+let currentLesson = 0;
+function showToast(msg, emoji='✅') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${emoji} ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function updateModuleProgress() {
+  const total = LESSONS.length;
+  const done = LESSONS.filter(l => APP.done[l.id]).length;
+  document.getElementById('mod-fill').style.width = Math.round((done/total)*100) + '%';
+  document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
+}
+function renderSidebar() {
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  let html = `<div class="sidebar-title">Módulo 02 · Modelagem</div>`;
+  html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
+  html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
+  LESSONS.forEach((l, i) => {
+    const done = !!APP.done[l.id];
+    html += `<div class="toc-item ${currentLesson===i+1?'active':''}" onclick="goTo(${i+1})">
+      <span class="toc-num">${i+1}</span>
+      <span class="toc-check ${done?'done':''}">${done?'✓':''}</span>
+      <span class="toc-text">${l.title}</span>
+      <span class="toc-tag ${l.tag}">${tagLabel[l.tag]}</span>
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); window.scrollTo({top:0,behavior:'smooth'}); }
+function toggleDone(lessonId) {
+  APP.done[lessonId] = !APP.done[lessonId];
+  saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function answerQuiz(lessonIdx, chosen) {
+  const lesson = LESSONS[lessonIdx];
+  const opts = document.querySelectorAll(`#qc-opts-${lesson.id} .qc-opt`);
+  if (opts[0].disabled) return;
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === lesson.quiz.correct) o.classList.add('correct');
+    if (i === chosen && chosen !== lesson.quiz.correct) o.classList.add('wrong');
+  });
+  const ok = chosen === lesson.quiz.correct;
+  APP.quizResults[lesson.id] = ok;
+  saveData();
+  const fb = document.getElementById(`qc-fb-${lesson.id}`);
+  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + lesson.quiz.explanation;
+  fb.className = `qc-fb show ${ok ? 'correct' : 'wrong'}`;
+}
+
+function htmlToMarkdown(html) {
+  let md = html;
+  md = md.replace(/<div class="callout[^"]*">\s*([\s\S]*?)\s*<\/div>/g, (m, p1) => '> ' + p1.replace(/<[^>]+>/g,'').trim() + '\n\n');
+  md = md.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, p1) => '```sql\n' + p1.trim() + '\n```\n\n');
+  md = md.replace(/<h3>(.*?)<\/h3>/g, '\n### $1\n\n');
+  md = md.replace(/<h4>(.*?)<\/h4>/g, '\n#### $1\n\n');
+  md = md.replace(/<hr>/g, '\n---\n\n');
+  md = md.replace(/<table>[\s\S]*?<\/table>/g, (m) => {
+    let rows = [...m.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map(r => r[1]);
+    let out = '';
+    rows.forEach((r, i) => {
+      let cells = [...r.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)].map(c => c[1].replace(/<[^>]+>/g,'').trim());
+      out += '| ' + cells.join(' | ') + ' |\n';
+      if (i === 0) out += '|' + cells.map(()=>' --- ').join('|') + '|\n';
+    });
+    return out + '\n';
+  });
+  md = md.replace(/<ul>/g, '\n').replace(/<\/ul>/g, '\n');
+  md = md.replace(/<li>\s*([\s\S]*?)\s*<\/li>/g, '- $1\n');
+  md = md.replace(/<p>\s*([\s\S]*?)\s*<\/p>/g, '$1\n\n');
+  md = md.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+  md = md.replace(/<em>(.*?)<\/em>/g, '_$1_');
+  md = md.replace(/<code>(.*?)<\/code>/g, '`$1`');
+  md = md.replace(/<[^>]+>/g, '');
+  md = md.replace(/\n{3,}/g, '\n\n');
+  return md.trim();
+}
+
+function generateLessonMarkdown(lesson, moduleTitle) {
+  let md = `# ${lesson.title}\n\n`;
+  md += `_${lesson.eyebrow} — ${moduleTitle}_\n\n`;
+  md += `> ${lesson.sub}\n\n`;
+  md += '---\n\n';
+  md += htmlToMarkdown(lesson.body);
+  md += '\n\n## Recapitulando\n\n';
+  lesson.recap.forEach(r => md += `- ${r}\n`);
+  md += '\n## Aprofundar no NotebookLM\n\n';
+  md += `**Assunto do notebook:** ${lesson.nblm.subject}\n\n`;
+  md += `**Perguntas-guia para o Audio Overview:**\n\n`;
+  lesson.nblm.questions.forEach(q => md += `- ${q}\n`);
+  md += `\n**Fonte complementar sugerida:** ${lesson.nblm.source}\n\n`;
+  md += '---\n\n';
+  md += `**Teste rapido:** ${lesson.quiz.q}\n\n`;
+  lesson.quiz.options.forEach((o,i) => md += `${i === lesson.quiz.correct ? '- [x]' : '- [ ]'} ${o}\n`);
+  md += `\n> **Explicacao:** ${lesson.quiz.explanation}\n`;
+  return md;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportLessonMD(lessonIdx) {
+  const lesson = LESSONS[lessonIdx];
+  const md = generateLessonMarkdown(lesson, "Modelagem de Dados");
+  downloadFile(`modelagem_aula${lessonIdx+1}_${lesson.id}_victor_breia.md`, md);
+  showToast('Markdown exportado! Pronto pro NotebookLM.', '📄');
+}
+function exportModuleMD() {
+  let full = `# Modelagem de Dados\n\n_Modulo completo - exportado para estudo no NotebookLM_\n\n---\n\n`;
+  LESSONS.forEach((l) => {
+    full += generateLessonMarkdown(l, "Modelagem de Dados");
+    full += '\n\n---\n\n';
+  });
+  downloadFile(`modelagem_modulo_completo_victor_breia.md`, full);
+  showToast('Markdown do modulo completo exportado!', '📄');
+}
+function renderSummary() {
+  let html = `<div style="margin-bottom:20px">
+    <h2 style="font-size:20px;margin-bottom:6px">Visão geral — Módulo Modelagem de Dados</h2>
+    <p style="font-size:13px;color:var(--text2);max-width:620px;line-height:1.6">
+      Este módulo cobre os 7 subtópicos de modelagem de dados que separam engenheiros de analistas —
+      da Medallion Architecture ao Data Vault. Cada aula tem conteúdo completo, teste de fixação, e
+      uma seção pronta para você aprofundar no NotebookLM.
+    </p>
+  </div><div class="summary-grid">`;
+  LESSONS.forEach((l, i) => {
+    const d = !!APP.done[l.id];
+    const q = APP.quizResults[l.id];
+    html += `<div class="summary-card" onclick="goTo(${i+1})" style="cursor:pointer">
+      <h4>${i+1}. ${l.title} ${d ? '✅' : ''}</h4>
+      <p>${l.sub}${q !== undefined ? (q ? ' · Quiz: acertou ✅' : ' · Quiz: errou — revisar 🔴') : ''}</p>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+const VIDEO_FOLDER = 'modelagem';
+const VIDEO_PREFIX = 'mod';
+
+function renderVideoBlock(lesson, lessonNum) {
+  if (lesson.video) {
+    const src = lesson.video;
+    return `<div class="video-wrap">
+      <video controls preload="metadata">
+        <source src="${encodeURI(src)}" type="video/mp4">
+        Seu navegador não suporta vídeo HTML5.
+      </video>
+    </div>`;
+  }
+  return `<div class="video-placeholder">
+    <div class="vp-icon">🎬</div>
+    <div class="vp-title">Vídeo ainda não adicionado</div>
+    <div class="vp-sub">Salve como ${VIDEO_FOLDER}/${VIDEO_PREFIX}${lessonNum}.Titulo_Do_Video.mp4</div>
+  </div>`;
+}
+
+function renderContent() {
+  if (currentLesson === 0) { renderSummary(); return; }
+  const lesson = LESSONS[currentLesson - 1];
+  const done = !!APP.done[lesson.id];
+  const idx = currentLesson - 1;
+  const nblmQuestionsHtml = lesson.nblm.questions.map(q => `<li>${q}</li>`).join('');
+  document.getElementById('content').innerHTML = `
+    <div class="lesson-nav">
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson-1})" ${currentLesson<=1?'disabled':''}>← Anterior</button>
+      <span class="lesson-progress-label">Aula ${idx+1} de ${LESSONS.length}</span>
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson+1<=LESSONS.length?currentLesson+1:0})">${currentLesson<LESSONS.length?'Próxima →':'Ver resumo →'}</button>
+    </div>
+    <div class="lesson-card" id="lesson-print-${lesson.id}">
+      <div class="lesson-eyebrow">${lesson.eyebrow}</div>
+      <h2 class="lesson-title">${lesson.title}</h2>
+      <div class="lesson-sub">${lesson.sub}</div>
+      <hr>
+      ${renderVideoBlock(lesson, idx+1)}
+      ${lesson.body}
+      <div class="recap"><div class="rt">Recapitulando</div><ul>${lesson.recap.map(r => `<li>${r}</li>`).join('')}</ul></div>
+      <div class="nblm-box">
+        <div class="nblm-header">🎙️ Aprofundar no NotebookLM</div>
+        <div class="nblm-body">
+          <div class="nblm-field"><div class="nblm-label">Assunto do notebook</div><div class="nblm-value">${lesson.nblm.subject}</div></div>
+          <div class="nblm-field"><div class="nblm-label">Perguntas-guia para o Audio Overview</div><ul class="nblm-questions">${nblmQuestionsHtml}</ul></div>
+          <div class="nblm-field"><div class="nblm-label">Fonte complementar sugerida</div><div class="nblm-value">${lesson.nblm.source}</div></div>
+        </div>
+      </div>
+      <div class="source-box"><strong>Como usar:</strong> exporte esta aula em PDF, suba no NotebookLM junto com a fonte complementar sugerida, e cole as perguntas-guia no campo de customização do Audio Overview.</div>
+    </div>
+    <div class="mark-bar">
+      <button class="mark-check-btn" onclick="toggleDone('${lesson.id}')"><span class="box ${done?'done':''}">${done?'✓':''}</span>Marcar esta aula como concluída</button>
+      <button class="hdr-btn primary" onclick="exportLessonMD(${idx})">⬇ Exportar esta aula (.md)</button>
+    </div>
+    <div class="quick-check">
+      <div class="qc-title">🧪 Teste rápido de fixação</div>
+      <div class="qc-q">${lesson.quiz.q}</div>
+      ${lesson.quiz.code ? `<div class="test-code">${lesson.quiz.code}</div>` : ''}
+      <div class="qc-opts" id="qc-opts-${lesson.id}">${lesson.quiz.options.map((o,i) => `<button class="qc-opt" onclick="answerQuiz(${idx},${i})">${o}</button>`).join('')}</div>
+      <div class="qc-fb" id="qc-fb-${lesson.id}"></div>
+    </div>
+  `;
+}
+updateModuleProgress();
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>

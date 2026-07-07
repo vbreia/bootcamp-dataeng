@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Victor Breia — Data Engineer Study</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+
+:root {
+  --bg: #08080f;
+  --surface: #0f0f18;
+  --surface2: #16161f;
+  --surface3: #1c1c28;
+  --border: #252533;
+  --border2: #2e2e3f;
+  --accent: #6366f1;
+  --accent2: #a78bfa;
+  --green: #34d399;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --text: #e2e2ee;
+  --text2: #9898b8;
+  --muted: #55556a;
+  --font: 'Space Grotesk', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --serif: 'Source Serif 4', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+/* HEADER */
+.header { padding: 20px 20px 0; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+.header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 14px; }
+.header h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.4px; }
+.header h1 em { color: var(--accent2); font-style: normal; }
+.header-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.header-stats { display: flex; gap: 20px; align-items: center; }
+.stat-pill { display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; color: var(--muted); }
+.stat-pill strong { font-size: 18px; color: var(--text); font-family: var(--mono); line-height: 1; }
+.overall-bar { height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+.overall-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.5s ease; }
+.header-actions { display: flex; gap: 6px; padding-bottom: 10px; }
+.hdr-btn { padding: 5px 11px; border-radius: 6px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); font-family: var(--font); font-size: 11px; cursor: pointer; transition: all 0.15s; }
+.hdr-btn:hover { border-color: var(--accent); color: var(--text); }
+.hdr-btn.danger:hover { border-color: var(--red); color: var(--red); }
+.nav { display: flex; gap: 2px; padding: 8px 0 0; overflow-x: auto; }
+.nav-btn { padding: 7px 15px; border-radius: 7px 7px 0 0; border: none; background: transparent; color: var(--muted); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.15s; border-bottom: 2px solid transparent; }
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+
+.main { padding: 18px 18px 60px; max-width: 900px; margin: 0 auto; }
+
+.topic-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
+.topic-card.open { border-color: var(--accent); }
+.topic-header { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; user-select: none; }
+.topic-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.topic-meta { flex: 1; min-width: 0; }
+.topic-title { font-size: 13px; font-weight: 600; }
+.topic-sub { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topic-right { display: flex; align-items: center; gap: 8px; }
+.skill-wrap { width: 64px; text-align: right; }
+.skill-pct { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+.skill-bar { height: 2px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-top: 3px; }
+.skill-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+.chevron { color: var(--muted); font-size: 11px; transition: transform 0.2s; }
+.topic-card.open .chevron { transform: rotate(90deg); }
+
+.topic-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
+.topic-card.open .topic-body { display: block; }
+
+.body-tabs { display: flex; gap: 3px; margin: 12px 0 10px; flex-wrap: wrap; }
+.body-tab { padding: 5px 11px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: var(--font); font-size: 11px; cursor: pointer; transition: all 0.15s; }
+.body-tab:hover { color: var(--text); }
+.body-tab.active { background: var(--surface3); color: var(--text); border-color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.subtopics { display: grid; gap: 5px; }
+.subtopic { display: flex; align-items: center; gap: 9px; padding: 8px 11px; background: var(--surface2); border-radius: 7px; border: 1px solid var(--border); }
+.subtopic-check { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; transition: all 0.15s; }
+.subtopic-check.checked { background: var(--green); border-color: var(--green); color: #000; }
+.subtopic-text { flex: 1; font-size: 12px; }
+.subtopic-text.done { color: var(--muted); text-decoration: line-through; }
+.stag { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-family: var(--mono); white-space: nowrap; flex-shrink: 0; }
+.stag-critical { background: rgba(248,113,113,0.12); color: var(--red); }
+.stag-important { background: rgba(251,191,36,0.12); color: var(--yellow); }
+.stag-bonus { background: rgba(163,139,250,0.12); color: var(--accent2); }
+.stag-owned { background: rgba(52,211,153,0.12); color: var(--green); }
+
+.sources-list { display: grid; gap: 5px; }
+.source-item { display: flex; align-items: center; gap: 9px; padding: 8px 11px; background: var(--surface2); border-radius: 7px; border: 1px solid var(--border); }
+.source-icon { font-size: 12px; flex-shrink: 0; }
+.source-name { flex: 1; font-size: 12px; color: var(--text2); }
+.source-url { font-size: 11px; color: var(--accent2); text-decoration: none; }
+.source-url:hover { text-decoration: underline; }
+.source-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 2px; transition: color 0.15s; }
+.source-del:hover { color: var(--red); }
+.add-link-form { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.add-link-form input { flex: 1; min-width: 130px; padding: 7px 9px; background: var(--surface3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: var(--font); font-size: 12px; outline: none; transition: border-color 0.15s; }
+.add-link-form input:focus { border-color: var(--accent); }
+.add-link-form input::placeholder { color: var(--muted); }
+.add-btn { padding: 7px 13px; background: var(--accent); border: none; border-radius: 6px; color: #fff; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.add-btn:hover { background: var(--accent2); }
+
+.test-question { font-size: 13px; font-weight: 500; line-height: 1.6; margin-bottom: 10px; }
+.test-code { background: #0a0a12; border: 1px solid var(--border2); border-radius: 7px; padding: 10px 12px; font-family: var(--mono); font-size: 11px; color: #8899cc; margin-bottom: 10px; overflow-x: auto; white-space: pre; }
+.test-options { display: grid; gap: 5px; }
+.test-opt { padding: 8px 12px; border-radius: 7px; border: 1.5px solid var(--border2); background: transparent; color: var(--text); font-family: var(--font); font-size: 12px; cursor: pointer; text-align: left; transition: all 0.15s; line-height: 1.4; }
+.test-opt:hover:not(:disabled) { border-color: var(--accent); background: rgba(99,102,241,0.08); }
+.test-opt.correct { border-color: var(--green); background: rgba(52,211,153,0.1); color: var(--green); }
+.test-opt.wrong { border-color: var(--red); background: rgba(248,113,113,0.1); color: var(--red); }
+.test-opt:disabled { cursor: default; }
+.test-feedback { margin-top: 8px; padding: 8px 12px; border-radius: 7px; font-size: 12px; line-height: 1.5; display: none; }
+.test-feedback.show { display: block; }
+.test-feedback.correct { background: rgba(52,211,153,0.08); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.2); }
+.test-feedback.wrong { background: rgba(248,113,113,0.08); color: #fca5a5; border: 1px solid rgba(248,113,113,0.2); }
+.test-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.test-counter { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.test-result { text-align: center; padding: 20px 0; }
+.result-emoji { font-size: 30px; margin-bottom: 6px; }
+.result-score { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+.result-msg { font-size: 12px; color: var(--text2); margin-top: 5px; }
+.result-actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+
+.history-list { display: grid; gap: 5px; }
+.history-item { display: flex; align-items: center; gap: 9px; padding: 8px 11px; background: var(--surface2); border-radius: 7px; font-size: 12px; }
+.history-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.history-date { color: var(--muted); font-family: var(--mono); font-size: 11px; margin-left: auto; }
+
+.btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); font-family: var(--font); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn:hover { border-color: var(--accent); color: var(--text); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: var(--accent2); border-color: var(--accent2); }
+
+.empty { padding: 18px; text-align: center; color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+/* AULA / LESSON STYLING */
+.lesson-toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
+.lesson-content {
+  background: #fdfcf9; color: #1a1a1f; border-radius: 10px;
+  padding: 28px 30px; font-family: var(--serif);
+  line-height: 1.75; font-size: 14.5px;
+}
+.lesson-content .lesson-eyebrow {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #8b7a5e; margin-bottom: 6px; font-weight: 500;
+}
+.lesson-content h2.lesson-title {
+  font-size: 24px; font-weight: 700; color: #14141a; margin-bottom: 4px; letter-spacing: -0.3px;
+}
+.lesson-content .lesson-sub {
+  font-family: var(--font); font-size: 12.5px; color: #6b6b78; margin-bottom: 18px;
+}
+.lesson-content hr { border: none; border-top: 1px solid #e5e0d5; margin: 20px 0; }
+.lesson-content h3 {
+  font-family: var(--font); font-size: 15px; font-weight: 700; color: #14141a;
+  margin: 24px 0 10px; padding-top: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.lesson-content h3 .n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 5px; background: #14141a; color: #fdfcf9;
+  font-family: var(--mono); font-size: 11px; flex-shrink: 0;
+}
+.lesson-content h4 { font-family: var(--font); font-size: 13px; font-weight: 600; color: #2a2a30; margin: 14px 0 6px; }
+.lesson-content p { margin-bottom: 12px; color: #2a2a30; }
+.lesson-content ul, .lesson-content ol { margin: 8px 0 14px 20px; }
+.lesson-content li { margin-bottom: 6px; color: #2a2a30; }
+.lesson-content strong { color: #14141a; font-weight: 700; }
+.lesson-content code {
+  font-family: var(--mono); background: #eeead9; color: #6a4c1f;
+  padding: 1px 5px; border-radius: 4px; font-size: 12.5px;
+}
+.lesson-content pre {
+  background: #14141a; color: #d8dce8; border-radius: 8px;
+  padding: 14px 16px; overflow-x: auto; margin: 12px 0 16px;
+  font-family: var(--mono); font-size: 12px; line-height: 1.6;
+}
+.lesson-content pre code { background: none; color: inherit; padding: 0; }
+.lesson-callout {
+  background: #eef0fb; border-left: 3px solid #6366f1;
+  padding: 10px 14px; border-radius: 0 7px 7px 0; margin: 14px 0;
+  font-family: var(--font); font-size: 12.5px; color: #3a3a5c;
+}
+.lesson-callout.warn { background: #fdf3e7; border-left-color: #d97706; color: #6b4a10; }
+.lesson-callout.tip { background: #eafaf3; border-left-color: #10b981; color: #0d5e42; }
+.lesson-source-box {
+  margin-top: 22px; padding: 12px 16px; background: #f2f0e8;
+  border-radius: 8px; font-family: var(--font); font-size: 11.5px; color: #6b6b78;
+}
+.lesson-source-box strong { color: #3a3a44; }
+.lesson-recap {
+  margin-top: 18px; padding: 14px 16px; background: #14141a; color: #fdfcf9;
+  border-radius: 8px; font-family: var(--font);
+}
+.lesson-recap .rt { font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.06em; }
+.lesson-recap ul { margin: 0 0 0 16px; }
+.lesson-recap li { font-size: 12.5px; margin-bottom: 5px; color: #e2e2ee; }
+
+@media print {
+  body { background: #fff; }
+  .lesson-content { box-shadow: none; }
+}
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 200; display: none; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 24px; max-width: 380px; width: 90%; }
+.modal h3 { font-size: 15px; margin-bottom: 8px; }
+.modal p { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.modal textarea { width: 100%; height: 100px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 7px; color: var(--text); font-family: var(--mono); font-size: 11px; padding: 8px; resize: vertical; outline: none; margin-bottom: 12px; }
+.modal textarea:focus { border-color: var(--accent); }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 14px; font-size: 12px; display: flex; align-items: center; gap: 8px; transform: translateY(60px); opacity: 0; transition: all 0.25s ease; z-index: 300; max-width: 260px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div>
+      <h1>Victor Breia · <em>Data Engineer</em></h1>
+      <div class="header-sub">Sistema de estudos local · Aulas completas + testes · Estágio → Jr → Pleno</div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill"><strong id="hdr-pct">0%</strong>progresso</div>
+      <div class="stat-pill"><strong id="hdr-tests">0</strong>testes</div>
+    </div>
+  </div>
+  <div class="overall-bar"><div class="overall-bar-fill" id="overall-fill" style="width:0%"></div></div>
+  <div class="header-actions">
+    <button class="hdr-btn" onclick="exportData()">⬇ Exportar backup</button>
+    <button class="hdr-btn" onclick="showImport()">⬆ Importar backup</button>
+    <button class="hdr-btn danger" onclick="showReset()">⚠ Resetar dados</button>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="setFilter('all',this)">Todos</button>
+    <button class="nav-btn" onclick="setFilter('critical',this)">🔴 Críticos</button>
+    <button class="nav-btn" onclick="setFilter('owned',this)">✅ Dominados</button>
+    <button class="nav-btn" onclick="setFilter('test',this)">🧪 Testar</button>
+    <button class="nav-btn" onclick="setFilter('links',this)">🔗 Meus links</button>
+  </div>
+</div>
+
+<div class="main" id="main-content"></div>
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modal-import">
+  <div class="modal">
+    <h3>⬆ Importar backup</h3>
+    <p>Cole o conteúdo do arquivo JSON exportado anteriormente:</p>
+    <textarea id="import-json" placeholder='{"checks":{...}}'></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-import')">Cancelar</button>
+      <button class="btn primary" onclick="importData()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-reset">
+  <div class="modal">
+    <h3>⚠ Resetar todos os dados</h3>
+    <p>Isso apagará seu progresso, histórico de testes e links salvos. Exporte um backup antes se quiser guardar seus dados.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-reset')">Cancelar</button>
+      <button class="btn" style="background:var(--red);border-color:var(--red);color:#fff" onclick="resetData()">Sim, resetar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'de_study_local_v2';
+
+// ─── CONTEÚDO DAS AULAS (apostila por tema) ───────────────────────────────────
+const LESSONS = {
+sql: `
+<div class="lesson-eyebrow">Módulo 01 · Fundamentos de Banco de Dados</div>
+<h2 class="lesson-title">SQL Avançado</h2>
+<div class="lesson-sub">Window Functions, CTEs e otimização de queries — a base de qualquer processo seletivo de dados</div>
+<hr>
+
+<h3><span class="n">1</span>Por que SQL é o filtro nº 1</h3>
+<p>Antes de qualquer ferramenta de orquestração ou cloud, praticamente toda vaga de dados testa SQL primeiro. Isso acontece porque SQL é a interface universal entre você e o dado: independente da stack (Postgres, Snowflake, BigQuery, Spark SQL), a lógica de consulta é a mesma. Dominar SQL avançado é o que separa quem "sabe fazer um SELECT" de quem consegue responder perguntas de negócio complexas com uma única query.</p>
+
+<h3><span class="n">2</span>JOINs — a base da combinação de tabelas</h3>
+<p>Um JOIN combina linhas de duas ou mais tabelas com base em uma condição relacional. Os tipos mais comuns:</p>
+<ul>
+  <li><strong>INNER JOIN</strong> — retorna apenas as linhas que têm correspondência nas duas tabelas.</li>
+  <li><strong>LEFT JOIN</strong> — retorna todas as linhas da tabela à esquerda, preenchendo com <code>NULL</code> quando não há correspondência à direita.</li>
+  <li><strong>RIGHT JOIN</strong> — o espelho do LEFT JOIN.</li>
+  <li><strong>FULL JOIN</strong> — retorna todas as linhas de ambas as tabelas, com <code>NULL</code> onde não há match.</li>
+</ul>
+<pre><code>SELECT c.nome, p.valor_total
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id;
+-- Retorna TODOS os clientes, mesmo os que nunca fizeram pedido</code></pre>
+<div class="lesson-callout tip">💡 Dica prática: em entrevistas, é comum pedirem para você explicar por que escolheu LEFT JOIN em vez de INNER JOIN. A resposta certa quase sempre envolve "eu preciso preservar registros sem correspondência" — por exemplo, listar clientes que nunca compraram.</div>
+
+<h3><span class="n">3</span>Window Functions — o divisor de águas</h3>
+<p>Segundo a documentação oficial do PostgreSQL, uma window function executa um cálculo através de um conjunto de linhas relacionadas à linha atual — de forma parecida com uma função agregada, mas <strong>sem agrupar as linhas em uma única linha de saída</strong>. As linhas mantêm suas identidades individuais.</p>
+<p>A sintaxe sempre inclui uma cláusula <code>OVER</code> logo após o nome da função — é isso que distingue uma window function de uma função normal:</p>
+<pre><code>SELECT
+  depname, empno, salary,
+  AVG(salary) OVER (PARTITION BY depname) AS media_depto
+FROM empsalary;</code></pre>
+<p>A cláusula <code>PARTITION BY</code> divide as linhas em grupos (partições) que compartilham o mesmo valor — nesse exemplo, cada departamento. Já a cláusula <code>ORDER BY</code> dentro do <code>OVER</code> define a ordem de processamento dentro de cada partição.</p>
+
+<h4>As três funções de ranking mais cobradas</h4>
+<ul>
+  <li><strong>ROW_NUMBER()</strong> — numera as linhas sequencialmente, nunca empata, mesmo com valores idênticos.</li>
+  <li><strong>RANK()</strong> — empata linhas com o mesmo valor e <em>pula</em> a posição seguinte (1, 1, 3).</li>
+  <li><strong>DENSE_RANK()</strong> — empata linhas, mas <em>não pula</em> a posição seguinte (1, 1, 2).</li>
+</ul>
+<pre><code>WITH ranked AS (
+  SELECT name, salary,
+    DENSE_RANK() OVER (ORDER BY salary DESC) AS rk
+  FROM employees
+)
+SELECT name, salary FROM ranked WHERE rk = 2;
+-- Retorna TODOS os empatados na 2ª posição de salário</code></pre>
+<div class="lesson-callout warn">⚠️ Segundo a documentação oficial, window functions só são permitidas na cláusula <code>SELECT</code> e no <code>ORDER BY</code> da query — são proibidas em <code>WHERE</code>, <code>GROUP BY</code> e <code>HAVING</code>, porque logicamente executam <em>depois</em> desses processamentos. Por isso usamos uma CTE (explicada abaixo) para poder filtrar o resultado de uma window function.</div>
+
+<h3><span class="n">4</span>CTEs — organizando queries complexas</h3>
+<p>Uma Common Table Expression (<code>WITH ... AS</code>) cria uma "tabela temporária nomeada" que existe apenas durante a execução da query. Ela resolve dois problemas: legibilidade (quebra queries complexas em blocos lógicos) e a limitação de filtrar window functions, como vimos acima.</p>
+<pre><code>WITH vendas_por_regiao AS (
+  SELECT regiao, SUM(valor) AS total
+  FROM vendas
+  GROUP BY regiao
+)
+SELECT * FROM vendas_por_regiao
+WHERE total > 100000;</code></pre>
+
+<h3><span class="n">5</span>Subqueries correlacionadas</h3>
+<p>Uma subquery correlacionada referencia uma coluna da query externa — ela é executada uma vez <em>para cada linha</em> da query externa, o que pode ter impacto de performance se mal utilizada:</p>
+<pre><code>SELECT nome, salario
+FROM funcionarios f
+WHERE salario > (
+  SELECT AVG(salario)
+  FROM funcionarios
+  WHERE depto = f.depto
+);
+-- Funcionários que ganham acima da média do próprio departamento</code></pre>
+
+<h3><span class="n">6</span>EXPLAIN e otimização de queries</h3>
+<p><code>EXPLAIN</code> mostra o plano de execução que o banco escolheu para rodar sua query — quais índices ele usa, se faz um full table scan, e o custo estimado de cada etapa. É a ferramenta que você usa quando uma query está lenta e precisa entender <em>por quê</em>.</p>
+<p>Regra prática: se o <code>EXPLAIN</code> mostra <code>Seq Scan</code> (varredura sequencial) em uma tabela grande onde você espera um índice sendo usado, isso é um sinal de que falta um índice na coluna filtrada ou de que o índice existente não está sendo aproveitado.</p>
+
+<h3><span class="n">7</span>Agregação condicional</h3>
+<p>Combinar <code>CASE WHEN</code> dentro de funções de agregação permite calcular múltiplas métricas condicionais em uma única passada pela tabela — muito mais eficiente do que rodar queries separadas:</p>
+<pre><code>SELECT
+  regiao,
+  COUNT(CASE WHEN status = 'ativo' THEN 1 END) AS clientes_ativos,
+  COUNT(CASE WHEN status = 'inativo' THEN 1 END) AS clientes_inativos
+FROM clientes
+GROUP BY regiao;</code></pre>
+
+<div class="lesson-recap">
+  <div class="rt">Recapitulando</div>
+  <ul>
+    <li>JOINs combinam tabelas; LEFT JOIN preserva a tabela da esquerda mesmo sem match</li>
+    <li>Window functions calculam sobre um conjunto de linhas sem colapsá-las — use <code>OVER</code></li>
+    <li>RANK() pula posições em empate; DENSE_RANK() não pula</li>
+    <li>CTEs organizam queries complexas e permitem filtrar resultados de window functions</li>
+    <li>EXPLAIN revela o plano de execução — essencial para debugar performance</li>
+  </ul>
+</div>
+
+<div class="lesson-source-box"><strong>Fontes oficiais consultadas:</strong> PostgreSQL Documentation — Window Functions (postgresql.org/docs/current/tutorial-window.html e functions-window.html)</div>
+`,
+
+python: `
+<div class="lesson-eyebrow">Módulo 02 · Linguagem e Manipulação de Dados</div>
+<h2 class="lesson-title">Python para Dados</h2>
+<div class="lesson-sub">Pandas, tratamento de dados e integração com APIs — o dia a dia de um pipeline de dados</div>
+<hr>
+
+<h3><span class="n">1</span>Por que Pandas domina o ecossistema</h3>
+<p>Pandas é a biblioteca padrão para manipulação de dados tabulares em Python. Sua estrutura central, o <code>DataFrame</code>, representa dados em formato de tabela (linhas e colunas), com operações otimizadas em C por baixo dos panos — o que o torna muito mais rápido que loops Python puros para transformações de dados.</p>
+
+<h3><span class="n">2</span>Leitura e escrita de dados</h3>
+<p>Pandas abstrai a leitura de praticamente qualquer formato tabular com uma interface consistente:</p>
+<pre><code>import pandas as pd
+
+df_csv = pd.read_csv('dados.csv')
+df_json = pd.read_json('dados.json')
+df_parquet = pd.read_parquet('dados.parquet')
+
+df_csv.to_parquet('saida.parquet', index=False)</code></pre>
+<div class="lesson-callout tip">💡 Parquet é o formato preferido em pipelines de produção: é colunar, comprimido e muito mais rápido para leitura seletiva de colunas do que CSV — por isso aparece nas camadas Silver e Gold de arquiteturas Medallion.</div>
+
+<h3><span class="n">3</span>groupby, merge e pivot_table</h3>
+<p><strong>groupby</strong> agrupa linhas por uma ou mais colunas e aplica uma agregação — o equivalente do <code>GROUP BY</code> do SQL:</p>
+<pre><code>df.groupby('categoria')['valor'].mean()
+# Média de 'valor' por categoria, ignorando NaN por padrão</code></pre>
+<p><strong>merge</strong> combina dois DataFrames por uma coluna-chave — o equivalente de um JOIN:</p>
+<pre><code>pd.merge(pedidos, clientes, on='cliente_id', how='left')</code></pre>
+<p><strong>pivot_table</strong> reorganiza dados transformando valores únicos de uma coluna em novas colunas, útil para relatórios:</p>
+<pre><code>df.pivot_table(index='regiao', columns='mes', values='vendas', aggfunc='sum')</code></pre>
+<div class="lesson-callout warn">⚠️ Um erro comum: confundir <code>merge()</code> com <code>concat()</code>. O merge combina por chave (como um JOIN); o concat empilha DataFrames inteiros, verticalmente (<code>axis=0</code>) ou lado a lado (<code>axis=1</code>), sem lógica de correspondência de chave.</div>
+
+<h3><span class="n">4</span>apply, map e lambda</h3>
+<p>Quando uma transformação não existe como função pronta do Pandas, você usa <code>apply</code> para rodar uma função customizada em cada linha ou coluna:</p>
+<pre><code>df['categoria_normalizada'] = df['categoria'].apply(lambda x: x.strip().lower())
+
+df['score_total'] = df.apply(
+    lambda row: row['nota1'] * 0.6 + row['nota2'] * 0.4, axis=1
+)</code></pre>
+<p><code>map()</code> é mais rápido que <code>apply()</code> mas funciona apenas em uma Series (uma coluna), não em DataFrames inteiros — use quando a transformação é elemento a elemento em uma única coluna.</p>
+
+<h3><span class="n">5</span>Tratamento de nulos e tipos</h3>
+<p>Dados reais quase sempre chegam sujos. As operações mais usadas:</p>
+<pre><code>df.isnull().sum()              # conta nulos por coluna
+df.dropna(subset=['coluna'])   # remove linhas com nulo em coluna específica
+df.fillna({'valor': 0})        # preenche nulos com um valor padrão
+df['data'] = pd.to_datetime(df['data'])   # conversão de tipo
+df['id'] = df['id'].astype(str)           # casting explícito</code></pre>
+<div class="lesson-callout">Boa prática de pipeline: sempre valide tipos e nulos <em>antes</em> de qualquer transformação de negócio. Um pipeline profissional trata isso na camada Bronze → Silver, nunca deixando dado sujo avançar para a camada Gold.</div>
+
+<h3><span class="n">6</span>Consumindo APIs com Requests</h3>
+<p>A biblioteca <code>requests</code> é o padrão de fato para chamadas HTTP em Python. Um padrão robusto de consumo de API inclui tratamento de erro e timeout:</p>
+<pre><code>import requests
+
+try:
+    resp = requests.get('https://api.exemplo.com/dados', timeout=10)
+    resp.raise_for_status()
+    dados = resp.json()
+except requests.exceptions.RequestException as e:
+    logging.error(f"Falha ao consumir API: {e}")
+    raise</code></pre>
+
+<h3><span class="n">7</span>Variáveis de ambiente e segurança</h3>
+<p>Credenciais, tokens e URLs sensíveis nunca devem estar hardcoded no código. O padrão é usar variáveis de ambiente:</p>
+<pre><code>import os
+from dotenv import load_dotenv
+
+load_dotenv()
+api_key = os.environ.get('API_KEY')</code></pre>
+
+<h3><span class="n">8</span>Logging estruturado</h3>
+<p>Em pipelines de produção, <code>print()</code> não é suficiente — você precisa de níveis de log e rastreabilidade:</p>
+<pre><code>import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    processar_dados()
+except Exception:
+    logger.exception("Falha ao processar dados do pipeline")</code></pre>
+
+<div class="lesson-recap">
+  <div class="rt">Recapitulando</div>
+  <ul>
+    <li>merge() = JOIN (por chave); concat() = empilhar DataFrames</li>
+    <li>groupby().mean() ignora NaN por padrão</li>
+    <li>apply/lambda para transformações customizadas; map para Series simples</li>
+    <li>Sempre trate nulos e tipos antes de aplicar lógica de negócio</li>
+    <li>Nunca hardcode credenciais — use variáveis de ambiente</li>
+  </ul>
+</div>
+
+<div class="lesson-source-box"><strong>Fontes oficiais consultadas:</strong> Pandas User Guide (pandas.pydata.org/docs/user_guide), Real Python — Requests Library</div>
+`,
+
+modeling: `
+<div class="lesson-eyebrow">Módulo 03 · Arquitetura de Dados</div>
+<h2 class="lesson-title">Modelagem de Dados</h2>
+<div class="lesson-sub">Star Schema, Medallion Architecture e o raciocínio por trás de cada escolha de design</div>
+<hr>
+
+<h3><span class="n">1</span>Por que modelagem separa engenheiros de analistas</h3>
+<p>Qualquer pessoa consegue escrever uma query. O que diferencia um engenheiro de dados é saber <strong>por que</strong> os dados estão organizados de determinada forma — e conseguir justificar essa escolha em uma entrevista técnica ou em uma revisão de arquitetura.</p>
+
+<h3><span class="n">2</span>Medallion Architecture — Bronze, Silver, Gold</h3>
+<p>É um padrão de organização de dados em camadas dentro de um Data Lake, popularizado pela comunidade Databricks/Spark, mas aplicável em qualquer stack (incluindo Azure Data Lake, como no seu pipeline-etransparente):</p>
+<ul>
+  <li><strong>Bronze</strong> — dado bruto, exatamente como veio da fonte. Sem transformação, sem limpeza. Serve como histórico auditável e ponto de reprocessamento caso algo dê errado nas camadas seguintes.</li>
+  <li><strong>Silver</strong> — dado limpo, validado e padronizado (tipos corrigidos, duplicatas removidas, nulos tratados). Ainda granular, mas já confiável.</li>
+  <li><strong>Gold</strong> — dado agregado e modelado para consumo direto: dashboards, relatórios, modelos de ML. Geralmente já em formato de Star Schema.</li>
+</ul>
+<div class="lesson-callout tip">💡 Em entrevista, a pergunta mais comum é "por que não processar tudo direto na camada final?". A resposta certa: separar em camadas permite reprocessamento sem re-extrair da fonte, isolamento de falhas, e auditoria histórica do dado bruto.</div>
+
+<h3><span class="n">3</span>Star Schema — fatos e dimensões</h3>
+<p>É o modelo dimensional mais usado em Data Warehousing, formalizado por Ralph Kimball. A ideia central: separar <strong>o que aconteceu</strong> (fato) de <strong>o contexto sobre quem/onde/quando</strong> (dimensão).</p>
+<ul>
+  <li><strong>Tabela Fato</strong> — contém métricas numéricas (valor_venda, quantidade) e chaves estrangeiras para as dimensões. Tende a ter muitas linhas.</li>
+  <li><strong>Tabela Dimensão</strong> — contém atributos descritivos (nome_produto, cidade, categoria). Tende a ter menos linhas, mais colunas descritivas.</li>
+</ul>
+<pre><code>-- Fato: fato_vendas
+-- id_produto (FK) | id_cliente (FK) | id_data (FK) | valor | quantidade
+
+-- Dimensão: dim_produto
+-- id_produto (PK) | nome | categoria | marca</code></pre>
+<p>O nome "Star Schema" vem do desenho: uma tabela fato central conectada a várias dimensões ao redor, como uma estrela.</p>
+
+<h3><span class="n">4</span>Snowflake Schema — quando normalizar as dimensões</h3>
+<p>É uma variação do Star Schema onde as dimensões são normalizadas em sub-tabelas (por exemplo, <code>dim_produto</code> se divide em <code>dim_produto</code> e <code>dim_categoria</code>). Reduz redundância, mas aumenta a quantidade de JOINs necessários nas queries — por isso, Star Schema costuma ser preferido em Data Warehouses analíticos, onde performance de leitura importa mais que economia de espaço.</p>
+
+<h3><span class="n">5</span>Slowly Changing Dimensions (SCD)</h3>
+<p>Resolve o problema de "o que fazer quando um atributo de dimensão muda com o tempo" — por exemplo, um cliente muda de cidade.</p>
+<ul>
+  <li><strong>SCD Tipo 1</strong> — sobrescreve o valor antigo. Simples, mas perde histórico.</li>
+  <li><strong>SCD Tipo 2</strong> — cria uma nova linha com data de validade, preservando o histórico completo. É o mais usado quando o histórico importa para análise.</li>
+  <li><strong>SCD Tipo 3</strong> — mantém uma coluna com o "valor anterior", um meio-termo raramente usado na prática.</li>
+</ul>
+<pre><code>-- SCD Tipo 2
+id_cliente | nome | cidade | data_inicio | data_fim   | atual
+1          | Ana  | Rio    | 2024-01-01  | 2025-06-01 | false
+1          | Ana  | SP     | 2025-06-01  | NULL       | true</code></pre>
+
+<h3><span class="n">6</span>Normalização — 1FN, 2FN, 3FN</h3>
+<p>Normalização é o processo de organizar tabelas para reduzir redundância em sistemas transacionais (OLTP). As três primeiras formas normais, resumidas:</p>
+<ul>
+  <li><strong>1FN</strong> — cada coluna contém um valor atômico (sem listas ou valores compostos em uma célula).</li>
+  <li><strong>2FN</strong> — 1FN + toda coluna não-chave depende da chave primária inteira (relevante em chaves compostas).</li>
+  <li><strong>3FN</strong> — 2FN + nenhuma coluna não-chave depende de outra coluna não-chave (elimina dependências transitivas).</li>
+</ul>
+<div class="lesson-callout warn">⚠️ Um ponto que costuma confundir: Data Warehouses (Star Schema) são propositalmente <strong>desnormalizados</strong> em relação a sistemas OLTP. Isso é uma escolha consciente para priorizar performance de leitura analítica sobre economia de espaço.</div>
+
+<h3><span class="n">7</span>Como explicar sua escolha de modelagem em entrevista</h3>
+<p>Um bom roteiro de resposta segue esta estrutura: <strong>(1)</strong> qual problema a modelagem resolve, <strong>(2)</strong> por que essa opção e não outra, <strong>(3)</strong> qual o trade-off aceito. Exemplo aplicado ao etransparente: "Usei Medallion porque preciso reprocessar sem re-extrair de sites de ONGs (scraping é custoso); a camada Bronze me dá esse seguro, mesmo custando espaço extra em storage."</p>
+
+<div class="lesson-recap">
+  <div class="rt">Recapitulando</div>
+  <ul>
+    <li>Bronze = bruto · Silver = limpo · Gold = agregado para consumo</li>
+    <li>Fato = métricas + FKs · Dimensão = atributos descritivos</li>
+    <li>Snowflake normaliza dimensões; Star Schema prioriza performance de leitura</li>
+    <li>SCD Tipo 2 é o padrão quando você precisa manter histórico de mudanças</li>
+    <li>Data Warehouses são desnormalizados de propósito — trade-off consciente</li>
+  </ul>
+</div>
+
+<div class="lesson-source-box"><strong>Fontes oficiais consultadas:</strong> Databricks — Medallion Architecture, dbt Docs — Modelos e Materialização, Kimball Group — The Data Warehouse Toolkit</div>
+`,
+
+airflow: `
+<div class="lesson-eyebrow">Módulo 04 · Orquestração</div>
+<h2 class="lesson-title">Apache Airflow</h2>
+<div class="lesson-sub">DAGs, XComs e TaskFlow API — você já usa em produção, hora de aprofundar</div>
+<hr>
+
+<h3><span class="n">1</span>O que é o Airflow, formalmente</h3>
+<p>Airflow orquestra workflows definidos como código Python. A unidade central é a <strong>DAG</strong> (Directed Acyclic Graph) — um grafo de tarefas (<em>Tasks</em>) com dependências explícitas, sem ciclos. Cada Task é uma instância de um <strong>Operator</strong>, que funciona como um template reutilizável para um tipo de trabalho (rodar Python, rodar Bash, esperar um arquivo, etc).</p>
+
+<h3><span class="n">2</span>DAGs, Tasks e Task Instances — o vocabulário correto</h3>
+<ul>
+  <li><strong>DAG</strong> — o trabalho e a ordem em que deve acontecer, escrito em Python.</li>
+  <li><strong>DAG Run</strong> — uma instância concreta de execução de uma DAG, para uma data lógica específica.</li>
+  <li><strong>Operator</strong> — a classe-template que define o tipo de trabalho.</li>
+  <li><strong>Task</strong> — o trabalho definido ao instanciar um Operator dentro da DAG.</li>
+  <li><strong>Task Instance</strong> — a execução específica de uma Task dentro de uma DAG Run, com um estado associado (running, success, failed).</li>
+</ul>
+
+<h3><span class="n">3</span>XComs — como tasks isoladas trocam dados</h3>
+<p>Segundo a documentação oficial, XComs (abreviação de "cross-communications") são um mecanismo que permite Tasks conversarem entre si — já que, por padrão, Tasks são totalmente isoladas e podem rodar em máquinas diferentes. Um XCom é identificado por uma chave, além do <code>task_id</code> e <code>dag_id</code> de origem.</p>
+<div class="lesson-callout warn">⚠️ A documentação oficial é explícita: XComs são projetados apenas para <strong>pequenas quantidades de dado</strong>. Nunca use XCom para passar um DataFrame inteiro ou um arquivo grande entre tasks — para isso, salve o dado em um storage externo (ADLS, S3) e passe apenas o <em>path</em> via XCom.</div>
+<pre><code># Forma tradicional (sem TaskFlow)
+def extract(**kwargs):
+    ti = kwargs['ti']
+    ti.xcom_push(key='dados', value=dados_extraidos)
+
+def transform(**kwargs):
+    ti = kwargs['ti']
+    dados = ti.xcom_pull(task_ids='extract', key='dados')</code></pre>
+
+<h3><span class="n">4</span>TaskFlow API — a forma moderna de escrever DAGs</h3>
+<p>Introduzida no Airflow 2.0, a TaskFlow API elimina o boilerplate de <code>xcom_push</code>/<code>xcom_pull</code> manual. Você escreve funções Python decoradas com <code>@task</code>, e o Airflow cuida automaticamente da passagem de dados via XCom e do cálculo de dependências:</p>
+<pre><code>from airflow.sdk import task
+
+@task
+def extract():
+    return {"pedido_1": 100, "pedido_2": 250}
+
+@task
+def transform(order_data: dict):
+    return sum(order_data.values())
+
+@task
+def load(total: float):
+    print(f"Valor total: {total:.2f}")
+
+order_data = extract()
+total = transform(order_data)
+load(total)</code></pre>
+<p>Repare que não há nenhuma chamada explícita a XCom — ao chamar <code>transform(order_data)</code>, o Airflow automaticamente identifica que <code>transform</code> depende de <code>extract</code> e transporta o valor de retorno via XCom por trás dos panos.</p>
+<div class="lesson-callout tip">💡 Um detalhe cobrado em entrevista: usar <code>@task(multiple_outputs=True)</code> faz cada chave do dicionário retornado virar um XCom separado — o que facilita referenciar valores específicos nas tasks seguintes, em vez de acessar o dicionário inteiro.</div>
+
+<h3><span class="n">5</span>Connections e Variables</h3>
+<p><strong>Connections</strong> armazenam credenciais de sistemas externos (bancos, APIs, cloud) de forma centralizada e criptografada, evitando hardcode. <strong>Variables</strong> armazenam configurações e parâmetros reutilizáveis entre DAGs (paths, flags, thresholds), acessíveis via <code>Variable.get()</code>.</p>
+
+<h3><span class="n">6</span>Sensors — esperando por eventos externos</h3>
+<p>Um Sensor é um tipo especial de Operator que espera uma condição se tornar verdadeira antes de continuar — por exemplo, esperar um arquivo aparecer em um storage, ou esperar outra DAG terminar. Sensors modernos usam <em>deferrable mode</em> para não ocupar um worker enquanto esperam, o que economiza recursos em pipelines com muitas esperas.</p>
+
+<h3><span class="n">7</span>Backfill e re-execução</h3>
+<p>Backfill é o processo de rodar (ou re-rodar) execuções passadas de uma DAG — essencial quando você corrige um bug e precisa reprocessar dados históricos com a lógica corrigida. O Airflow permite isso nativamente via CLI ou UI, sem precisar reescrever a lógica de execução.</p>
+
+<h3><span class="n">8</span>Trigger Rules — controlando dependências complexas</h3>
+<p>Por padrão, uma task só executa quando todas as tasks upstream tiveram sucesso (<code>all_success</code>). Mas é possível customizar: <code>one_failed</code> dispara assim que uma dependência falha (útil para tasks de alerta), <code>one_success</code> dispara assim que uma tem sucesso, sem esperar as demais.</p>
+
+<div class="lesson-recap">
+  <div class="rt">Recapitulando</div>
+  <ul>
+    <li>DAG = grafo de tasks; Task Instance = execução específica com estado</li>
+    <li>XComs passam dados pequenos entre tasks isoladas — nunca DataFrames grandes</li>
+    <li>TaskFlow API (@task) automatiza XCom e dependências, reduzindo boilerplate</li>
+    <li>Sensors esperam eventos externos; use deferrable mode para economizar recursos</li>
+    <li>Backfill permite reprocessar execuções passadas após corrigir um bug</li>
+  </ul>
+</div>
+
+<div class="lesson-source-box"><strong>Fontes oficiais consultadas:</strong> Apache Airflow Documentation — Core Concepts, XComs, TaskFlow API (airflow.apache.org/docs/apache-airflow/stable)</div>
+`,
+
+cloud: `
+<div class="lesson-eyebrow">Módulo 05 · Infraestrutura Cloud</div>
+<h2 class="lesson-title">Cloud — Azure + AWS/GCP</h2>
+<div class="lesson-sub">Você domina Azure em produção — hora de construir a equivalência cross-cloud para entrevistas</div>
+<hr>
+
+<h3><span class="n">1</span>Por que equivalência cross-cloud importa</h3>
+<p>Empresas diferentes usam clouds diferentes. Ter domínio prático em Azure (como você tem) é ótimo, mas em entrevistas técnicas é comum pedirem para você "traduzir" seu conhecimento para AWS ou GCP — isso demonstra que você entende os <strong>conceitos</strong> por trás da ferramenta, não apenas o botão que aperta.</p>
+
+<h3><span class="n">2</span>Armazenamento de objetos e Data Lakes</h3>
+<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:13px">
+<tr style="background:#eeead9"><td style="padding:8px;font-weight:600">Conceito</td><td style="padding:8px;font-weight:600">Azure</td><td style="padding:8px;font-weight:600">AWS</td><td style="padding:8px;font-weight:600">GCP</td></tr>
+<tr><td style="padding:8px;border-top:1px solid #e5e0d5">Storage de objetos</td><td style="padding:8px;border-top:1px solid #e5e0d5">Blob Storage / ADLS Gen2</td><td style="padding:8px;border-top:1px solid #e5e0d5">S3</td><td style="padding:8px;border-top:1px solid #e5e0d5">Cloud Storage</td></tr>
+<tr><td style="padding:8px;border-top:1px solid #e5e0d5">Data Warehouse</td><td style="padding:8px;border-top:1px solid #e5e0d5">Synapse Analytics</td><td style="padding:8px;border-top:1px solid #e5e0d5">Redshift</td><td style="padding:8px;border-top:1px solid #e5e0d5">BigQuery</td></tr>
+<tr><td style="padding:8px;border-top:1px solid #e5e0d5">ETL gerenciado</td><td style="padding:8px;border-top:1px solid #e5e0d5">Data Factory</td><td style="padding:8px;border-top:1px solid #e5e0d5">Glue</td><td style="padding:8px;border-top:1px solid #e5e0d5">Dataflow</td></tr>
+<tr><td style="padding:8px;border-top:1px solid #e5e0d5">Query engine serverless</td><td style="padding:8px;border-top:1px solid #e5e0d5">Synapse Serverless</td><td style="padding:8px;border-top:1px solid #e5e0d5">Athena</td><td style="padding:8px;border-top:1px solid #e5e0d5">BigQuery</td></tr>
+<tr><td style="padding:8px;border-top:1px solid #e5e0d5">Identidade/IAM</td><td style="padding:8px;border-top:1px solid #e5e0d5">Entra ID (ex-Azure AD)</td><td style="padding:8px;border-top:1px solid #e5e0d5">IAM</td><td style="padding:8px;border-top:1px solid #e5e0d5">Cloud IAM</td></tr>
+</table>
+
+<h3><span class="n">3</span>ADLS Gen2 — o que você já domina, formalizado</h3>
+<p>Azure Data Lake Storage Gen2 combina o Blob Storage padrão com um namespace hierárquico (pastas reais, não apenas prefixos simulados) e ACLs (listas de controle de acesso) granulares por pasta ou arquivo. Isso é o que permite organizar seu Data Lake em camadas Bronze/Silver/Gold com permissões diferentes por camada.</p>
+
+<h3><span class="n">4</span>IAM — o conceito que atravessa todas as clouds</h3>
+<p>Identity and Access Management é o sistema que controla <strong>quem</strong> pode fazer <strong>o quê</strong> em <strong>quais recursos</strong>. O princípio universal, independente da cloud, é o <strong>least privilege</strong> (privilégio mínimo): conceder apenas as permissões estritamente necessárias para uma tarefa, nunca acesso amplo "por conveniência".</p>
+<div class="lesson-callout tip">💡 Você já aplica esse princípio na prática: o GCP Workload Identity Federation do seu pipeline-etransparente existe exatamente para evitar chaves de serviço estáticas, permitindo que a VM Azure se autentique no GCP via identidade federada, sem armazenar credenciais de longa duração.</div>
+
+<h3><span class="n">5</span>Trade-offs entre clouds — como falar disso em entrevista</h3>
+<p>Não existe "cloud melhor" de forma absoluta — existe a cloud mais adequada ao contexto. Um bom candidato consegue articular trade-offs reais:</p>
+<ul>
+  <li><strong>Azure</strong> — forte integração com ecossistema Microsoft (Active Directory, Office, .NET); Synapse combina DW e Data Lake em uma superfície só.</li>
+  <li><strong>AWS</strong> — maior maturidade e variedade de serviços; Athena permite queries SQL diretas sobre S3 sem infraestrutura dedicada.</li>
+  <li><strong>GCP</strong> — BigQuery se destaca por separar armazenamento e computação de forma extremamente elástica, com preço por dado escaneado.</li>
+</ul>
+
+<h3><span class="n">6</span>Azure Logic Apps — automação sem servidor</h3>
+<p>Logic Apps é o serviço de automação de fluxos low-code do Azure — você já usa isso para ligar/desligar sua VM automaticamente. Ele se conecta nativamente a centenas de serviços (Outlook, SharePoint, bancos de dados, APIs REST) via conectores pré-construídos, sem precisar escrever código de integração do zero.</p>
+
+<div class="lesson-recap">
+  <div class="rt">Recapitulando</div>
+  <ul>
+    <li>ADLS Gen2 (Azure) ≈ S3 (AWS) ≈ Cloud Storage (GCP)</li>
+    <li>Synapse (Azure) ≈ Redshift (AWS) ≈ BigQuery (GCP)</li>
+    <li>IAM segue o princípio de least privilege em qualquer cloud</li>
+    <li>Workload Identity Federation evita credenciais estáticas entre clouds</li>
+    <li>Trade-offs entre clouds = maturidade de serviço, integração de ecossistema, modelo de precificação</li>
+  </ul>
+</div>
+
+<div class="lesson-source-box"><strong>Fontes oficiais consultadas:</strong> Microsoft Learn — Azure Data Engineer Path, AWS Skill Builder — Data Analytics, Google Cloud — Data Engineering Learning Path</div>
+`,
+
+process: `
+<div class="lesson-eyebrow">Módulo 06 · Carreira e Processo Seletivo</div>
+<h2 class="lesson-title">Processos Seletivos</h2>
+<div class="lesson-sub">Como transformar dois projetos reais em entrevistas e ofertas concretas</div>
+<hr>
+
+<h3><span class="n">1</span>O funil real de uma vaga de dados</h3>
+<p>A maioria dos processos segue uma estrutura parecida: triagem de currículo/LinkedIn → teste técnico (SQL/Python, geralmente em plataforma como HackerRank ou live coding) → case ou entrevista técnica com o time → entrevista comportamental/cultural → oferta. Entender essa estrutura ajuda a saber onde investir energia de preparo.</p>
+
+<h3><span class="n">2</span>Por que seus projetos são um diferencial real</h3>
+<p>A maioria dos candidatos jr chega com projetos de curso (tutorial seguido passo a passo). Você tem dois projetos <strong>em produção real</strong>, rodando com stack de mercado (Airflow, Docker, Azure, arquitetura Medallion). Isso muda completamente sua posição no funil — mas só se você souber <strong>comunicar</strong> isso de forma que um recrutador não-técnico e um engenheiro sênior consigam entender igualmente bem.</p>
+
+<h3><span class="n">3</span>Como estruturar a apresentação de um projeto</h3>
+<p>Um roteiro eficaz de 30-45 segundos segue: <strong>(1) o que o projeto faz</strong> — em termos de negócio/impacto, não só técnico; <strong>(2) como foi construído</strong> — stack e arquitetura, com palavras-chave relevantes; <strong>(3) um desafio real que você resolveu</strong> — isso demonstra profundidade, não apenas execução de tutorial.</p>
+<div class="lesson-callout tip">💡 Exemplo aplicado ao pipeline-etransparente: "É um pipeline ETL open source que monitora transparência de ONGs brasileiras — coleta dados públicos, processa em arquitetura Medallion com Airflow rodando em uma VM Azure, e gera relatórios com score de transparência. Um desafio real foi automatizar o liga/desliga da VM via Logic Apps para controlar custo, já que o processamento roda só uma vez por mês."</div>
+
+<h3><span class="n">4</span>SQL challenges — o que praticar e como</h3>
+<p>Plataformas como LeetCode (categoria SQL) e HackerRank simulam o formato mais comum de teste técnico. O padrão de dificuldade que costuma aparecer em vagas jr/pleno:</p>
+<ul>
+  <li>JOINs com múltiplas tabelas e filtros condicionais</li>
+  <li>Window functions para ranking (top N por grupo)</li>
+  <li>Subqueries para comparação com agregados (acima da média, etc)</li>
+  <li>Detecção de duplicatas e deduplicação via <code>ROW_NUMBER()</code></li>
+</ul>
+
+<h3><span class="n">5</span>Case de ETL — o que avaliadores procuram</h3>
+<p>Um case típico apresenta uma fonte de dados bruta (CSV, API, JSON) e pede para você desenhar ou implementar um pipeline. O que diferencia uma resposta boa de uma excelente:</p>
+<ul>
+  <li>Perguntar sobre volume, frequência de atualização e SLA antes de propor a arquitetura</li>
+  <li>Justificar a escolha de ferramenta em vez de "usar porque é o que eu sei"</li>
+  <li>Mencionar tratamento de erro, idempotência (rodar 2x não deve duplicar dado) e observabilidade</li>
+  <li>Separar em camadas (bruto → limpo → agregado), mesmo em um desenho simples</li>
+</ul>
+
+<h3><span class="n">6</span>Perguntas comportamentais — prepare histórias, não respostas genéricas</h3>
+<p>Perguntas como "conte sobre um desafio técnico que você enfrentou" são melhor respondidas com o método <strong>Situação → Tarefa → Ação → Resultado</strong>. Prepare 2-3 histórias reais dos seus próprios projetos (IDC, etransparente) que demonstrem: resolução de problema técnico, tomada de decisão sob ambiguidade, e trabalho com stakeholders não-técnicos.</p>
+
+<h3><span class="n">7</span>Explicando Medallion Architecture para não-técnicos</h3>
+<p>Uma analogia eficaz: "É como organizar uma cozinha profissional em três estações — a de recebimento (ingredientes brutos, do jeito que chegam do fornecedor), a de preparo (ingredientes limpos e cortados), e a de finalização (o prato pronto para servir). Cada estação existe separada porque, se algo der errado no preparo, você não quer ter que ir comprar tudo de novo — só refazer aquela etapa."</p>
+
+<div class="lesson-recap">
+  <div class="rt">Recapitulando</div>
+  <ul>
+    <li>Estruture a apresentação de projetos: o quê → como → desafio real superado</li>
+    <li>Pratique window functions e JOINs — são a base de qualquer teste técnico de SQL</li>
+    <li>Em cases de ETL, pergunte sobre volume/SLA antes de propor solução</li>
+    <li>Prepare histórias reais no formato Situação-Tarefa-Ação-Resultado</li>
+    <li>Tenha uma analogia simples para conceitos técnicos (Medallion, arquitetura)</li>
+  </ul>
+</div>
+
+<div class="lesson-source-box"><strong>Fontes consultadas:</strong> LeetCode SQL 50, HackerRank SQL Domain — padrões de questões observados em processos seletivos de mercado</div>
+`
+};
+
+// ─── TOPICS (metadados, subtópicos, fontes, testes) ───────────────────────────
+const TOPICS = [
+  { id: 'sql', icon: '🗄️', color: '#ef4444', title: 'SQL Avançado', sub: 'Filtro #1 em qualquer processo seletivo de dados',
+    subtopics: [
+      { text: 'SELECT, WHERE, GROUP BY, ORDER BY', tag: 'owned' },
+      { text: 'JOINs (INNER, LEFT, RIGHT, FULL, CROSS)', tag: 'critical' },
+      { text: 'Window Functions (ROW_NUMBER, RANK, LAG, LEAD)', tag: 'critical' },
+      { text: 'CTEs (WITH ... AS)', tag: 'critical' },
+      { text: 'Subqueries correlacionadas', tag: 'important' },
+      { text: 'EXPLAIN / Query Plan — otimização', tag: 'important' },
+      { text: 'Índices e performance', tag: 'important' },
+      { text: 'Agregação condicional (FILTER, CASE WHEN)', tag: 'important' },
+      { text: 'Particionamento de tabelas', tag: 'bonus' },
+    ],
+    defaultSources: [
+      { name: 'PostgreSQL Docs — Window Functions (tutorial)', url: 'https://www.postgresql.org/docs/current/tutorial-window.html' },
+      { name: 'PostgreSQL Docs — Window Functions (referência)', url: 'https://www.postgresql.org/docs/current/functions-window.html' },
+      { name: 'LeetCode SQL 50', url: 'https://leetcode.com/studyplan/top-sql-50/' },
+    ],
+    questions: [
+      { q: 'Qual window function empata posições e pula a seguinte em caso de empate?', options: ['ROW_NUMBER()', 'RANK()', 'DENSE_RANK()', 'NTILE(4)'], correct: 1, explanation: 'RANK() empata e pula (1,1,3). DENSE_RANK() não pula (1,1,2). ROW_NUMBER() nunca empata.' },
+      { q: 'O que retorna o código abaixo?', code: `WITH ranked AS (\n  SELECT name, salary,\n    DENSE_RANK() OVER (ORDER BY salary DESC) rk\n  FROM employees\n)\nSELECT name, salary FROM ranked WHERE rk = 2`, options: ['Apenas um funcionário (2º maior único)', 'Todos com o 2º maior salário, incluindo empates', 'Erro — DENSE_RANK não pode ser filtrado em WHERE', 'O funcionário com menor salário'], correct: 1, explanation: 'Via CTE, o WHERE funciona normalmente. DENSE_RANK retorna TODOS os empatados na 2ª posição.' },
+      { q: 'Segundo a documentação oficial, onde window functions são permitidas?', options: ['Em WHERE e HAVING', 'Apenas em SELECT e ORDER BY', 'Em qualquer cláusula', 'Apenas em GROUP BY'], correct: 1, explanation: 'Window functions são proibidas em WHERE, GROUP BY e HAVING porque executam depois desses processamentos — só são permitidas em SELECT e ORDER BY.' },
+    ]
+  },
+  { id: 'python', icon: '🐍', color: '#3b82f6', title: 'Python para Dados', sub: 'Pandas, APIs, automação e tratamento de dados',
+    subtopics: [
+      { text: 'Pandas — leitura/escrita (CSV, JSON, Parquet)', tag: 'owned' },
+      { text: 'Pandas — merge, groupby, pivot_table', tag: 'critical' },
+      { text: 'Pandas — apply, map, lambda', tag: 'critical' },
+      { text: 'Tratamento de nulos e casting de tipos', tag: 'critical' },
+      { text: 'Requests — consumo de APIs REST', tag: 'important' },
+      { text: 'Variáveis de ambiente (.env / os.environ)', tag: 'important' },
+      { text: 'Logging e tratamento de exceções', tag: 'important' },
+      { text: 'NumPy básico para transformações', tag: 'owned' },
+      { text: 'PySpark — RDD vs DataFrame', tag: 'bonus' },
+    ],
+    defaultSources: [
+      { name: 'Pandas User Guide (oficial)', url: 'https://pandas.pydata.org/docs/user_guide/' },
+      { name: 'Python for Data Analysis — Wes McKinney', url: 'https://wesmckinney.com/book/' },
+      { name: 'Real Python — APIs com Requests', url: 'https://realpython.com/python-requests/' },
+    ],
+    questions: [
+      { q: 'Como calcular média de "valor" por "categoria" ignorando nulos?', code: `df = pd.DataFrame({\n    'categoria': ['A','B','A','B','A'],\n    'valor': [10, 20, None, 30, 40]\n})`, options: ["df.groupby('categoria')['valor'].mean()", "df.groupby('categoria')['valor'].mean(skipna=False)", "df.pivot('categoria','valor').mean()", "df['valor'].groupby(df['categoria']).sum()"], correct: 0, explanation: 'groupby().mean() ignora NaN por padrão. skipna=False propagaria o NaN. A opção D tem sintaxe incorreta.' },
+      { q: 'Diferença entre df.merge() e pd.concat()?', options: ['São equivalentes', 'merge() combina por chave (tipo JOIN); concat() empilha DataFrames', 'concat() é sempre mais rápido', 'merge() só funciona com índices numéricos'], correct: 1, explanation: 'merge() = JOIN do SQL. concat() = empilhar verticalmente (axis=0) ou lado a lado (axis=1).' },
+    ]
+  },
+  { id: 'modeling', icon: '🏗️', color: '#8b5cf6', title: 'Modelagem de Dados', sub: 'Fundamentos que diferenciam engenheiros de analistas',
+    subtopics: [
+      { text: 'Medallion Architecture (Bronze/Silver/Gold)', tag: 'owned' },
+      { text: 'Star Schema — fatos e dimensões', tag: 'critical' },
+      { text: 'Snowflake Schema — quando usar vs Star', tag: 'important' },
+      { text: 'SCD Tipo 1, 2 e 3', tag: 'important' },
+      { text: 'Normalização (1FN, 2FN, 3FN)', tag: 'critical' },
+      { text: 'Data Vault 2.0 — conceitos básicos', tag: 'bonus' },
+      { text: 'Explicar escolhas de modelagem em entrevista', tag: 'critical' },
+    ],
+    defaultSources: [
+      { name: 'Databricks — Medallion Architecture', url: 'https://www.databricks.com/glossary/medallion-architecture' },
+      { name: 'dbt Docs — Modelos e Materialização', url: 'https://docs.getdbt.com/docs/build/models' },
+      { name: 'Kimball Group — Data Warehouse Toolkit', url: 'https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/data-warehouse-dw-toolkit/' },
+    ],
+    questions: [
+      { q: 'No Star Schema, diferença entre tabela fato e dimensão?', options: ['Fato = métricas + FKs; Dimensão = atributos descritivos', 'Dimensão = métricas; Fato = textos', 'São sinônimos', 'Fato tem sempre mais colunas'], correct: 0, explanation: 'Fato: valor_venda, quantidade + FKs. Dimensão: nome_produto, cidade, categoria.' },
+      { q: 'Qual camada Medallion recebe dados brutos sem transformação?', options: ['Gold', 'Silver', 'Bronze', 'Raw Vault'], correct: 2, explanation: 'Bronze = ingestão direta, dado bruto. Silver = limpo. Gold = agregado para BI/ML.' },
+    ]
+  },
+  { id: 'airflow', icon: '🌬️', color: '#10b981', title: 'Apache Airflow', sub: 'Você já usa em produção — aprofunde os conceitos avançados',
+    subtopics: [
+      { text: 'DAGs — estrutura e configuração', tag: 'owned' },
+      { text: 'Operators (PythonOperator, BashOperator)', tag: 'owned' },
+      { text: 'XComs — passagem de dados entre tasks', tag: 'critical' },
+      { text: 'Connections e Variables', tag: 'important' },
+      { text: 'Sensors — aguardar eventos externos', tag: 'important' },
+      { text: 'Task Dependencies (>>, <<)', tag: 'owned' },
+      { text: 'Backfill e re-execução de runs', tag: 'important' },
+      { text: 'Airflow com Docker Compose', tag: 'owned' },
+      { text: 'TaskFlow API (@task decorator)', tag: 'bonus' },
+    ],
+    defaultSources: [
+      { name: 'Apache Airflow Docs — Core Concepts', url: 'https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/index.html' },
+      { name: 'Apache Airflow Docs — XComs', url: 'https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/xcoms.html' },
+      { name: 'Apache Airflow Docs — TaskFlow', url: 'https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/taskflow.html' },
+    ],
+    questions: [
+      { q: 'O que são XComs no Airflow e quando usar?', options: ['Conexões externas configuradas no Admin', 'Mecanismo para passar pequenos dados entre tasks', 'Variáveis globais do Airflow', 'Logs por task'], correct: 1, explanation: 'XComs passam dados pequenos entre tasks. Para dados grandes, use storage externo e passe só o path via XCom.' },
+      { q: 'O que a TaskFlow API (@task) elimina, segundo a documentação oficial?', options: ['A necessidade de instalar operators', 'O boilerplate de xcom_push/xcom_pull manual e cálculo de dependências', 'A necessidade de definir uma DAG', 'O uso de Python'], correct: 1, explanation: 'TaskFlow automatiza a passagem de dados via XCom e a declaração de dependências entre tasks, reduzindo código repetitivo.' },
+    ]
+  },
+  { id: 'cloud', icon: '☁️', color: '#0ea5e9', title: 'Cloud — Azure + AWS/GCP', sub: 'Azure em produção · Equivalência cross-cloud para entrevistas',
+    subtopics: [
+      { text: 'Azure Data Lake Gen2 — estrutura e ACL', tag: 'owned' },
+      { text: 'Azure VM — configuração e custo', tag: 'owned' },
+      { text: 'Azure Logic Apps — automação de fluxos', tag: 'owned' },
+      { text: 'Azure Synapse Analytics — conceitos', tag: 'important' },
+      { text: 'GCP Workload Identity Federation', tag: 'owned' },
+      { text: 'AWS S3 — equivalente ao ADLS', tag: 'important' },
+      { text: 'AWS Glue / Athena — conceitos básicos', tag: 'bonus' },
+      { text: 'IAM — permissões e roles (Azure + AWS)', tag: 'critical' },
+      { text: 'Trade-offs entre clouds em entrevista', tag: 'critical' },
+    ],
+    defaultSources: [
+      { name: 'Microsoft Learn — Azure Data Engineer', url: 'https://learn.microsoft.com/en-us/training/career-paths/azure-data-engineer' },
+      { name: 'AWS Skill Builder — Data Analytics', url: 'https://skillbuilder.aws/' },
+    ],
+    questions: [
+      { q: 'Qual serviço Azure equivale ao AWS S3 para Data Lakes?', options: ['Azure Data Lake Gen2 / Azure Blob Storage', 'Azure SQL Database', 'Azure Cosmos DB', 'Azure Files'], correct: 0, explanation: 'ADLS Gen2 combina Blob Storage com hierarquia de pastas e ACLs granulares — padrão para Data Lakes no Azure.' },
+    ]
+  },
+  { id: 'process', icon: '🎯', color: '#f59e0b', title: 'Processos Seletivos', sub: 'Cases, testes técnicos e como apresentar seus projetos',
+    subtopics: [
+      { text: 'SQL challenges — LeetCode / HackerRank', tag: 'critical' },
+      { text: 'Case de ETL — dado bruto → insight', tag: 'critical' },
+      { text: 'Perguntas comportamentais sobre projetos', tag: 'important' },
+      { text: 'Como apresentar o etransparente para recrutador', tag: 'critical' },
+      { text: 'Explicar Medallion Architecture de forma simples', tag: 'important' },
+      { text: 'Design de pipeline em entrevista técnica', tag: 'bonus' },
+    ],
+    defaultSources: [
+      { name: 'LeetCode — SQL 50', url: 'https://leetcode.com/studyplan/top-sql-50/' },
+      { name: 'HackerRank — SQL challenges', url: 'https://www.hackerrank.com/domains/sql' },
+    ],
+    questions: [
+      { q: 'Como apresentar o pipeline-etransparente em 30 segundos?', options: ['"Pipeline ETL open source que coleta, processa e pontua dados de transparência de ONGs usando Airflow, Docker e Azure com arquitetura Medallion."', '"É um projeto de machine learning para classificar ONGs."', '"É um sistema de scraping de sites governamentais."', '"É uma aplicação web para visualizar dados de ONGs."'], correct: 0, explanation: 'A resposta certa usa palavras-chave certas (ETL, open source, Airflow, Azure, Medallion) e conecta tecnologia com impacto real.' },
+    ]
+  }
+];
+
+// ─── STORAGE LOCAL ────────────────────────────────────────────────────────────
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e) {}
+  return buildDefaultData();
+}
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); }
+  catch(e) { showToast('Erro ao salvar — localStorage cheio?', '⚠️'); }
+}
+function buildDefaultData() {
+  const checks = {}, sources = {};
+  TOPICS.forEach(t => {
+    sources[t.id] = t.defaultSources.map(s => ({ ...s, custom: false }));
+    t.subtopics.forEach((s, i) => { checks[`${t.id}_${i}`] = s.tag === 'owned'; });
+  });
+  return { checks, sources, testHistory: {}, totalTests: 0 };
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(APP, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `de_study_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Backup exportado!', '⬇');
+}
+function showImport() { document.getElementById('import-json').value = ''; document.getElementById('modal-import').classList.add('show'); }
+function importData() {
+  try {
+    const parsed = JSON.parse(document.getElementById('import-json').value.trim());
+    if (!parsed.checks || !parsed.sources) throw new Error('Formato inválido');
+    APP = parsed; saveData(); closeModal('modal-import'); renderTopics();
+    showToast('Dados importados com sucesso!', '✅');
+  } catch(e) { showToast('JSON inválido. Verifique o arquivo.', '⚠️'); }
+}
+function showReset() { document.getElementById('modal-reset').classList.add('show'); }
+function resetData() { APP = buildDefaultData(); saveData(); closeModal('modal-reset'); renderTopics(); showToast('Dados resetados.', '🔄'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+let APP = loadData();
+let activeFilter = 'all';
+const testStates = {};
+
+function topicProgress(id) {
+  const t = TOPICS.find(x => x.id === id);
+  const done = t.subtopics.filter((_, i) => APP.checks[`${id}_${i}`]).length;
+  return Math.round((done / t.subtopics.length) * 100);
+}
+function overallProgress() {
+  const total = TOPICS.reduce((a, t) => a + t.subtopics.length, 0);
+  const done = TOPICS.reduce((a, t) => a + t.subtopics.filter((_, i) => APP.checks[`${t.id}_${i}`]).length, 0);
+  return Math.round((done / total) * 100);
+}
+function updateHeader() {
+  const pct = overallProgress();
+  document.getElementById('hdr-pct').textContent = pct + '%';
+  document.getElementById('overall-fill').style.width = pct + '%';
+  document.getElementById('hdr-tests').textContent = APP.totalTests || 0;
+}
+function barColor(pct) { if (pct >= 70) return 'var(--green)'; if (pct >= 40) return 'var(--yellow)'; return 'var(--red)'; }
+
+function showToast(msg, emoji = '✅') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${emoji} ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function toggleCheck(topicId, idx) {
+  const key = `${topicId}_${idx}`;
+  APP.checks[key] = !APP.checks[key];
+  saveData();
+  const chk = document.getElementById(`chk_${topicId}_${idx}`);
+  const txt = document.getElementById(`txt_${topicId}_${idx}`);
+  if (chk) { chk.className = 'subtopic-check' + (APP.checks[key] ? ' checked' : ''); chk.textContent = APP.checks[key] ? '✓' : ''; }
+  if (txt) txt.className = 'subtopic-text' + (APP.checks[key] ? ' done' : '');
+  const pct = topicProgress(topicId);
+  const bar = document.getElementById(`bar_${topicId}`);
+  const pctEl = document.getElementById(`pct_${topicId}`);
+  if (bar) { bar.style.width = pct + '%'; bar.style.background = barColor(pct); }
+  if (pctEl) pctEl.textContent = pct + '%';
+  updateHeader();
+  showToast(APP.checks[key] ? 'Subtópico concluído!' : 'Desmarcado', APP.checks[key] ? '✅' : '↩️');
+}
+
+function addLink(topicId) {
+  const nameEl = document.getElementById(`ln-${topicId}`);
+  const urlEl = document.getElementById(`lu-${topicId}`);
+  const name = nameEl.value.trim(), url = urlEl.value.trim();
+  if (!name || !url) { showToast('Preencha nome e URL', '⚠️'); return; }
+  if (!url.startsWith('http')) { showToast('URL deve começar com http', '⚠️'); return; }
+  if (!APP.sources[topicId]) APP.sources[topicId] = [];
+  APP.sources[topicId].push({ name, url, custom: true });
+  saveData(); nameEl.value = ''; urlEl.value = '';
+  renderSourcesList(topicId);
+  showToast('Link salvo!', '🔗');
+}
+function removeLink(topicId, idx) {
+  APP.sources[topicId].splice(idx, 1); saveData();
+  renderSourcesList(topicId); showToast('Link removido', '🗑️');
+}
+function renderSourcesList(topicId) {
+  const c = document.getElementById(`sl-${topicId}`);
+  if (!c) return;
+  const srcs = APP.sources[topicId] || [];
+  if (!srcs.length) { c.innerHTML = '<div class="empty">Nenhuma fonte ainda.</div>'; return; }
+  c.innerHTML = srcs.map((s, i) => `
+    <div class="source-item">
+      <span class="source-icon">${s.custom ? '🔗' : '📄'}</span>
+      <span class="source-name">${s.name}</span>
+      <a class="source-url" href="${s.url}" target="_blank" rel="noopener">→ abrir</a>
+      <button class="source-del" onclick="removeLink('${topicId}',${i})">×</button>
+    </div>`).join('');
+}
+
+function switchTab(topicId, tab) {
+  ['subtopics','sources','lesson','test','history'].forEach(t => {
+    const p = document.getElementById(`tp-${topicId}-${t}`);
+    const b = document.getElementById(`tb-${topicId}-${t}`);
+    if (p) p.className = 'tab-panel' + (t === tab ? ' active' : '');
+    if (b) b.className = 'body-tab' + (t === tab ? ' active' : '');
+  });
+  if (tab === 'sources') renderSourcesList(topicId);
+  if (tab === 'history') renderHistory(topicId);
+  if (tab === 'test') initTest(topicId);
+}
+
+function initTest(topicId) { testStates[topicId] = { current: 0, score: 0, answered: false }; renderQ(topicId); }
+function renderQ(topicId) {
+  const topic = TOPICS.find(t => t.id === topicId);
+  const ts = testStates[topicId];
+  const c = document.getElementById(`tp-${topicId}-test`);
+  if (!topic.questions.length) { c.innerHTML = '<div class="empty">Mais questões em breve!</div>'; return; }
+  const q = topic.questions[ts.current];
+  c.innerHTML = `
+    <div class="test-question">${q.q}</div>
+    ${q.code ? `<div class="test-code">${q.code}</div>` : ''}
+    <div class="test-options" id="opts-${topicId}">
+      ${q.options.map((o, i) => `<button class="test-opt" onclick="answerQ('${topicId}',${i})">${o}</button>`).join('')}
+    </div>
+    <div class="test-feedback" id="fb-${topicId}"></div>
+    <div class="test-nav">
+      <span class="test-counter">${ts.current + 1} / ${topic.questions.length}</span>
+      <button class="btn primary" id="nx-${topicId}" style="display:none" onclick="nextQ('${topicId}')">
+        ${ts.current + 1 < topic.questions.length ? 'Próxima →' : 'Ver resultado'}
+      </button>
+    </div>`;
+}
+function answerQ(topicId, chosen) {
+  const ts = testStates[topicId];
+  if (ts.answered) return;
+  ts.answered = true;
+  const q = TOPICS.find(t => t.id === topicId).questions[ts.current];
+  document.querySelectorAll(`#opts-${topicId} .test-opt`).forEach((o, i) => {
+    o.disabled = true;
+    if (i === q.correct) o.classList.add('correct');
+    if (i === chosen && chosen !== q.correct) o.classList.add('wrong');
+  });
+  const ok = chosen === q.correct;
+  if (ok) ts.score++;
+  const fb = document.getElementById(`fb-${topicId}`);
+  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + q.explanation;
+  fb.className = `test-feedback show ${ok ? 'correct' : 'wrong'}`;
+  const nx = document.getElementById(`nx-${topicId}`);
+  if (nx) nx.style.display = 'flex';
+}
+function nextQ(topicId) {
+  const topic = TOPICS.find(t => t.id === topicId);
+  const ts = testStates[topicId];
+  if (ts.current + 1 >= topic.questions.length) {
+    const pct = Math.round((ts.score / topic.questions.length) * 100);
+    if (!APP.testHistory[topicId]) APP.testHistory[topicId] = [];
+    APP.testHistory[topicId].unshift({ date: new Date().toLocaleDateString('pt-BR'), score: ts.score, total: topic.questions.length, pct });
+    APP.totalTests = (APP.totalTests || 0) + 1;
+    saveData(); updateHeader();
+    const emoji = pct >= 70 ? '🟢' : pct >= 40 ? '🟡' : '🔴';
+    const msg = pct >= 70 ? 'Bom domínio! Avance.' : pct >= 40 ? 'Em progresso — releia a aula.' : 'Prioridade — releia a aula antes de refazer.';
+    document.getElementById(`tp-${topicId}-test`).innerHTML = `
+      <div class="test-result">
+        <div class="result-emoji">${emoji}</div>
+        <div class="result-score">${ts.score}/${topic.questions.length} · ${pct}%</div>
+        <div class="result-msg">${msg}</div>
+        <div class="result-actions">
+          <button class="btn" onclick="switchTab('${topicId}','history')">Ver histórico</button>
+          <button class="btn" onclick="switchTab('${topicId}','lesson')">Reler aula</button>
+          <button class="btn primary" onclick="initTest('${topicId}')">Refazer</button>
+        </div>
+      </div>`;
+    showToast(pct < 70 ? 'Releia a aula e refaça!' : 'Ótimo resultado!', pct < 70 ? '📚' : '🎉');
+    return;
+  }
+  ts.current++; ts.answered = false; renderQ(topicId);
+}
+
+function renderHistory(topicId) {
+  const c = document.getElementById(`tp-${topicId}-history`);
+  const h = APP.testHistory[topicId] || [];
+  if (!h.length) { c.innerHTML = '<div class="empty">Nenhum teste feito ainda.</div>'; return; }
+  c.innerHTML = `<div class="history-list">${h.map(x => {
+    const col = x.pct >= 70 ? 'var(--green)' : x.pct >= 40 ? 'var(--yellow)' : 'var(--red)';
+    return `<div class="history-item"><div class="history-dot" style="background:${col}"></div><span>${x.score}/${x.total} corretas — ${x.pct}%</span><span class="history-date">${x.date}</span></div>`;
+  }).join('')}</div>`;
+}
+
+function setFilter(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTopics();
+}
+
+function renderLinksView() {
+  const main = document.getElementById('main-content');
+  let html = '';
+  TOPICS.forEach(t => {
+    const custom = (APP.sources[t.id] || []).filter(s => s.custom);
+    if (!custom.length) return;
+    html += `<div style="margin-bottom:18px">
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:7px">${t.icon} ${t.title}</div>
+      <div class="sources-list">${custom.map(s => `
+        <div class="source-item">
+          <span class="source-icon">🔗</span>
+          <span class="source-name">${s.name}</span>
+          <a class="source-url" href="${s.url}" target="_blank" rel="noopener">→ abrir</a>
+        </div>`).join('')}</div></div>`;
+  });
+  if (!html) html = '<div class="empty" style="padding:40px">Nenhum link personalizado ainda.<br>Abra um tema → aba "Fontes" → adicione seus links de estudo.</div>';
+  main.innerHTML = html;
+}
+
+function toggleTopic(id) { document.getElementById(`card_${id}`).classList.toggle('open'); }
+
+const tagLabel = { critical: '🔴 crítico', important: '🟡 importante', bonus: '🔵 bônus', owned: '✅ já tenho' };
+const tagClass = { critical: 'stag-critical', important: 'stag-important', bonus: 'stag-bonus', owned: 'stag-owned' };
+
+function htmlToMarkdown(html) {
+  let md = html;
+  md = md.replace(/<div class="lesson-callout[^"]*">\s*([\s\S]*?)\s*<\/div>/g, (m, p1) => '> ' + p1.replace(/<[^>]+>/g,'').trim() + '\n\n');
+  md = md.replace(/<div class="lesson-eyebrow">([\s\S]*?)<\/div>/g, (m, p1) => '_' + p1.trim() + '_\n\n');
+  md = md.replace(/<h2 class="lesson-title">(.*?)<\/h2>/g, '# $1\n\n');
+  md = md.replace(/<div class="lesson-sub">([\s\S]*?)<\/div>/g, (m, p1) => '> ' + p1.trim() + '\n\n');
+  md = md.replace(/<div class="lesson-recap">([\s\S]*?)<\/div>\s*<\/div>/g, (m, p1) => {
+    let title = (p1.match(/<div class="rt">(.*?)<\/div>/) || [,'Recapitulando'])[1];
+    let items = [...p1.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(x => '- ' + x[1].trim());
+    return '\n## ' + title + '\n\n' + items.join('\n') + '\n\n';
+  });
+  md = md.replace(/<div class="lesson-source-box">([\s\S]*?)<\/div>/g, (m, p1) => '\n---\n\n' + p1.replace(/<[^>]+>/g,'').trim() + '\n');
+  md = md.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, p1) => '```sql\n' + p1.trim() + '\n```\n\n');
+  md = md.replace(/<h3>(.*?)<\/h3>/g, '\n### $1\n\n');
+  md = md.replace(/<h4>(.*?)<\/h4>/g, '\n#### $1\n\n');
+  md = md.replace(/<hr>/g, '\n---\n\n');
+  md = md.replace(/<ul>/g, '\n').replace(/<\/ul>/g, '\n');
+  md = md.replace(/<li>\s*([\s\S]*?)\s*<\/li>/g, '- $1\n');
+  md = md.replace(/<p>\s*([\s\S]*?)\s*<\/p>/g, '$1\n\n');
+  md = md.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+  md = md.replace(/<em>(.*?)<\/em>/g, '_$1_');
+  md = md.replace(/<code>(.*?)<\/code>/g, '`$1`');
+  md = md.replace(/<[^>]+>/g, '');
+  md = md.replace(/\n{3,}/g, '\n\n');
+  return md.trim();
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportLessonMD(topicId) {
+  const rawHtml = LESSONS[topicId];
+  const md = htmlToMarkdown(rawHtml);
+  downloadFile(`aula_${topicId}_victor_breia.md`, md);
+  showToast('Markdown exportado! Já pode subir no NotebookLM.', '📄');
+}
+
+function renderTopics() {
+  const main = document.getElementById('main-content');
+  if (activeFilter === 'links') { renderLinksView(); return; }
+  let filtered = TOPICS;
+  if (activeFilter === 'critical') filtered = TOPICS.filter(t => t.subtopics.some(s => s.tag === 'critical'));
+  else if (activeFilter === 'owned') filtered = TOPICS.filter(t => topicProgress(t.id) >= 60);
+  else if (activeFilter === 'test') filtered = TOPICS.filter(t => t.questions.length > 0);
+
+  main.innerHTML = filtered.map(topic => {
+    const pct = topicProgress(topic.id);
+    const bc = barColor(pct);
+    const srcs = APP.sources[topic.id] || [];
+
+    const subtopicsHtml = topic.subtopics.map((s, i) => {
+      const done = APP.checks[`${topic.id}_${i}`];
+      return `<div class="subtopic">
+        <div class="subtopic-check ${done ? 'checked' : ''}" id="chk_${topic.id}_${i}" onclick="toggleCheck('${topic.id}',${i})">${done ? '✓' : ''}</div>
+        <div class="subtopic-text ${done ? 'done' : ''}" id="txt_${topic.id}_${i}">${s.text}</div>
+        <span class="stag ${tagClass[s.tag]}">${tagLabel[s.tag]}</span>
+      </div>`;
+    }).join('');
+
+    const sourcesHtml = srcs.length
+      ? srcs.map((s, i) => `<div class="source-item">
+          <span class="source-icon">${s.custom ? '🔗' : '📄'}</span>
+          <span class="source-name">${s.name}</span>
+          <a class="source-url" href="${s.url}" target="_blank" rel="noopener">→ abrir</a>
+          <button class="source-del" onclick="removeLink('${topic.id}',${i})">×</button>
+        </div>`).join('')
+      : '<div class="empty">Nenhuma fonte.</div>';
+
+    return `
+    <div class="topic-card" id="card_${topic.id}">
+      <div class="topic-header" onclick="toggleTopic('${topic.id}')">
+        <div class="topic-icon" style="background:${topic.color}18;color:${topic.color}">${topic.icon}</div>
+        <div class="topic-meta">
+          <div class="topic-title">${topic.title}</div>
+          <div class="topic-sub">${topic.sub}</div>
+        </div>
+        <div class="topic-right">
+          <div class="skill-wrap">
+            <div class="skill-pct" id="pct_${topic.id}">${pct}%</div>
+            <div class="skill-bar"><div class="skill-bar-fill" id="bar_${topic.id}" style="width:${pct}%;background:${bc}"></div></div>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+      </div>
+      <div class="topic-body">
+        ${topic.id === 'sql' ? `<div style="margin:14px 0 0"><a href="modulo-01-sql.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none">📘 Abrir módulo completo (9 aulas individuais) →</a></div>` : ''}
+        ${topic.id === 'modeling' ? `<div style="margin:14px 0 0"><a href="modulo-02-modelagem.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none">📘 Abrir módulo completo (7 aulas individuais) →</a></div>` : ''}
+        ${topic.id === 'airflow' ? `<div style="margin:14px 0 0"><a href="modulo-03-airflow.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none">📘 Abrir módulo completo (9 aulas individuais) →</a></div>` : ''}
+        ${topic.id === 'python' ? `<div style="margin:14px 0 0"><a href="modulo-04-python.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none">📘 Abrir módulo completo (9 aulas individuais) →</a></div>` : ''}
+        ${topic.id === 'cloud' ? `<div style="margin:14px 0 0"><a href="modulo-05-cloud.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none">📘 Abrir módulo completo (9 aulas individuais) →</a></div>` : ''}
+        <div class="body-tabs">
+          <button class="body-tab" id="tb-${topic.id}-lesson" onclick="switchTab('${topic.id}','lesson')">📖 Aula</button>
+          <button class="body-tab active" id="tb-${topic.id}-subtopics" onclick="switchTab('${topic.id}','subtopics')">📋 Subtópicos</button>
+          <button class="body-tab" id="tb-${topic.id}-sources" onclick="switchTab('${topic.id}','sources')">🔗 Fontes</button>
+          <button class="body-tab" id="tb-${topic.id}-test" onclick="switchTab('${topic.id}','test')">🧪 Testar</button>
+          <button class="body-tab" id="tb-${topic.id}-history" onclick="switchTab('${topic.id}','history')">📊 Histórico</button>
+        </div>
+
+        <div class="tab-panel" id="tp-${topic.id}-lesson">
+          <div class="lesson-toolbar">
+            <button class="btn primary" onclick="exportLessonMD('${topic.id}')">⬇ Exportar aula (.md)</button>
+          </div>
+          <div class="lesson-content" id="lesson-print-${topic.id}">${LESSONS[topic.id]}</div>
+        </div>
+
+        <div class="tab-panel active" id="tp-${topic.id}-subtopics">
+          <div class="subtopics">${subtopicsHtml}</div>
+        </div>
+        <div class="tab-panel" id="tp-${topic.id}-sources">
+          <div class="sources-list" id="sl-${topic.id}">${sourcesHtml}</div>
+          <div class="add-link-form">
+            <input id="ln-${topic.id}" placeholder="Nome (ex: Artigo Kimball)" />
+            <input id="lu-${topic.id}" placeholder="https://..." />
+            <button class="add-btn" onclick="addLink('${topic.id}')">+ Salvar</button>
+          </div>
+        </div>
+        <div class="tab-panel" id="tp-${topic.id}-test">
+          <div class="empty">Clique na aba "Testar" para iniciar.</div>
+        </div>
+        <div class="tab-panel" id="tp-${topic.id}-history">
+          <div class="empty">Faça um teste para ver o histórico aqui.</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateHeader();
+}
+
+TOPICS.forEach(t => {
+  if (!APP.sources[t.id]) APP.sources[t.id] = t.defaultSources.map(s => ({ ...s, custom: false }));
+});
+
+renderTopics();
+</script>
+</body>
+</html>

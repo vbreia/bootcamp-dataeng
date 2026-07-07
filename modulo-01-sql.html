@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 01 — SQL Avançado | Victor Breia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+:root {
+  --bg:#08080f; --surface:#0f0f18; --surface2:#16161f; --surface3:#1c1c28;
+  --border:#252533; --border2:#2e2e3f;
+  --accent:#ef4444; --accent2:#fca5a5;
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+  --text:#e2e2ee; --text2:#9898b8; --muted:#55556a;
+  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace; --serif:'Source Serif 4',serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
+.header { padding:22px 20px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:60; }
+.breadcrumb { font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px; }
+.breadcrumb a { color:var(--text2); text-decoration:none; }
+.breadcrumb a:hover { color:var(--accent2); }
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.header h1 { font-size:20px; font-weight:700; }
+.header h1 em { color:var(--accent2); font-style:normal; }
+.header-sub { font-size:12px; color:var(--muted); margin-top:4px; max-width:520px; }
+.hdr-actions { display:flex; gap:8px; flex-shrink:0; }
+.hdr-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.hdr-btn:hover { border-color:var(--accent); color:var(--text); }
+.hdr-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.hdr-btn.primary:hover { background:var(--accent2); border-color:var(--accent2); color:#1a1a1f; }
+.overall-bar { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-top:14px; max-width:520px; }
+.overall-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width .5s ease; }
+.overall-label { font-size:11px; color:var(--muted); margin-top:6px; font-family:var(--mono); }
+.layout { display:grid; grid-template-columns:260px 1fr; gap:0; max-width:1180px; margin:0 auto; align-items:start; }
+@media (max-width:860px) { .layout { grid-template-columns:1fr; } .sidebar { position:static !important; } }
+.sidebar { position:sticky; top:130px; padding:22px 14px 40px 20px; max-height:calc(100vh - 130px); overflow-y:auto; }
+.sidebar-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; padding-left:8px; }
+.toc-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; cursor:pointer; margin-bottom:2px; transition:background .15s; border-left:2px solid transparent; }
+.toc-item:hover { background:var(--surface2); }
+.toc-item.active { background:var(--surface2); border-left-color:var(--accent); }
+.toc-num { font-family:var(--mono); font-size:10px; color:var(--muted); width:16px; flex-shrink:0; }
+.toc-check { width:13px; height:13px; border-radius:4px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:8px; }
+.toc-check.done { background:var(--green); border-color:var(--green); color:#000; }
+.toc-text { font-size:12px; color:var(--text2); line-height:1.3; }
+.toc-item.active .toc-text { color:var(--text); font-weight:500; }
+.toc-tag { font-size:9px; padding:1px 5px; border-radius:3px; font-family:var(--mono); margin-left:auto; flex-shrink:0; }
+.toc-tag.critical { background:rgba(248,113,113,.15); color:var(--red); }
+.toc-tag.important { background:rgba(251,191,36,.15); color:var(--yellow); }
+.toc-tag.bonus { background:rgba(163,139,250,.15); color:#a78bfa; }
+.toc-tag.owned { background:rgba(52,211,153,.15); color:var(--green); }
+.toc-divider { height:1px; background:var(--border); margin:14px 8px; }
+.toc-item.summary-item .toc-text { font-weight:600; color:var(--text); }
+.content { padding:24px 24px 80px 20px; min-width:0; }
+.lesson-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap; }
+.lesson-nav-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
+.lesson-nav-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--text); }
+.lesson-nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+.lesson-progress-label { font-size:11px; color:var(--muted); font-family:var(--mono); }
+.lesson-card { background:#fdfcf9; color:#1a1a1f; border-radius:12px; padding:32px 36px; font-family:var(--serif); line-height:1.75; font-size:14.5px; }
+.lesson-eyebrow { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#8b5a5a; margin-bottom:6px; font-weight:500; }
+.lesson-title { font-size:25px; font-weight:700; color:#14141a; margin-bottom:6px; letter-spacing:-.3px; }
+.lesson-sub { font-family:var(--font); font-size:12.5px; color:#6b6b78; margin-bottom:20px; }
+.lesson-card hr { border:none; border-top:1px solid #e5e0d5; margin:20px 0; }
+.lesson-card h3 { font-family:var(--font); font-size:15px; font-weight:700; color:#14141a; margin:22px 0 10px; }
+.lesson-card h4 { font-family:var(--font); font-size:13px; font-weight:600; color:#2a2a30; margin:14px 0 6px; }
+.lesson-card p { margin-bottom:12px; color:#2a2a30; }
+.lesson-card ul, .lesson-card ol { margin:8px 0 14px 20px; }
+.lesson-card li { margin-bottom:6px; color:#2a2a30; }
+.lesson-card strong { color:#14141a; font-weight:700; }
+.lesson-card code { font-family:var(--mono); background:#f3e2e2; color:#8a3d3d; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+.lesson-card pre { background:#14141a; color:#d8dce8; border-radius:8px; padding:14px 16px; overflow-x:auto; margin:12px 0 16px; font-family:var(--mono); font-size:12px; line-height:1.6; }
+.lesson-card pre code { background:none; color:inherit; padding:0; }
+.callout { padding:10px 14px; border-radius:0 7px 7px 0; margin:14px 0; font-family:var(--font); font-size:12.5px; border-left:3px solid #6366f1; background:#eef0fb; color:#3a3a5c; }
+.callout.warn { background:#fdf3e7; border-left-color:#d97706; color:#6b4a10; }
+.callout.tip { background:#eafaf3; border-left-color:#10b981; color:#0d5e42; }
+.nblm-box { margin-top:24px; border-radius:10px; overflow:hidden; border:1px solid #d8d0be; }
+.nblm-header { background:#14141a; color:#fff; padding:10px 16px; font-family:var(--font); font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.nblm-body { padding:16px; background:#f7f5ee; }
+.nblm-field { margin-bottom:12px; }
+.nblm-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#8b7a5e; margin-bottom:4px; font-weight:600; }
+.nblm-value { font-family:var(--font); font-size:12.5px; color:#2a2a30; }
+.nblm-questions { list-style:none; margin:0; padding:0; }
+.nblm-questions li { background:#fff; border:1px solid #e5e0d5; border-radius:6px; padding:8px 12px; margin-bottom:6px; font-size:12px; font-family:var(--font); color:#2a2a30; }
+.source-box { margin-top:16px; padding:10px 16px; background:#f2f0e8; border-radius:8px; font-family:var(--font); font-size:11.5px; color:#6b6b78; }
+.source-box strong { color:#3a3a44; }
+.recap { margin-top:18px; padding:14px 16px; background:#14141a; color:#fdfcf9; border-radius:8px; font-family:var(--font); }
+.recap .rt { font-size:12px; font-weight:700; margin-bottom:8px; color:#fca5a5; text-transform:uppercase; letter-spacing:.06em; }
+.recap ul { margin:0 0 0 16px; }
+.recap li { font-size:12.5px; margin-bottom:5px; color:#e2e2ee; }
+.quick-check { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-top:16px; }
+.qc-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.qc-q { font-size:13px; margin-bottom:10px; line-height:1.5; }
+.qc-opts { display:grid; gap:6px; }
+.qc-opt { padding:8px 12px; border-radius:7px; border:1.5px solid var(--border2); background:transparent; color:var(--text); font-family:var(--font); font-size:12px; cursor:pointer; text-align:left; transition:all .15s; }
+.qc-opt:hover:not(:disabled) { border-color:var(--accent); background:rgba(239,68,68,.08); }
+.qc-opt.correct { border-color:var(--green); background:rgba(52,211,153,.1); color:var(--green); }
+.qc-opt.wrong { border-color:var(--red); background:rgba(248,113,113,.1); color:var(--red); }
+.qc-opt:disabled { cursor:default; }
+.qc-fb { margin-top:8px; padding:8px 12px; border-radius:7px; font-size:12px; display:none; }
+.qc-fb.show { display:block; }
+.qc-fb.correct { background:rgba(52,211,153,.08); color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+.qc-fb.wrong { background:rgba(248,113,113,.08); color:#fca5a5; border:1px solid rgba(248,113,113,.2); }
+.mark-bar { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+.mark-check-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; }
+.mark-check-btn .box { width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:10px; }
+.mark-check-btn .box.done { background:var(--green); border-color:var(--green); color:#000; }
+.summary-grid { display:grid; gap:10px; }
+.summary-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+.summary-card h4 { font-size:13px; margin-bottom:4px; }
+.summary-card p { font-size:12px; color:var(--text2); }
+.toast { position:fixed; bottom:20px; right:20px; background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 14px; font-size:12px; display:flex; align-items:center; gap:8px; transform:translateY(60px); opacity:0; transition:all .25s ease; z-index:300; max-width:260px; }
+.toast.show { transform:translateY(0); opacity:1; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.video-wrap { margin-bottom:20px; border-radius:10px; overflow:hidden; background:#000; }
+.video-wrap video { width:100%; display:block; max-height:480px; background:#000; }
+.video-placeholder {
+  margin-bottom:20px; border-radius:10px; border:1.5px dashed var(--border2);
+  background:var(--surface2); padding:28px 20px; text-align:center;
+}
+.video-placeholder .vp-icon { font-size:26px; margin-bottom:8px; }
+.video-placeholder .vp-title { font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
+.video-placeholder .vp-sub { font-family:var(--mono); font-size:11px; color:var(--muted); }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="breadcrumb"><a href="data-engineer-study-system.html">← Voltar ao painel geral</a></div>
+  <div class="header-top">
+    <div>
+      <h1>Módulo 01 · <em>SQL Avançado</em></h1>
+      <div class="header-sub">9 aulas individuais, do fundamento ao avançado. Filtro nº1 em qualquer processo seletivo de dados.</div>
+    </div>
+    <div class="hdr-actions"><button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button></div>
+  </div>
+  <div class="overall-bar"><div class="overall-fill" id="mod-fill" style="width:0%"></div></div>
+  <div class="overall-label" id="mod-label">0 / 9 subtópicos concluídos</div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'de_module_sql_v1';
+
+const LESSONS = [
+{
+  id: 'basico', tag: 'owned',
+  video: 'sql/sql1.Lógica_de_Execução_SQL.mp4',
+  title: 'SELECT, WHERE, GROUP BY, ORDER BY',
+  eyebrow: 'Aula 1 de 9 · Fundamentos',
+  sub: 'A gramática básica de qualquer consulta — e os detalhes que a maioria ignora',
+  body: `
+<p>Toda query SQL, por mais complexa que fique depois, nasce de quatro cláusulas: <code>SELECT</code> (o que eu quero ver), <code>FROM</code> (de onde), <code>WHERE</code> (quais linhas) e <code>ORDER BY</code> (em que ordem). Parece trivial, mas a ordem lógica de execução dessas cláusulas — que é diferente da ordem em que você as escreve — é a base para entender praticamente todo erro estranho que você vai encontrar em SQL mais complexo depois.</p>
+<h3>A ordem real de execução</h3>
+<p>Você escreve <code>SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY</code>, mas o banco de dados processa nessa ordem: <strong>FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY</strong>. Isso explica por que você não pode usar um alias definido no SELECT dentro do WHERE — o WHERE roda antes do SELECT existir.</p>
+<pre><code>-- Isso NÃO funciona na maioria dos bancos:
+SELECT preco * 1.1 AS preco_com_taxa
+FROM produtos
+WHERE preco_com_taxa > 100;  -- erro: preco_com_taxa ainda não existe aqui
+
+-- Isso funciona:
+SELECT preco * 1.1 AS preco_com_taxa
+FROM produtos
+WHERE preco * 1.1 > 100;</code></pre>
+<h3>WHERE vs HAVING — a confusão mais comum</h3>
+<p><code>WHERE</code> filtra linhas <em>antes</em> do agrupamento. <code>HAVING</code> filtra grupos <em>depois</em> do agrupamento — por isso só faz sentido usá-lo junto de <code>GROUP BY</code>, e é o único lugar onde você pode filtrar por uma função de agregação como <code>COUNT()</code> ou <code>SUM()</code>.</p>
+<pre><code>SELECT regiao, COUNT(*) AS total_clientes
+FROM clientes
+WHERE ativo = true
+GROUP BY regiao
+HAVING COUNT(*) > 100;</code></pre>
+<div class="callout warn">⚠️ Um erro clássico de iniciante: tentar escrever <code>WHERE COUNT(*) > 100</code>. Isso sempre falha, porque no momento em que o WHERE é processado, a agregação ainda não existe.</div>
+<h3>GROUP BY — a regra que ninguém explica direito</h3>
+<p>Toda coluna que aparece no SELECT e <strong>não</strong> está dentro de uma função de agregação precisa estar no GROUP BY. Bancos como PostgreSQL são rígidos com essa regra e recusam a query; o MySQL em modo não-estrito pode "deixar passar", retornando um valor arbitrário — o que costuma gerar bugs silenciosos.</p>
+<pre><code>-- Correto
+SELECT cidade, COUNT(*) FROM clientes GROUP BY cidade;
+
+-- Incorreto em bancos rígidos: 'nome' não está agregado nem no GROUP BY
+SELECT cidade, nome, COUNT(*) FROM clientes GROUP BY cidade;</code></pre>
+<h3>ORDER BY — nulls e múltiplas colunas</h3>
+<p>Por padrão no PostgreSQL, valores <code>NULL</code> são ordenados por último em ordem ascendente — mas isso varia entre bancos, então especifique explicitamente quando o comportamento de NULL importa:</p>
+<pre><code>SELECT nome, data_ultimo_pedido
+FROM clientes
+ORDER BY data_ultimo_pedido DESC NULLS LAST;</code></pre>
+<p>Ordenar por múltiplas colunas funciona como um desempate em cascata:</p>
+<pre><code>SELECT * FROM funcionarios
+ORDER BY departamento ASC, salario DESC;</code></pre>
+<h3>DISTINCT — remoção de duplicatas</h3>
+<p><code>DISTINCT</code> remove linhas totalmente duplicadas. Quando aplicado a múltiplas colunas, considera a <em>combinação</em> delas, não cada uma isoladamente.</p>
+<pre><code>SELECT DISTINCT cidade, estado FROM clientes;</code></pre>
+<h3>Por que isso importa em entrevista</h3>
+<p>Perguntas sobre esses fundamentos aparecem disfarçadas em cases mais complexos. Entender a ordem de execução lógica é o que permite debugar rapidamente, sem tentativa e erro.</p>
+`,
+  recap: [
+    'Ordem lógica de execução: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY',
+    'WHERE filtra linhas antes de agrupar; HAVING filtra grupos já agregados',
+    'Toda coluna não-agregada no SELECT precisa estar no GROUP BY',
+    'ORDER BY com múltiplas colunas funciona como desempate em cascata',
+    'DISTINCT remove combinações duplicadas, considerando todas as colunas selecionadas'
+  ],
+  nblm: {
+    subject: 'Fundamentos de consultas SQL: ordem de execução lógica, WHERE vs HAVING, e as regras do GROUP BY.',
+    questions: [
+      'Por que a ordem em que escrevo uma query SQL é diferente da ordem em que ela é executada?',
+      'Me dê 3 exemplos de queries com erro comum de GROUP BY e explique o que corrigir em cada uma.',
+      'Quando devo usar HAVING em vez de WHERE? Crie um cenário de negócio para ilustrar.',
+      'Como o comportamento de NULLS em ORDER BY muda entre PostgreSQL, MySQL e SQL Server?'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre a cláusula SELECT (postgresql.org/docs/current/sql-select.html).'
+  },
+  quiz: {
+    q: 'Por que a query "SELECT cidade, COUNT(*) as total FROM clientes WHERE total > 5 GROUP BY cidade" falha na maioria dos bancos?',
+    options: ['Porque falta um JOIN','Porque WHERE é processado antes do SELECT existir — o alias "total" ainda não foi calculado','Porque COUNT(*) não pode ser usado com GROUP BY','Porque cidade precisa estar entre aspas'],
+    correct: 1,
+    explanation: 'A ordem lógica de execução processa WHERE antes do SELECT. Como "total" é um alias definido no SELECT, ele não existe ainda quando o WHERE é avaliado. O correto seria usar HAVING COUNT(*) > 5.'
+  }
+},
+{
+  id: 'joins', tag: 'critical',
+  video: 'sql/sql2.Masterclass_SQL_JOINs.mp4',
+  title: 'JOINs (INNER, LEFT, RIGHT, FULL, CROSS)',
+  eyebrow: 'Aula 2 de 9 · Combinação de tabelas',
+  sub: 'A operação mais cobrada em testes técnicos — e como raciocinar sobre cada tipo',
+  body: `
+<p>Um JOIN combina linhas de duas (ou mais) tabelas com base em uma condição de correspondência. É provavelmente a operação SQL mais testada em processos seletivos, porque avalia diretamente se você entende relacionamento entre entidades.</p>
+<h3>INNER JOIN — a interseção</h3>
+<p>Retorna apenas as linhas que têm correspondência em <strong>ambas</strong> as tabelas.</p>
+<pre><code>SELECT c.nome, p.valor
+FROM clientes c
+INNER JOIN pedidos p ON p.cliente_id = c.id;</code></pre>
+<h3>LEFT JOIN — preservando o lado esquerdo</h3>
+<p>Retorna <strong>todas</strong> as linhas da tabela à esquerda, preenchendo com <code>NULL</code> quando não há correspondência.</p>
+<pre><code>SELECT c.nome, p.valor
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id;</code></pre>
+<div class="callout tip">💡 Padrão comum em entrevista: "encontre clientes que NUNCA fizeram pedido". LEFT JOIN + <code>WHERE p.id IS NULL</code>.</div>
+<pre><code>SELECT c.nome
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id
+WHERE p.id IS NULL;</code></pre>
+<h3>RIGHT JOIN — o espelho</h3>
+<p>Funciona como o LEFT JOIN, mas preservando a tabela à direita. Raramente usado — qualquer RIGHT JOIN pode ser reescrito como LEFT JOIN invertendo a ordem das tabelas.</p>
+<h3>FULL OUTER JOIN — a união completa</h3>
+<p>Retorna todas as linhas de ambas as tabelas, com <code>NULL</code> onde não há correspondência de nenhum lado. Útil para achar divergências entre duas fontes.</p>
+<pre><code>SELECT rh.nome, acessos.usuario
+FROM funcionarios_rh rh
+FULL OUTER JOIN acessos_sistema acessos ON acessos.cpf = rh.cpf;</code></pre>
+<h3>CROSS JOIN — produto cartesiano</h3>
+<p>Combina cada linha de uma tabela com <strong>todas</strong> as linhas da outra, sem condição de correspondência.</p>
+<pre><code>SELECT p.nome, t.tamanho
+FROM produtos p
+CROSS JOIN tamanhos_disponiveis t;</code></pre>
+<h3>Self JOIN — uma tabela consigo mesma</h3>
+<pre><code>SELECT f.nome AS funcionario, g.nome AS gerente
+FROM funcionarios f
+LEFT JOIN funcionarios g ON f.gerente_id = g.id;</code></pre>
+<h3>O erro de performance mais comum</h3>
+<p>JOINs em colunas sem índice geram varreduras completas de tabela em ambos os lados. Garanta índice nas colunas usadas em <code>ON</code>.</p>
+`,
+  recap: [
+    'INNER JOIN retorna apenas matches; LEFT JOIN preserva todas as linhas da esquerda',
+    'LEFT JOIN + WHERE ... IS NULL é o padrão para achar registros "órfãos"',
+    'FULL OUTER JOIN é útil para comparar duas fontes de dados e achar divergências',
+    'CROSS JOIN gera produto cartesiano — cuidado com tabelas grandes',
+    'Self JOIN usa aliases diferentes para relacionar uma tabela com ela mesma'
+  ],
+  nblm: {
+    subject: 'Tipos de JOIN em SQL: INNER, LEFT, RIGHT, FULL OUTER e CROSS, com foco em quando usar cada um.',
+    questions: [
+      'Crie 3 cenários de negócio reais onde cada tipo de JOIN seria a escolha certa.',
+      'Por que RIGHT JOIN é raramente usado na prática?',
+      'Explique o padrão "LEFT JOIN + WHERE IS NULL" passo a passo.',
+      'Quais são os riscos de performance de um CROSS JOIN acidental em produção?'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre Joined Tables (postgresql.org/docs/current/queries-table-expressions.html).'
+  },
+  quiz: {
+    q: 'Qual query encontra corretamente clientes que NUNCA fizeram nenhum pedido?',
+    options: ['SELECT c.nome FROM clientes c INNER JOIN pedidos p ON p.cliente_id = c.id WHERE p.id IS NULL','SELECT c.nome FROM clientes c LEFT JOIN pedidos p ON p.cliente_id = c.id WHERE p.id IS NULL','SELECT c.nome FROM clientes c, pedidos p WHERE p.cliente_id != c.id','SELECT c.nome FROM clientes c RIGHT JOIN pedidos p ON p.cliente_id = c.id'],
+    correct: 1,
+    explanation: 'INNER JOIN nunca produziria linhas com p.id NULL. O LEFT JOIN preserva todos os clientes, e o filtro isola os sem correspondência.'
+  }
+},
+{
+  id: 'window', tag: 'critical',
+  video: 'sql/sql3.Funções_de_Janela_SQL.mp4',
+  title: 'Window Functions (ROW_NUMBER, RANK, LAG, LEAD)',
+  eyebrow: 'Aula 3 de 9 · Análise avançada',
+  sub: 'O recurso que separa quem sabe SQL básico de quem sabe SQL analítico',
+  body: `
+<p>Segundo a documentação oficial do PostgreSQL, uma window function executa um cálculo através de um conjunto de linhas relacionadas à linha atual — sem colapsar as linhas em uma única linha de saída, diferente de uma agregação com GROUP BY.</p>
+<h3>A anatomia da cláusula OVER</h3>
+<pre><code>função(coluna) OVER (
+  [PARTITION BY coluna_de_agrupamento]
+  [ORDER BY coluna_de_ordenação]
+  [frame_clause]
+)</code></pre>
+<p><code>PARTITION BY</code> divide as linhas em grupos processados independentemente. <code>ORDER BY</code> dentro do OVER define a ordem de processamento — obrigatório para <code>ROW_NUMBER()</code>, <code>LAG()</code> e <code>LEAD()</code>.</p>
+<h3>As três funções de ranking — a pegadinha clássica</h3>
+<pre><code>SELECT nome, departamento, salario,
+  ROW_NUMBER() OVER (PARTITION BY departamento ORDER BY salario DESC) AS rn,
+  RANK()       OVER (PARTITION BY departamento ORDER BY salario DESC) AS rk,
+  DENSE_RANK() OVER (PARTITION BY departamento ORDER BY salario DESC) AS drk
+FROM funcionarios;</code></pre>
+<p>Com salários 5000, 5000, 4000 no mesmo departamento:</p>
+<ul>
+  <li><strong>ROW_NUMBER()</strong> → 1, 2, 3 (nunca empata)</li>
+  <li><strong>RANK()</strong> → 1, 1, 3 (empata, mas <em>pula</em> a posição 2)</li>
+  <li><strong>DENSE_RANK()</strong> → 1, 1, 2 (empata, <em>não pula</em>)</li>
+</ul>
+<div class="callout warn">⚠️ Decore com um exemplo mental fixo: "RANK pula, DENSE_RANK não pula".</div>
+<h3>LAG e LEAD — comparando com linhas vizinhas</h3>
+<pre><code>SELECT mes, receita,
+  LAG(receita, 1) OVER (ORDER BY mes) AS receita_mes_anterior,
+  receita - LAG(receita, 1) OVER (ORDER BY mes) AS variacao
+FROM receita_mensal;</code></pre>
+<h3>Agregações como window functions</h3>
+<pre><code>SELECT produto, categoria, vendas,
+  SUM(vendas) OVER (PARTITION BY categoria) AS total_categoria,
+  ROUND(vendas * 100.0 / SUM(vendas) OVER (PARTITION BY categoria), 2) AS pct_da_categoria
+FROM vendas_produtos;</code></pre>
+<h3>Running totals — soma acumulada</h3>
+<pre><code>SELECT data, valor,
+  SUM(valor) OVER (ORDER BY data) AS saldo_acumulado
+FROM transacoes;</code></pre>
+<h3>Filtrando resultados de window functions</h3>
+<p>Window functions só são permitidas em <code>SELECT</code> e <code>ORDER BY</code>. Para filtrar, use uma CTE:</p>
+<pre><code>WITH ranking AS (
+  SELECT nome, departamento, salario,
+    RANK() OVER (PARTITION BY departamento ORDER BY salario DESC) AS rk
+  FROM funcionarios
+)
+SELECT * FROM ranking WHERE rk <= 3;</code></pre>
+`,
+  recap: [
+    'Window functions enriquecem linhas sem colapsá-las — diferente de GROUP BY',
+    'PARTITION BY agrupa; ORDER BY dentro do OVER define ordem de processamento',
+    'RANK() pula posições em empate; DENSE_RANK() não pula; ROW_NUMBER() nunca empata',
+    'LAG/LEAD acessam linhas vizinhas — essenciais para cálculo de variação período a período',
+    'Para filtrar o resultado de uma window function, use CTE + WHERE na query externa'
+  ],
+  nblm: {
+    subject: 'Window functions em SQL: PARTITION BY, funções de ranking e funções de deslocamento (LAG, LEAD).',
+    questions: [
+      'Explique com uma tabela de exemplo a diferença exata entre ROW_NUMBER, RANK e DENSE_RANK.',
+      'Como LAG e LEAD podem detectar anomalias em uma série temporal de vendas?',
+      'Por que window functions não podem ser usadas diretamente em WHERE?',
+      'Crie um exercício: top 3 produtos mais vendidos por categoria usando window functions.'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL — Window Functions (postgresql.org/docs/current/tutorial-window.html e functions-window.html).'
+  },
+  quiz: {
+    q: 'Em uma partição com salários [5000, 5000, 4000, 3000], qual é a saída de RANK() OVER (ORDER BY salario DESC)?',
+    options: ['1, 2, 3, 4','1, 1, 2, 3','1, 1, 3, 4','1, 2, 2, 3'],
+    correct: 2,
+    explanation: 'RANK() empata os dois primeiros com posição 1, mas PULA a posição 2 — o próximo valor recebe posição 3.'
+  }
+},
+{
+  id: 'cte', tag: 'critical',
+  video: 'sql/sql4.CTEs_SQL_Avançado.mp4',
+  title: 'CTEs (WITH ... AS)',
+  eyebrow: 'Aula 4 de 9 · Organização de queries',
+  sub: 'Como estruturar queries complexas de forma legível — e resolver o filtro de window functions',
+  body: `
+<p>Uma Common Table Expression, escrita com <code>WITH nome AS (...)</code>, cria um resultado nomeado e temporário que existe apenas durante a execução daquela query. É uma forma de dar nome e organizar uma subquery, tornando queries complexas muito mais legíveis.</p>
+<h3>A motivação principal: legibilidade</h3>
+<pre><code>WITH totais_por_cliente AS (
+  SELECT c.nome, SUM(p.valor) AS total
+  FROM clientes c JOIN pedidos p ON p.cliente_id = c.id
+  GROUP BY c.nome
+),
+media_geral AS (
+  SELECT AVG(total) AS media FROM totais_por_cliente
+)
+SELECT t.nome, t.total
+FROM totais_por_cliente t, media_geral m
+WHERE t.total > m.media;</code></pre>
+<p>Você pode rodar cada CTE isoladamente (trocando o SELECT final por <code>SELECT * FROM totais_por_cliente</code>) para verificar se aquele passo está correto.</p>
+<h3>Múltiplas CTEs encadeadas</h3>
+<pre><code>WITH vendas_diarias AS (
+  SELECT data, SUM(valor) AS total_dia
+  FROM pedidos GROUP BY data
+),
+media_movel AS (
+  SELECT data, total_dia,
+    AVG(total_dia) OVER (ORDER BY data ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS media_7dias
+  FROM vendas_diarias
+)
+SELECT * FROM media_movel ORDER BY data;</code></pre>
+<h3>Resolvendo o filtro de window functions</h3>
+<pre><code>WITH ranking AS (
+  SELECT produto, vendas,
+    DENSE_RANK() OVER (ORDER BY vendas DESC) AS posicao
+  FROM produtos
+)
+SELECT * FROM ranking WHERE posicao <= 5;</code></pre>
+<h3>CTEs Recursivas — hierarquias e grafos</h3>
+<pre><code>WITH RECURSIVE hierarquia AS (
+  SELECT id, nome, gerente_id, 1 AS nivel
+  FROM funcionarios WHERE gerente_id IS NULL
+  UNION ALL
+  SELECT f.id, f.nome, f.gerente_id, h.nivel + 1
+  FROM funcionarios f
+  JOIN hierarquia h ON f.gerente_id = h.id
+)
+SELECT * FROM hierarquia ORDER BY nivel;</code></pre>
+<div class="callout tip">💡 CTEs recursivas raramente são cobradas em entrevistas jr/pleno, mas mencionar que você sabe que existem já demonstra profundidade.</div>
+<h3>CTE vs Subquery vs View</h3>
+<ul>
+  <li><strong>Subquery</strong> — uma única transformação simples, aninhada.</li>
+  <li><strong>CTE</strong> — múltiplos passos lógicos, ou reuso dentro da mesma query.</li>
+  <li><strong>View</strong> — mesma lógica reutilizada entre queries diferentes.</li>
+</ul>
+`,
+  recap: [
+    'CTEs nomeiam resultados temporários, tornando queries complexas mais legíveis e debugáveis',
+    'Múltiplas CTEs podem ser encadeadas, cada uma referenciando as anteriores',
+    'CTE + WHERE na query externa é o padrão para filtrar resultados de window functions',
+    'WITH RECURSIVE permite percorrer hierarquias (organogramas, árvores de categoria)',
+    'Use View em vez de CTE quando a mesma lógica precisa ser reaproveitada entre queries diferentes'
+  ],
+  nblm: {
+    subject: 'Common Table Expressions (CTEs) em SQL: sintaxe WITH, encadeamento e recursão.',
+    questions: [
+      'Reescreva uma subquery aninhada complexa como uma sequência de CTEs.',
+      'Quando faz mais sentido usar uma CTE em vez de uma View?',
+      'Explique passo a passo como uma CTE recursiva "anda" por uma hierarquia.',
+      'Dê um exemplo de pipeline de 3 CTEs encadeadas para um cálculo de cohort de clientes.'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre WITH Queries (postgresql.org/docs/current/queries-with.html).'
+  },
+  quiz: {
+    q: 'Por que CTEs tornam mais fácil debugar uma query complexa?',
+    options: ['Porque elas rodam mais rápido que subqueries sempre','Porque você pode rodar cada CTE isoladamente para validar um passo intermediário','Porque CTEs não permitem erros de sintaxe','Porque o banco otimiza CTEs automaticamente em paralelo'],
+    correct: 1,
+    explanation: 'A vantagem prática vem de poder isolar cada CTE para verificar se aquele passo específico está correto antes de seguir para o próximo.'
+  }
+},
+{
+  id: 'subqueries', tag: 'important',
+  video: 'sql/sql5.Subqueries_Correlacionadas.mp4',
+  title: 'Subqueries correlacionadas',
+  eyebrow: 'Aula 5 de 9 · Consultas aninhadas',
+  sub: 'Quando uma query "conversa" com a linha externa — e o cuidado de performance que isso exige',
+  body: `
+<p>Uma subquery correlacionada é uma consulta aninhada que referencia uma coluna da query externa. Diferente de uma subquery independente, ela é reexecutada uma vez para cada linha da query externa em muitas implementações.</p>
+<h3>Independente vs correlacionada</h3>
+<pre><code>-- INDEPENDENTE: roda uma única vez
+SELECT nome, salario FROM funcionarios
+WHERE salario > (SELECT AVG(salario) FROM funcionarios);
+
+-- CORRELACIONADA: referencia 'f' da query externa
+SELECT nome, salario FROM funcionarios f
+WHERE salario > (
+  SELECT AVG(salario) FROM funcionarios
+  WHERE departamento = f.departamento
+);</code></pre>
+<h3>EXISTS — a forma mais eficiente de checar existência</h3>
+<pre><code>SELECT c.nome
+FROM clientes c
+WHERE EXISTS (
+  SELECT 1 FROM pedidos p
+  WHERE p.cliente_id = c.id AND p.valor > 1000
+);</code></pre>
+<div class="callout tip">💡 Convenção usar <code>SELECT 1</code> dentro do EXISTS — o valor selecionado é irrelevante, só a existência da linha importa.</div>
+<h3>NOT EXISTS — o padrão para "nunca aconteceu"</h3>
+<pre><code>SELECT c.nome
+FROM clientes c
+WHERE NOT EXISTS (
+  SELECT 1 FROM pedidos p WHERE p.cliente_id = c.id
+);</code></pre>
+<div class="callout warn">⚠️ Resolve o mesmo problema do "LEFT JOIN + WHERE IS NULL", geralmente com performance melhor em tabelas grandes.</div>
+<h3>IN vs EXISTS</h3>
+<pre><code>-- IN: mais legível para casos simples
+SELECT nome FROM clientes
+WHERE id IN (SELECT cliente_id FROM pedidos WHERE valor > 1000);
+
+-- EXISTS: geralmente mais eficiente em tabelas grandes
+SELECT nome FROM clientes c
+WHERE EXISTS (
+  SELECT 1 FROM pedidos p WHERE p.cliente_id = c.id AND p.valor > 1000
+);</code></pre>
+<h3>Subquery escalar no SELECT</h3>
+<pre><code>SELECT c.nome,
+  (SELECT COUNT(*) FROM pedidos p WHERE p.cliente_id = c.id) AS total_pedidos
+FROM clientes c;</code></pre>
+<div class="callout warn">⚠️ Para tabelas grandes, uma window function ou JOIN com GROUP BY costuma performar melhor que subquery escalar linha a linha.</div>
+<h3>Quando preferir JOIN</h3>
+<p>Se você só precisa filtrar, EXISTS/NOT EXISTS é suficiente. Se precisa trazer dados de outra tabela, use JOIN.</p>
+`,
+  recap: [
+    'Subquery correlacionada referencia a linha da query externa — recalculada para cada linha',
+    'EXISTS retorna apenas verdadeiro/falso e para na primeira correspondência',
+    'NOT EXISTS é o padrão preferido para "nunca aconteceu"',
+    'IN é mais legível para listas pequenas; EXISTS tende a performar melhor em tabelas grandes',
+    'Prefira JOIN quando precisar trazer dados; EXISTS quando só precisar filtrar'
+  ],
+  nblm: {
+    subject: 'Subqueries correlacionadas: diferença para independentes, EXISTS/NOT EXISTS, e comparação com IN e JOIN.',
+    questions: [
+      'Explique como uma subquery correlacionada é reexecutada linha a linha.',
+      'Quando EXISTS tem performance melhor que IN?',
+      'Compare LEFT JOIN + IS NULL, NOT EXISTS e NOT IN para achar "clientes sem pedido" — riscos com NULL?',
+      'Crie 2 exercícios de subquery correlacionada com dificuldade crescente.'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre Subquery Expressions (postgresql.org/docs/current/functions-subquery.html).'
+  },
+  quiz: {
+    q: 'Por que "SELECT 1" é usado por convenção dentro de um EXISTS?',
+    options: ['Porque SELECT * causa erro de sintaxe dentro de EXISTS','Porque o valor selecionado é irrelevante — só a existência da linha importa','Porque SELECT 1 é mais rápido para o banco processar','Porque EXISTS só aceita valores numéricos'],
+    correct: 1,
+    explanation: 'EXISTS avalia apenas se a subquery retorna alguma linha — o conteúdo selecionado nunca é usado. SELECT 1 é convenção de legibilidade.'
+  }
+},
+{
+  id: 'explain', tag: 'important',
+  video: 'sql/sql6.EXPLAIN_e_Otimização.mp4',
+  title: 'EXPLAIN / Query Plan — otimização',
+  eyebrow: 'Aula 6 de 9 · Performance',
+  sub: 'Como enxergar o que o banco de dados realmente faz por trás da sua query',
+  body: `
+<p><code>EXPLAIN</code> revela o plano de execução que o otimizador escolheu: qual estratégia de varredura usar, em que ordem fazer JOINs, e o custo estimado de cada etapa.</p>
+<h3>EXPLAIN vs EXPLAIN ANALYZE</h3>
+<pre><code>EXPLAIN ANALYZE
+SELECT * FROM pedidos WHERE cliente_id = 42;</code></pre>
+<div class="callout warn">⚠️ EXPLAIN ANALYZE executa a query de verdade. Cuidado com queries de escrita — use uma transação com ROLLBACK se só quiser analisar.</div>
+<h3>Seq Scan vs Index Scan</h3>
+<p><strong>Seq Scan</strong> lê a tabela inteira. <strong>Index Scan</strong> usa um índice para pular direto às linhas relevantes. Seq Scan em tabela grande onde se esperava índice é o sinal mais comum de otimização faltando.</p>
+<pre><code>EXPLAIN SELECT * FROM pedidos WHERE cliente_id = 42;
+-- Solução se mostrar Seq Scan:
+CREATE INDEX idx_pedidos_cliente ON pedidos(cliente_id);</code></pre>
+<h3>Lendo o custo estimado</h3>
+<p>Números como <code>cost=0.29..8.31</code> são unidades relativas de custo, não milissegundos — servem para comparar planos entre si.</p>
+<h3>Estratégias de JOIN no plano</h3>
+<ul>
+  <li><strong>Nested Loop</strong> — eficiente quando uma tabela é pequena ou bem indexada.</li>
+  <li><strong>Hash Join</strong> — eficiente para tabelas grandes sem índice na coluna de junção.</li>
+  <li><strong>Merge Join</strong> — quando ambas as tabelas já estão ordenadas pela coluna de junção.</li>
+</ul>
+<h3>Índice existe mas não é usado</h3>
+<ul>
+  <li>Tabela pequena — overhead do índice não compensa</li>
+  <li>Estatísticas desatualizadas — rode <code>ANALYZE nome_da_tabela</code></li>
+  <li>Função aplicada sobre a coluna no WHERE: <code>WHERE LOWER(email) = 'x'</code> não usa índice simples em <code>email</code></li>
+</ul>
+<div class="callout tip">💡 Solução: índice funcional — <code>CREATE INDEX ON clientes (LOWER(email))</code>.</div>
+`,
+  recap: [
+    'EXPLAIN mostra o plano estimado; EXPLAIN ANALYZE executa de verdade',
+    'Seq Scan em tabela grande onde se esperava índice é o sinal mais comum de otimização faltando',
+    'Custos no plano são unidades relativas, não milissegundos',
+    'Nested Loop, Hash Join e Merge Join são escolhidos automaticamente pelo otimizador',
+    'Índice não usado: verificar estatísticas desatualizadas ou função aplicada sobre a coluna'
+  ],
+  nblm: {
+    subject: 'EXPLAIN e otimização de queries: leitura de planos, Seq Scan vs Index Scan, estratégias de JOIN.',
+    questions: [
+      'Explique como ler um plano de EXPLAIN linha por linha.',
+      'Por que EXPLAIN ANALYZE é potencialmente perigoso em queries de escrita?',
+      'Quais os 3 motivos mais comuns para um índice existir mas não ser usado?',
+      'Compare Nested Loop, Hash Join e Merge Join com exemplos.'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre EXPLAIN e Índices (postgresql.org/docs/current/using-explain.html).'
+  },
+  quiz: {
+    q: 'Você criou um índice em "cliente_id", mas o EXPLAIN ainda mostra Seq Scan. Qual NÃO é uma causa provável?',
+    options: ['A tabela é pequena e o otimizador prefere Seq Scan','As estatísticas da tabela estão desatualizadas','O índice foi criado com o nome errado de coluna','Uma função está sendo aplicada sobre a coluna filtrada'],
+    correct: 2,
+    explanation: 'Nome de coluna errado geraria erro na criação ou índice em outra coluna — não explicaria Seq Scan na coluna correta.'
+  }
+},
+{
+  id: 'indices', tag: 'important',
+  video: 'sql/sql7.Índices_e_Performance.mp4',
+  title: 'Índices e performance',
+  eyebrow: 'Aula 7 de 9 · Performance',
+  sub: 'Como um índice funciona por dentro — e por que ele não é gratuito',
+  body: `
+<p>Um índice é uma estrutura auxiliar que permite localizar linhas sem varrer a tabela inteira — como o índice remissivo de um livro.</p>
+<h3>Como um índice B-Tree funciona</h3>
+<pre><code>CREATE INDEX idx_pedidos_data ON pedidos(data_pedido);
+SELECT * FROM pedidos WHERE data_pedido BETWEEN '2026-01-01' AND '2026-01-31';</code></pre>
+<h3>O trade-off que todo índice representa</h3>
+<div class="callout warn">⚠️ Todo índice acelera leitura mas encarece escrita (INSERT/UPDATE/DELETE precisam atualizar o índice também). A pergunta certa: "essa coluna é filtrada com frequência suficiente para justificar isso?"</div>
+<h3>Índice composto — ordem importa</h3>
+<pre><code>CREATE INDEX idx_composto ON pedidos(cliente_id, data_pedido);
+
+-- Usa eficientemente:
+SELECT * FROM pedidos WHERE cliente_id = 42;
+SELECT * FROM pedidos WHERE cliente_id = 42 AND data_pedido > '2026-01-01';
+
+-- NÃO usa eficientemente:
+SELECT * FROM pedidos WHERE data_pedido > '2026-01-01';</code></pre>
+<div class="callout tip">💡 Coloque primeiro a coluna mais usada em filtros de igualdade, por último a mais usada em intervalos ou ordenação.</div>
+<h3>Índice único — integridade</h3>
+<pre><code>CREATE UNIQUE INDEX idx_email_unico ON usuarios(email);</code></pre>
+<h3>Índices parciais</h3>
+<pre><code>CREATE INDEX idx_pedidos_pendentes ON pedidos(cliente_id)
+WHERE status = 'pendente';</code></pre>
+<h3>Quando NÃO indexar</h3>
+<ul>
+  <li>Colunas de baixa cardinalidade (poucos valores distintos)</li>
+  <li>Tabelas pequenas o suficiente para caber em memória</li>
+  <li>Colunas raramente usadas em WHERE, JOIN ou ORDER BY</li>
+</ul>
+`,
+  recap: [
+    'Índices B-Tree permitem busca logarítmica em vez de varredura linear',
+    'Todo índice tem custo de escrita — decisão sempre é trade-off leitura vs escrita',
+    'Em índices compostos, a ordem das colunas determina quais queries se beneficiam',
+    'Índice único garante integridade além de performance',
+    'Índices parciais cobrem só o subconjunto relevante, mais leves de manter'
+  ],
+  nblm: {
+    subject: 'Índices em bancos relacionais: B-Tree, trade-off leitura/escrita, compostos e parciais.',
+    questions: [
+      'Explique com analogia como uma B-Tree acelera buscas.',
+      'Por que "criar índice em tudo" é má prática?',
+      'Como a ordem das colunas em índice composto afeta quais queries se beneficiam?',
+      'Quando um índice parcial é preferível a um completo?'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre Índices (postgresql.org/docs/current/indexes.html).'
+  },
+  quiz: {
+    q: 'Você tem um índice composto (cliente_id, status). Qual query NÃO se beneficia eficientemente dele?',
+    options: ['WHERE cliente_id = 42','WHERE cliente_id = 42 AND status = "pago"','WHERE status = "pago"','WHERE cliente_id = 42 ORDER BY status'],
+    correct: 2,
+    explanation: 'Um índice composto é ordenado primeiro por cliente_id. Buscar só por status não aproveita essa ordenação.'
+  }
+},
+{
+  id: 'agregacao', tag: 'important',
+  video: 'sql/sql8.Guia_de_Agregação_SQL.mp4',
+  title: 'Agregação condicional (FILTER, CASE WHEN)',
+  eyebrow: 'Aula 8 de 9 · Análise de dados',
+  sub: 'Como calcular múltiplas métricas condicionais em uma única passada pela tabela',
+  body: `
+<p>É comum precisar de métricas segmentadas na mesma query. A agregação condicional resolve isso combinando agregação com lógica condicional, processando a tabela uma única vez.</p>
+<h3>CASE WHEN dentro de agregação</h3>
+<pre><code>SELECT
+  regiao,
+  COUNT(CASE WHEN status = 'ativo' THEN 1 END) AS clientes_ativos,
+  COUNT(CASE WHEN status = 'inativo' THEN 1 END) AS clientes_inativos,
+  SUM(CASE WHEN status = 'ativo' THEN valor_mensal ELSE 0 END) AS receita_ativos
+FROM clientes
+GROUP BY regiao;</code></pre>
+<div class="callout warn">⚠️ CASE WHEN sem ELSE retorna NULL, que COUNT() ignora. Usar ELSE 0 no COUNT contaria TODAS as linhas — para SUM o ELSE 0 é necessário, para COUNT deve ser omitido.</div>
+<h3>FILTER — a alternativa mais moderna</h3>
+<pre><code>SELECT
+  regiao,
+  COUNT(*) FILTER (WHERE status = 'ativo') AS clientes_ativos,
+  COUNT(*) FILTER (WHERE status = 'inativo') AS clientes_inativos,
+  SUM(valor_mensal) FILTER (WHERE status = 'ativo') AS receita_ativos
+FROM clientes
+GROUP BY regiao;</code></pre>
+<h3>Pivotização manual</h3>
+<pre><code>SELECT
+  produto,
+  SUM(CASE WHEN mes = 1 THEN vendas ELSE 0 END) AS jan,
+  SUM(CASE WHEN mes = 2 THEN vendas ELSE 0 END) AS fev,
+  SUM(CASE WHEN mes = 3 THEN vendas ELSE 0 END) AS mar
+FROM vendas_mensais
+GROUP BY produto;</code></pre>
+<h3>Combinando com AVG para percentuais</h3>
+<pre><code>SELECT
+  regiao,
+  AVG(CASE WHEN status = 'ativo' THEN 1.0 ELSE 0.0 END) * 100 AS pct_ativos
+FROM clientes
+GROUP BY regiao;</code></pre>
+<div class="callout tip">💡 Aqui o ELSE é necessário porque usamos AVG, não COUNT.</div>
+<h3>Por que preferir a múltiplas queries</h3>
+<p>Rodar tudo em uma passada é mais eficiente do que N queries separadas, especialmente em tabelas grandes.</p>
+`,
+  recap: [
+    'CASE WHEN sem ELSE retorna NULL, que COUNT() ignora',
+    'Para SUM o ELSE 0 é necessário; para COUNT deve ser omitido',
+    'FILTER (WHERE ...) é a alternativa mais legível e moderna',
+    'Agregação condicional é a base para pivotizar dados manualmente',
+    'Rodar múltiplas métricas em uma query é mais eficiente que múltiplas queries'
+  ],
+  nblm: {
+    subject: 'Agregação condicional: CASE WHEN dentro de agregações e a cláusula FILTER.',
+    questions: [
+      'Por que COUNT(CASE WHEN x THEN 1 END) funciona mas com ELSE 0 não conta corretamente?',
+      'Reescreva 3 exemplos de CASE WHEN usando FILTER equivalente.',
+      'Como agregação condicional simula PIVOT em bancos sem essa função nativa?',
+      'Crie um exercício de e-commerce (pedidos por status e método de pagamento).'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre Aggregate Expressions e FILTER.'
+  },
+  quiz: {
+    q: 'Por que SUM(...ELSE 0 END) precisa do ELSE, mas o COUNT equivalente não deveria ter ELSE?',
+    options: ['Não há diferença real','SUM precisa de valor neutro (0); COUNT ignora NULL, que já funciona como neutro','ELSE é obrigatório sempre','SUM não aceita CASE WHEN sem ELSE'],
+    correct: 1,
+    explanation: 'SUM precisa somar algo em cada linha (0 é neutro para adição). COUNT conta não-nulos — NULL do CASE sem ELSE já exclui corretamente.'
+  }
+},
+{
+  id: 'particionamento', tag: 'bonus',
+  video: 'sql/sql9.Particionamento_SQL.mp4',
+  title: 'Particionamento de tabelas',
+  eyebrow: 'Aula 9 de 9 · Escalabilidade',
+  sub: 'Como bancos gigantes continuam rápidos — dividir para conquistar, literalmente',
+  body: `
+<p>Particionamento divide uma tabela logicamente única em partições físicas menores, de forma transparente para quem consulta, com ganhos de performance e manutenção em grande volume.</p>
+<h3>O problema que resolve</h3>
+<p>Tabelas que crescem indefinidamente enfrentam queries lentas mesmo com índices, e manutenção (VACUUM, backup) cada vez mais demorada.</p>
+<h3>Particionamento por Range</h3>
+<pre><code>CREATE TABLE pedidos (
+  id SERIAL, data_pedido DATE NOT NULL, valor NUMERIC
+) PARTITION BY RANGE (data_pedido);
+
+CREATE TABLE pedidos_2026_01 PARTITION OF pedidos
+  FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');</code></pre>
+<p>O otimizador elimina partições fora do intervalo filtrado — <strong>partition pruning</strong>, o principal ganho de performance.</p>
+<h3>Particionamento por Lista</h3>
+<pre><code>CREATE TABLE vendas (
+  id SERIAL, regiao TEXT NOT NULL, valor NUMERIC
+) PARTITION BY LIST (regiao);
+
+CREATE TABLE vendas_sudeste PARTITION OF vendas
+  FOR VALUES IN ('SP', 'RJ', 'MG', 'ES');</code></pre>
+<h3>Particionamento por Hash</h3>
+<pre><code>CREATE TABLE logs (
+  id SERIAL, usuario_id INT NOT NULL, evento TEXT
+) PARTITION BY HASH (usuario_id);
+
+CREATE TABLE logs_p0 PARTITION OF logs FOR VALUES WITH (MODULUS 4, REMAINDER 0);</code></pre>
+<h3>Ganho além de performance de query</h3>
+<p>Descartar dados antigos vira <code>DROP TABLE</code> de uma partição inteira — praticamente instantâneo comparado a um DELETE em massa.</p>
+<div class="callout tip">💡 Relevante para Medallion: a camada Bronze, que acumula dados brutos indefinidamente, é candidata natural a particionamento por data.</div>
+<h3>Quando NÃO particionar</h3>
+<p>Adiciona complexidade operacional real. Só vale para tabelas na casa de dezenas de milhões de linhas com padrão claro de filtro.</p>
+`,
+  recap: [
+    'Particionamento divide uma tabela lógica em partições físicas menores',
+    'Partition pruning permite ao otimizador ignorar partições irrelevantes',
+    'Range (data) é o mais comum; List para categorias; Hash para distribuição uniforme',
+    'Descartar dados antigos vira DROP de partição, muito mais rápido que DELETE em massa',
+    'Só vale a complexidade em tabelas muito grandes com padrão claro de filtro'
+  ],
+  nblm: {
+    subject: 'Particionamento de tabelas: Range, List e Hash, e o conceito de partition pruning.',
+    questions: [
+      'Explique partition pruning com um exemplo de query e plano de execução.',
+      'Quando Range é preferível a Hash?',
+      'Como particionamento por data se conecta com retenção de dados em Medallion?',
+      'Quais os custos operacionais reais de manter uma tabela particionada?'
+    ],
+    source: 'Cruzar com a documentação oficial do PostgreSQL sobre Table Partitioning (postgresql.org/docs/current/ddl-partitioning.html).'
+  },
+  quiz: {
+    q: 'O que é "partition pruning"?',
+    options: ['Remoção automática de partições vazias','Capacidade do otimizador de ignorar partições que não podem conter linhas relevantes','Arquivamento de partições antigas','Compressão automática de dados por partição'],
+    correct: 1,
+    explanation: 'Partition pruning é o otimizador determinando quais partições podem conter dados relevantes para a query, ignorando as demais.'
+  }
+}
+];
+
+function htmlToMarkdown(html) {
+  let md = html;
+  md = md.replace(/<div class="callout[^"]*">\s*([\s\S]*?)\s*<\/div>/g, (m, p1) => '> ' + p1.replace(/<[^>]+>/g,'').trim() + '\n\n');
+  md = md.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, p1) => '```sql\n' + p1.trim() + '\n```\n\n');
+  md = md.replace(/<h3>(.*?)<\/h3>/g, '\n### $1\n\n');
+  md = md.replace(/<h4>(.*?)<\/h4>/g, '\n#### $1\n\n');
+  md = md.replace(/<hr>/g, '\n---\n\n');
+  md = md.replace(/<ul>/g, '\n').replace(/<\/ul>/g, '\n');
+  md = md.replace(/<li>\s*([\s\S]*?)\s*<\/li>/g, '- $1\n');
+  md = md.replace(/<p>\s*([\s\S]*?)\s*<\/p>/g, '$1\n\n');
+  md = md.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+  md = md.replace(/<em>(.*?)<\/em>/g, '_$1_');
+  md = md.replace(/<code>(.*?)<\/code>/g, '`$1`');
+  md = md.replace(/<[^>]+>/g, '');
+  md = md.replace(/\n{3,}/g, '\n\n');
+  return md.trim();
+}
+
+function generateLessonMarkdown(lesson, moduleTitle) {
+  let md = `# ${lesson.title}\n\n`;
+  md += `_${lesson.eyebrow} — ${moduleTitle}_\n\n`;
+  md += `> ${lesson.sub}\n\n`;
+  md += '---\n\n';
+  md += htmlToMarkdown(lesson.body);
+  md += '\n\n## Recapitulando\n\n';
+  lesson.recap.forEach(r => md += `- ${r}\n`);
+  md += '\n## Aprofundar no NotebookLM\n\n';
+  md += `**Assunto do notebook:** ${lesson.nblm.subject}\n\n`;
+  md += `**Perguntas-guia para o Audio Overview:**\n\n`;
+  lesson.nblm.questions.forEach(q => md += `- ${q}\n`);
+  md += `\n**Fonte complementar sugerida:** ${lesson.nblm.source}\n\n`;
+  md += '---\n\n';
+  md += `**Teste rápido:** ${lesson.quiz.q}\n\n`;
+  lesson.quiz.options.forEach((o,i) => md += `${i === lesson.quiz.correct ? '- [x]' : '- [ ]'} ${o}\n`);
+  md += `\n> **Explicação:** ${lesson.quiz.explanation}\n`;
+  return md;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return { done: {}, quizResults: {} };
+}
+function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e){} }
+let APP = loadData();
+let currentLesson = 0;
+function showToast(msg, emoji='✅') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${emoji} ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function updateModuleProgress() {
+  const total = LESSONS.length;
+  const done = LESSONS.filter(l => APP.done[l.id]).length;
+  document.getElementById('mod-fill').style.width = Math.round((done/total)*100) + '%';
+  document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
+}
+function renderSidebar() {
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  let html = `<div class="sidebar-title">Módulo 01 · SQL</div>`;
+  html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
+  html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
+  LESSONS.forEach((l, i) => {
+    const done = !!APP.done[l.id];
+    html += `<div class="toc-item ${currentLesson===i+1?'active':''}" onclick="goTo(${i+1})">
+      <span class="toc-num">${i+1}</span>
+      <span class="toc-check ${done?'done':''}">${done?'✓':''}</span>
+      <span class="toc-text">${l.title}</span>
+      <span class="toc-tag ${l.tag}">${tagLabel[l.tag]}</span>
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); window.scrollTo({top:0,behavior:'smooth'}); }
+function toggleDone(lessonId) {
+  APP.done[lessonId] = !APP.done[lessonId];
+  saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function answerQuiz(lessonIdx, chosen) {
+  const lesson = LESSONS[lessonIdx];
+  const opts = document.querySelectorAll(`#qc-opts-${lesson.id} .qc-opt`);
+  if (opts[0].disabled) return;
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === lesson.quiz.correct) o.classList.add('correct');
+    if (i === chosen && chosen !== lesson.quiz.correct) o.classList.add('wrong');
+  });
+  const ok = chosen === lesson.quiz.correct;
+  APP.quizResults[lesson.id] = ok;
+  saveData();
+  const fb = document.getElementById(`qc-fb-${lesson.id}`);
+  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + lesson.quiz.explanation;
+  fb.className = `qc-fb show ${ok ? 'correct' : 'wrong'}`;
+}
+function exportLessonMD(lessonIdx) {
+  const lesson = LESSONS[lessonIdx];
+  const md = generateLessonMarkdown(lesson, "SQL Avançado");
+  downloadFile(`sql_aula${lessonIdx+1}_${lesson.id}_victor_breia.md`, md);
+  showToast('Markdown exportado! Pronto pro NotebookLM.', '📄');
+}
+function exportModuleMD() {
+  let full = `# SQL Avançado\n\n_Módulo completo — exportado para estudo no NotebookLM_\n\n---\n\n`;
+  LESSONS.forEach((l) => {
+    full += generateLessonMarkdown(l, "SQL Avançado");
+    full += '\n\n---\n\n';
+  });
+  downloadFile(`sql_modulo_completo_victor_breia.md`, full);
+  showToast('Markdown do módulo completo exportado!', '📄');
+}
+function renderSummary() {
+  let html = `<div style="margin-bottom:20px">
+    <h2 style="font-size:20px;margin-bottom:6px">Visão geral — Módulo SQL Avançado</h2>
+    <p style="font-size:13px;color:var(--text2);max-width:620px;line-height:1.6">
+      Este módulo cobre os 9 subtópicos de SQL mais cobrados em processos seletivos de dados,
+      do fundamento até otimização de performance. Cada aula tem conteúdo completo, um teste rápido
+      de fixação, e uma seção pronta para você aprofundar no NotebookLM.
+    </p>
+  </div><div class="summary-grid">`;
+  LESSONS.forEach((l, i) => {
+    const d = !!APP.done[l.id];
+    const q = APP.quizResults[l.id];
+    html += `<div class="summary-card" onclick="goTo(${i+1})" style="cursor:pointer">
+      <h4>${i+1}. ${l.title} ${d ? '✅' : ''}</h4>
+      <p>${l.sub}${q !== undefined ? (q ? ' · Quiz: acertou ✅' : ' · Quiz: errou — revisar 🔴') : ''}</p>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+const VIDEO_FOLDER = 'sql';
+const VIDEO_PREFIX = 'sql';
+
+function renderVideoBlock(lesson, lessonNum) {
+  if (lesson.video) {
+    const src = lesson.video;
+    return `<div class="video-wrap">
+      <video controls preload="metadata">
+        <source src="${encodeURI(src)}" type="video/mp4">
+        Seu navegador não suporta vídeo HTML5.
+      </video>
+    </div>`;
+  }
+  return `<div class="video-placeholder">
+    <div class="vp-icon">🎬</div>
+    <div class="vp-title">Vídeo ainda não adicionado</div>
+    <div class="vp-sub">Salve como ${VIDEO_FOLDER}/${VIDEO_PREFIX}${lessonNum}.Titulo_Do_Video.mp4</div>
+  </div>`;
+}
+
+function renderContent() {
+  if (currentLesson === 0) { renderSummary(); return; }
+  const lesson = LESSONS[currentLesson - 1];
+  const done = !!APP.done[lesson.id];
+  const idx = currentLesson - 1;
+  const nblmQuestionsHtml = lesson.nblm.questions.map(q => `<li>${q}</li>`).join('');
+  document.getElementById('content').innerHTML = `
+    <div class="lesson-nav">
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson-1})" ${currentLesson<=1?'disabled':''}>← Anterior</button>
+      <span class="lesson-progress-label">Aula ${idx+1} de ${LESSONS.length}</span>
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson+1<=LESSONS.length?currentLesson+1:0})">${currentLesson<LESSONS.length?'Próxima →':'Ver resumo →'}</button>
+    </div>
+    <div class="lesson-card" id="lesson-print-${lesson.id}">
+      <div class="lesson-eyebrow">${lesson.eyebrow}</div>
+      <h2 class="lesson-title">${lesson.title}</h2>
+      <div class="lesson-sub">${lesson.sub}</div>
+      <hr>
+      ${renderVideoBlock(lesson, idx+1)}
+      ${lesson.body}
+      <div class="recap"><div class="rt">Recapitulando</div><ul>${lesson.recap.map(r => `<li>${r}</li>`).join('')}</ul></div>
+      <div class="nblm-box">
+        <div class="nblm-header">🎙️ Aprofundar no NotebookLM</div>
+        <div class="nblm-body">
+          <div class="nblm-field"><div class="nblm-label">Assunto do notebook</div><div class="nblm-value">${lesson.nblm.subject}</div></div>
+          <div class="nblm-field"><div class="nblm-label">Perguntas-guia para o Audio Overview</div><ul class="nblm-questions">${nblmQuestionsHtml}</ul></div>
+          <div class="nblm-field"><div class="nblm-label">Fonte complementar sugerida</div><div class="nblm-value">${lesson.nblm.source}</div></div>
+        </div>
+      </div>
+      <div class="source-box"><strong>Como usar:</strong> exporte esta aula em Markdown, suba no NotebookLM junto com a fonte complementar sugerida, e cole as perguntas-guia no campo de customização do Audio Overview.</div>
+    </div>
+    <div class="mark-bar">
+      <button class="mark-check-btn" onclick="toggleDone('${lesson.id}')"><span class="box ${done?'done':''}">${done?'✓':''}</span>Marcar esta aula como concluída</button>
+      <button class="hdr-btn primary" onclick="exportLessonMD(${idx})">⬇ Exportar esta aula (.md)</button>
+    </div>
+    <div class="quick-check">
+      <div class="qc-title">🧪 Teste rápido de fixação</div>
+      <div class="qc-q">${lesson.quiz.q}</div>
+      ${lesson.quiz.code ? `<div class="test-code">${lesson.quiz.code}</div>` : ''}
+      <div class="qc-opts" id="qc-opts-${lesson.id}">${lesson.quiz.options.map((o,i) => `<button class="qc-opt" onclick="answerQuiz(${idx},${i})">${o}</button>`).join('')}</div>
+      <div class="qc-fb" id="qc-fb-${lesson.id}"></div>
+    </div>
+  `;
+}
+updateModuleProgress();
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>

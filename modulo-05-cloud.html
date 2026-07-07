@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 05 — Cloud (Azure/AWS/GCP) | Victor Breia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+:root {
+  --bg:#08080f; --surface:#0f0f18; --surface2:#16161f; --surface3:#1c1c28;
+  --border:#252533; --border2:#2e2e3f;
+  --accent:#0ea5e9; --accent2:#7dd3fc;
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+  --text:#e2e2ee; --text2:#9898b8; --muted:#55556a;
+  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace; --serif:'Source Serif 4',serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
+.header { padding:22px 20px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:60; }
+.breadcrumb { font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px; }
+.breadcrumb a { color:var(--text2); text-decoration:none; }
+.breadcrumb a:hover { color:var(--accent2); }
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.header h1 { font-size:20px; font-weight:700; }
+.header h1 em { color:var(--accent2); font-style:normal; }
+.header-sub { font-size:12px; color:var(--muted); margin-top:4px; max-width:520px; }
+.hdr-actions { display:flex; gap:8px; flex-shrink:0; }
+.hdr-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.hdr-btn:hover { border-color:var(--accent); color:var(--text); }
+.hdr-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.hdr-btn.primary:hover { background:var(--accent2); border-color:var(--accent2); color:#1a1a1f; }
+.overall-bar { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-top:14px; max-width:520px; }
+.overall-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width .5s ease; }
+.overall-label { font-size:11px; color:var(--muted); margin-top:6px; font-family:var(--mono); }
+.layout { display:grid; grid-template-columns:260px 1fr; gap:0; max-width:1180px; margin:0 auto; align-items:start; }
+@media (max-width:860px) { .layout { grid-template-columns:1fr; } .sidebar { position:static !important; } }
+.sidebar { position:sticky; top:130px; padding:22px 14px 40px 20px; max-height:calc(100vh - 130px); overflow-y:auto; }
+.sidebar-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; padding-left:8px; }
+.toc-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; cursor:pointer; margin-bottom:2px; transition:background .15s; border-left:2px solid transparent; }
+.toc-item:hover { background:var(--surface2); }
+.toc-item.active { background:var(--surface2); border-left-color:var(--accent); }
+.toc-num { font-family:var(--mono); font-size:10px; color:var(--muted); width:16px; flex-shrink:0; }
+.toc-check { width:13px; height:13px; border-radius:4px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:8px; }
+.toc-check.done { background:var(--green); border-color:var(--green); color:#000; }
+.toc-text { font-size:12px; color:var(--text2); line-height:1.3; }
+.toc-item.active .toc-text { color:var(--text); font-weight:500; }
+.toc-tag { font-size:9px; padding:1px 5px; border-radius:3px; font-family:var(--mono); margin-left:auto; flex-shrink:0; }
+.toc-tag.critical { background:rgba(248,113,113,.15); color:var(--red); }
+.toc-tag.important { background:rgba(251,191,36,.15); color:var(--yellow); }
+.toc-tag.bonus { background:rgba(163,139,250,.15); color:#a78bfa; }
+.toc-tag.owned { background:rgba(52,211,153,.15); color:var(--green); }
+.toc-divider { height:1px; background:var(--border); margin:14px 8px; }
+.toc-item.summary-item .toc-text { font-weight:600; color:var(--text); }
+.content { padding:24px 24px 80px 20px; min-width:0; }
+.lesson-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap; }
+.lesson-nav-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
+.lesson-nav-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--text); }
+.lesson-nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+.lesson-progress-label { font-size:11px; color:var(--muted); font-family:var(--mono); }
+.lesson-card { background:#fdfcf9; color:#1a1a1f; border-radius:12px; padding:32px 36px; font-family:var(--serif); line-height:1.75; font-size:14.5px; }
+.lesson-eyebrow { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#2d6f8b; margin-bottom:6px; font-weight:500; }
+.lesson-title { font-size:25px; font-weight:700; color:#14141a; margin-bottom:6px; letter-spacing:-.3px; }
+.lesson-sub { font-family:var(--font); font-size:12.5px; color:#6b6b78; margin-bottom:20px; }
+.lesson-card hr { border:none; border-top:1px solid #e5e0d5; margin:20px 0; }
+.lesson-card h3 { font-family:var(--font); font-size:15px; font-weight:700; color:#14141a; margin:22px 0 10px; }
+.lesson-card h4 { font-family:var(--font); font-size:13px; font-weight:600; color:#2a2a30; margin:14px 0 6px; }
+.lesson-card p { margin-bottom:12px; color:#2a2a30; }
+.lesson-card ul, .lesson-card ol { margin:8px 0 14px 20px; }
+.lesson-card li { margin-bottom:6px; color:#2a2a30; }
+.lesson-card strong { color:#14141a; font-weight:700; }
+.lesson-card code { font-family:var(--mono); background:#d9eef7; color:#0c526b; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+.lesson-card pre { background:#14141a; color:#d8dce8; border-radius:8px; padding:14px 16px; overflow-x:auto; margin:12px 0 16px; font-family:var(--mono); font-size:12px; line-height:1.6; }
+.lesson-card pre code { background:none; color:inherit; padding:0; }
+.lesson-card table { border-collapse:collapse; width:100%; margin:12px 0; font-size:13px; }
+.lesson-card table td, .lesson-card table th { padding:8px; border-top:1px solid #e5e0d5; text-align:left; }
+.lesson-card table tr:first-child td, .lesson-card table th { background:#d9eef7; font-weight:600; border-top:none; }
+.callout { padding:10px 14px; border-radius:0 7px 7px 0; margin:14px 0; font-family:var(--font); font-size:12.5px; border-left:3px solid #6366f1; background:#eef0fb; color:#3a3a5c; }
+.callout.warn { background:#fdf3e7; border-left-color:#d97706; color:#6b4a10; }
+.callout.tip { background:#eafaf3; border-left-color:#10b981; color:#0d5e42; }
+.nblm-box { margin-top:24px; border-radius:10px; overflow:hidden; border:1px solid #d8d0be; }
+.nblm-header { background:#14141a; color:#fff; padding:10px 16px; font-family:var(--font); font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.nblm-body { padding:16px; background:#f7f5ee; }
+.nblm-field { margin-bottom:12px; }
+.nblm-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#8b7a5e; margin-bottom:4px; font-weight:600; }
+.nblm-value { font-family:var(--font); font-size:12.5px; color:#2a2a30; }
+.nblm-questions { list-style:none; margin:0; padding:0; }
+.nblm-questions li { background:#fff; border:1px solid #e5e0d5; border-radius:6px; padding:8px 12px; margin-bottom:6px; font-size:12px; font-family:var(--font); color:#2a2a30; }
+.source-box { margin-top:16px; padding:10px 16px; background:#f2f0e8; border-radius:8px; font-family:var(--font); font-size:11.5px; color:#6b6b78; }
+.source-box strong { color:#3a3a44; }
+.recap { margin-top:18px; padding:14px 16px; background:#14141a; color:#fdfcf9; border-radius:8px; font-family:var(--font); }
+.recap .rt { font-size:12px; font-weight:700; margin-bottom:8px; color:#7dd3fc; text-transform:uppercase; letter-spacing:.06em; }
+.recap ul { margin:0 0 0 16px; }
+.recap li { font-size:12.5px; margin-bottom:5px; color:#e2e2ee; }
+.quick-check { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-top:16px; }
+.qc-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.qc-q { font-size:13px; margin-bottom:10px; line-height:1.5; }
+.qc-opts { display:grid; gap:6px; }
+.qc-opt { padding:8px 12px; border-radius:7px; border:1.5px solid var(--border2); background:transparent; color:var(--text); font-family:var(--font); font-size:12px; cursor:pointer; text-align:left; transition:all .15s; }
+.qc-opt:hover:not(:disabled) { border-color:var(--accent); background:rgba(14,165,233,.08); }
+.qc-opt.correct { border-color:var(--green); background:rgba(52,211,153,.1); color:var(--green); }
+.qc-opt.wrong { border-color:var(--red); background:rgba(248,113,113,.1); color:var(--red); }
+.qc-opt:disabled { cursor:default; }
+.qc-fb { margin-top:8px; padding:8px 12px; border-radius:7px; font-size:12px; display:none; }
+.qc-fb.show { display:block; }
+.qc-fb.correct { background:rgba(52,211,153,.08); color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+.qc-fb.wrong { background:rgba(248,113,113,.08); color:#fca5a5; border:1px solid rgba(248,113,113,.2); }
+.mark-bar { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+.mark-check-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; }
+.mark-check-btn .box { width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:10px; }
+.mark-check-btn .box.done { background:var(--green); border-color:var(--green); color:#000; }
+.summary-grid { display:grid; gap:10px; }
+.summary-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+.summary-card h4 { font-size:13px; margin-bottom:4px; }
+.summary-card p { font-size:12px; color:var(--text2); }
+.toast { position:fixed; bottom:20px; right:20px; background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 14px; font-size:12px; display:flex; align-items:center; gap:8px; transform:translateY(60px); opacity:0; transition:all .25s ease; z-index:300; max-width:260px; }
+.toast.show { transform:translateY(0); opacity:1; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.video-wrap { margin-bottom:20px; border-radius:10px; overflow:hidden; background:#000; }
+.video-wrap video { width:100%; display:block; max-height:480px; background:#000; }
+.video-placeholder {
+  margin-bottom:20px; border-radius:10px; border:1.5px dashed var(--border2);
+  background:var(--surface2); padding:28px 20px; text-align:center;
+}
+.video-placeholder .vp-icon { font-size:26px; margin-bottom:8px; }
+.video-placeholder .vp-title { font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
+.video-placeholder .vp-sub { font-family:var(--mono); font-size:11px; color:var(--muted); }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="breadcrumb"><a href="data-engineer-study-system.html">← Voltar ao painel geral</a></div>
+  <div class="header-top">
+    <div>
+      <h1>Módulo 05 · <em>Cloud (Azure/AWS/GCP)</em></h1>
+      <div class="header-sub">9 aulas individuais — Azure em produção, equivalência cross-cloud e IAM para entrevistas.</div>
+    </div>
+    <div class="hdr-actions"><button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button></div>
+  </div>
+  <div class="overall-bar"><div class="overall-fill" id="mod-fill" style="width:0%"></div></div>
+  <div class="overall-label" id="mod-label">0 / 9 subtópicos concluídos</div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'de_module_cloud_v1';
+
+const LESSONS = [
+{
+  id: 'adls', tag: 'owned',
+  title: 'Azure Data Lake Gen2 — estrutura e ACL',
+  eyebrow: 'Aula 1 de 9 · Armazenamento',
+  sub: 'A base do seu Data Lake — como ela combina o melhor de dois mundos',
+  body: `
+<p>Azure Data Lake Storage Gen2 (ADLS Gen2) combina o Azure Blob Storage tradicional (armazenamento de objetos, barato e escalável) com um namespace hierárquico — pastas e subpastas reais, não apenas prefixos simulados em nomes de arquivo. Essa combinação é o que permite organizar um Data Lake em camadas (Bronze/Silver/Gold) com estrutura de diretórios real e permissões granulares por pasta.</p>
+<h3>Namespace hierárquico — a diferença central do Blob Storage padrão</h3>
+<p>No Blob Storage sem namespace hierárquico, uma "pasta" é apenas uma convenção de nomenclatura — <code>bronze/ongs/2026/01/dados.json</code> é, tecnicamente, um único nome de blob com barras. Operações como renomear ou mover uma "pasta inteira" exigiriam reescrever cada blob individualmente. Com namespace hierárquico ativado (o que define um Storage Account como ADLS Gen2), pastas são objetos reais no sistema de arquivos, tornando operações de diretório atômicas e eficientes.</p>
+<pre><code># Estrutura típica de um Data Lake em ADLS Gen2
+container/
+  bronze/
+    ongs/2026/01/dados_brutos.json
+  silver/
+    ongs/dados_limpos.parquet
+  gold/
+    score_transparencia.parquet</code></pre>
+<h3>ACLs — controle de acesso granular por pasta</h3>
+<p>Além do controle de acesso baseado em roles do IAM do Azure (aplicado no nível do Storage Account ou container), ADLS Gen2 permite ACLs (Access Control Lists) no estilo POSIX, granulares até o nível de pasta ou arquivo individual — permitindo, por exemplo, que um time tenha acesso de leitura apenas à camada Gold, sem visibilidade sobre a Bronze com dados brutos e potencialmente sensíveis.</p>
+<h3>Containers vs pastas — a organização em dois níveis</h3>
+<p>Um Storage Account pode ter múltiplos containers (o nível mais alto de organização, similar a um bucket no S3), e dentro de cada container, a estrutura de pastas hierárquica organiza os dados. Uma decisão comum de design: um container por camada Medallion (<code>bronze</code>, <code>silver</code>, <code>gold</code>) versus um único container com pastas de camada dentro dele — ambos funcionam, mas containers separados facilitam aplicar políticas de acesso e ciclo de vida diferentes por camada de forma mais direta.</p>
+<h3>Integração nativa com ferramentas de processamento</h3>
+<p>ADLS Gen2 é a camada de armazenamento padrão para serviços como Azure Synapse Analytics e Azure Databricks, além de ser acessível diretamente por Pandas, Spark, e Airflow (via providers específicos) — o que o torna uma peça central e não isolada dentro do ecossistema de dados Azure.</p>
+<h3>Hot, Cool e Archive — tiers de custo por frequência de acesso</h3>
+<div class="callout tip">💡 ADLS Gen2 (via Blob Storage) oferece tiers de armazenamento com custos diferentes conforme a frequência de acesso esperada: <strong>Hot</strong> para dados acessados frequentemente, <strong>Cool</strong> para dados acessados esporadicamente (custo de armazenamento menor, custo de acesso maior), e <strong>Archive</strong> para dados raramente acessados, com o menor custo de armazenamento mas latência de recuperação de horas. A camada Bronze de um pipeline, por exemplo, pode ser movida para Cool ou Archive depois de um certo tempo, já que raramente precisa ser lida novamente após o processamento inicial.</div>
+<h3>Autenticação — de chaves de acesso a identidades gerenciadas</h3>
+<div class="callout warn">⚠️ Embora ADLS Gen2 suporte autenticação por chave de acesso (uma string secreta que dá acesso total ao Storage Account), a prática recomendada em produção é usar Managed Identity ou Service Principal com permissões escopadas via IAM — evitando ter uma credencial "mestre" de altíssimo privilégio circulando entre aplicações e scripts.</div>
+`,
+  recap: [
+    'ADLS Gen2 combina Blob Storage com namespace hierárquico — pastas reais, não apenas convenção de nomenclatura',
+    'Namespace hierárquico torna operações de pasta (mover, renomear) atômicas e eficientes',
+    'ACLs no estilo POSIX permitem controle de acesso granular até nível de pasta ou arquivo',
+    'Tiers Hot/Cool/Archive permitem otimizar custo conforme a frequência de acesso esperada por camada',
+    'Managed Identity/Service Principal com IAM escopado é preferível a chaves de acesso de alto privilégio'
+  ],
+  nblm: {
+    subject: 'Azure Data Lake Storage Gen2: namespace hierárquico, ACLs, organização em containers e tiers de custo.',
+    questions: [
+      'Explique a diferença entre Blob Storage tradicional e ADLS Gen2 em termos de namespace hierárquico.',
+      'Como ACLs no estilo POSIX permitem controle de acesso granular em um Data Lake organizado em camadas Medallion?',
+      'Quando faz sentido mover dados da camada Bronze para o tier Archive, e quais são os trade-offs?',
+      'Por que Managed Identity é preferível a chaves de acesso estáticas para autenticação em produção?'
+    ],
+    source: 'Cruzar com a documentação oficial da Microsoft sobre Azure Data Lake Storage Gen2 (learn.microsoft.com/azure/storage/blobs/data-lake-storage-introduction).'
+  },
+  quiz: {
+    q: 'Qual é a principal diferença entre Blob Storage tradicional e ADLS Gen2?',
+    options: ['ADLS Gen2 é mais barato em qualquer cenário', 'ADLS Gen2 tem namespace hierárquico, tornando pastas objetos reais em vez de apenas convenção de nomenclatura em nomes de blob', 'Blob Storage não permite armazenar arquivos Parquet', 'Não há diferença técnica real entre os dois'],
+    correct: 1,
+    explanation: 'O namespace hierárquico é a característica definidora do ADLS Gen2 — ele transforma "pastas" de uma convenção de nomenclatura em objetos reais do sistema de arquivos, permitindo operações de diretório atômicas e ACLs granulares por pasta.'
+  }
+},
+{
+  id: 'vm', tag: 'owned',
+  title: 'Azure VM — configuração e custo',
+  eyebrow: 'Aula 2 de 9 · Computação',
+  sub: 'A infraestrutura que roda seu Airflow — e como pensar em custo de forma consciente',
+  body: `
+<p>Uma Azure Virtual Machine é a unidade de computação sob demanda mais fundamental do Azure — um servidor virtual completo onde você controla o sistema operacional, os processos rodando (como seu ambiente Airflow via Docker Compose), e a configuração de rede.</p>
+<h3>Séries de VM — escolhendo o tipo certo</h3>
+<p>Azure organiza VMs em séries otimizadas para diferentes perfis de carga: séries <strong>B</strong> (burstable, mais econômicas, adequadas para cargas intermitentes como um pipeline que roda uma vez por mês), séries <strong>D</strong> (uso geral, balanceadas entre CPU e memória), séries <strong>E</strong> (otimizadas para memória, úteis para processamento de dados em memória), e séries <strong>F</strong> (otimizadas para CPU).</p>
+<div class="callout tip">💡 Para um pipeline como o seu, que processa uma vez por mês e fica ocioso o resto do tempo, uma VM da série B (burstable) é geralmente a escolha mais econômica — ela acumula "créditos" de CPU durante períodos ociosos e permite picos de performance quando necessário, sem pagar o preço de uma VM de uso geral rodando 24/7 com capacidade que só é usada esporadicamente.</div>
+<h3>Os componentes de custo de uma VM</h3>
+<ul>
+  <li><strong>Computação</strong> — cobrada por hora (ou segundo) que a VM está ligada, proporcional ao tamanho/série escolhida.</li>
+  <li><strong>Disco gerenciado</strong> — cobrado independente da VM estar ligada ou desligada, pelo espaço provisionado.</li>
+  <li><strong>Rede</strong> — tráfego de saída (egress) geralmente é cobrado; tráfego de entrada e tráfego entre serviços na mesma região geralmente não.</li>
+  <li><strong>IP público</strong> — tem custo próprio, separado do custo da VM.</li>
+</ul>
+<h3>Desligar não é o mesmo que deletar — e o custo de disco continua</h3>
+<div class="callout warn">⚠️ Um erro comum de quem está começando com otimização de custo: desligar (stop) uma VM através do sistema operacional para "economizar", sem perceber que o Azure continua cobrando pelo disco gerenciado associado, mesmo com a VM parada. Para realmente parar de ser cobrado pela computação, é preciso usar "Stop (deallocate)" — que libera os recursos de hardware alocados, não apenas desliga o sistema operacional.</div>
+<h3>Automação de liga/desliga — o padrão que você já usa</h3>
+<p>Como implementado no seu pipeline-etransparente com Azure Logic Apps, automatizar o ciclo de liga/desliga de uma VM que só precisa rodar periodicamente é uma das otimizações de custo mais diretas e de maior impacto disponíveis — evitando pagar por computação ociosa 29 dos 30 dias do mês, por exemplo.</p>
+<h3>Discos gerenciados — Standard HDD, Standard SSD, Premium SSD</h3>
+<p>A escolha do tipo de disco afeta tanto performance (IOPS, throughput) quanto custo. Para workloads de processamento batch (como rodar Airflow uma vez por mês), Standard SSD geralmente oferece um equilíbrio adequado entre custo e performance, sem precisar do desempenho de Premium SSD (voltado para bancos de dados transacionais de alta demanda).</p>
+<h3>Extensões e scripts de inicialização</h3>
+<p>Azure VMs suportam Custom Script Extensions e Cloud-Init, permitindo que a VM execute automaticamente comandos de configuração (como subir containers Docker) assim que é provisionada ou ligada — reduzindo a necessidade de configuração manual repetida a cada ciclo de liga/desliga.</p>
+`,
+  recap: [
+    'Séries de VM (B, D, E, F) são otimizadas para diferentes perfis de carga — B (burstable) é econômica para cargas intermitentes',
+    'Custo de VM inclui computação, disco gerenciado, rede e IP público — cada um cobrado separadamente',
+    'Desligar via SO não para a cobrança do disco; "Stop (deallocate)" é necessário para liberar recursos de computação',
+    'Automatizar liga/desliga é uma das otimizações de custo de maior impacto para cargas periódicas',
+    'Cloud-Init/Custom Script Extensions automatizam configuração ao ligar a VM, reduzindo trabalho manual repetido'
+  ],
+  nblm: {
+    subject: 'Azure Virtual Machines: séries de VM, componentes de custo, e otimização para cargas periódicas.',
+    questions: [
+      'Compare as séries B, D, E e F de VMs Azure e explique qual seria mais adequada para diferentes tipos de workload.',
+      'Explique cada componente de custo de uma VM Azure (computação, disco, rede, IP) separadamente.',
+      'Por que "Stop (deallocate)" é diferente de simplesmente desligar o sistema operacional da VM?',
+      'Como Cloud-Init ou Custom Script Extensions podem automatizar a subida de containers Docker ao ligar uma VM?'
+    ],
+    source: 'Cruzar com a documentação oficial da Microsoft sobre Azure Virtual Machines pricing e séries de VM (learn.microsoft.com/azure/virtual-machines).'
+  },
+  quiz: {
+    q: 'Por que desligar uma VM Azure através do sistema operacional não é suficiente para parar de ser cobrado pela computação?',
+    options: ['Porque o Azure sempre cobra por VMs, independente do estado', 'Porque desligar via SO não libera os recursos de hardware alocados — é preciso usar "Stop (deallocate)" para isso, embora o custo do disco continue de qualquer forma', 'Porque VMs Azure não podem ser desligadas pelo sistema operacional', 'Isso é um mito — desligar via SO já para toda cobrança'],
+    correct: 1,
+    explanation: 'Desligar pelo sistema operacional deixa a VM em estado "Stopped", mas os recursos de computação continuam alocados e sendo cobrados. "Stop (deallocate)" libera efetivamente esses recursos, parando a cobrança de computação — mas o disco gerenciado continua sendo cobrado em ambos os casos, pelo espaço provisionado.'
+  }
+},
+{
+  id: 'logicapps', tag: 'owned',
+  title: 'Azure Logic Apps — automação de fluxos',
+  eyebrow: 'Aula 3 de 9 · Automação sem servidor',
+  sub: 'O serviço low-code que conecta sistemas sem escrever integração do zero',
+  body: `
+<p>Azure Logic Apps é um serviço de automação de fluxos de trabalho low-code: você desenha visualmente (ou via JSON) uma sequência de passos disparados por um evento (um horário, um webhook, um novo arquivo), conectando serviços diferentes através de conectores pré-construídos, sem escrever código de integração do zero.</p>
+<h3>Anatomia de um Logic App</h3>
+<p>Todo Logic App tem um <strong>trigger</strong> (o que inicia o fluxo) seguido de uma sequência de <strong>actions</strong> (os passos executados em resposta):</p>
+<ul>
+  <li><strong>Trigger recorrente</strong> — dispara em um schedule fixo, como "todo dia 1 do mês às 00:00".</li>
+  <li><strong>Trigger HTTP</strong> — dispara quando uma requisição HTTP é recebida em uma URL gerada automaticamente.</li>
+  <li><strong>Trigger de conector</strong> — dispara com base em um evento de um serviço conectado, como um novo arquivo aparecendo em um Storage Account.</li>
+</ul>
+<h3>O caso de uso que você já implementa: liga/desliga de VM</h3>
+<pre><code>Trigger: Recorrência (dia 1 de cada mês, 00:00)
+  ↓
+Action 1: Ligar a VM (conector Azure Resource Manager)
+  ↓
+Action 2: Aguardar (delay de tempo fixo, ou até uma condição)
+  ↓
+Action 3: Desligar a VM (Stop/Deallocate)</code></pre>
+<p>Esse padrão resolve exatamente o problema visto na aula anterior: evitar pagar por computação ociosa, automatizando o ciclo de vida da VM sem precisar de um script externo rodando em outro lugar (o que criaria uma dependência circular — precisaria de infraestrutura para desligar a própria infraestrutura).</p>
+<h3>Conectores — a biblioteca de integrações prontas</h3>
+<p>Logic Apps tem centenas de conectores pré-construídos para serviços Microsoft (Outlook, SharePoint, Teams) e de terceiros (Twitter, Salesforce, bancos de dados diversos), além de conectores genéricos para HTTP, SQL, e serviços REST customizados — isso é o que torna o serviço "low-code": a maior parte da integração já existe pronta, você só precisa configurar parâmetros.</p>
+<h3>Consumption vs Standard — os dois modelos de hospedagem</h3>
+<p>O plano <strong>Consumption</strong> cobra por execução e é totalmente sem servidor (serverless) — adequado para fluxos esporádicos como o liga/desliga mensal. O plano <strong>Standard</strong> roda em uma infraestrutura dedicada com custo fixo, mais adequado para fluxos de alta frequência onde o modelo por execução sairia mais caro.</p>
+<h3>Logic Apps vs Azure Functions — quando usar cada um</h3>
+<div class="callout tip">💡 Logic Apps é a escolha certa quando a lógica é majoritariamente <em>orquestração e integração entre sistemas</em> (conectar A a B a C). Quando a lógica envolve processamento de dados customizado e complexo (transformações, cálculos específicos), Azure Functions (código serverless) tende a ser mais apropriado — os dois frequentemente se complementam no mesmo pipeline, com Logic Apps orquestrando e Functions executando a lógica pesada.</div>
+<h3>Monitoramento e tratamento de erro</h3>
+<p>Logic Apps mantém histórico de execuções na interface do Azure Portal, mostrando exatamente qual action falhou e por quê — importante para diagnosticar problemas em fluxos de automação que rodam sem supervisão direta, como o liga/desliga automático de uma VM.</p>
+`,
+  recap: [
+    'Todo Logic App tem um trigger (o que inicia) seguido de uma sequência de actions (os passos executados)',
+    'O padrão liga/desliga de VM combina trigger recorrente + actions de start/stop via conector Azure Resource Manager',
+    'Conectores pré-construídos tornam Logic Apps "low-code" — a maior parte da integração já existe pronta',
+    'Consumption é sem servidor e cobra por execução; Standard tem infraestrutura dedicada com custo fixo',
+    'Logic Apps orquestra integrações entre sistemas; Azure Functions é mais apropriado para lógica de processamento pesada'
+  ],
+  nblm: {
+    subject: 'Azure Logic Apps: triggers, actions, conectores, e o padrão de automação de liga/desliga de infraestrutura.',
+    questions: [
+      'Explique a anatomia de um Logic App (trigger + actions) usando o exemplo de liga/desliga de VM como referência.',
+      'Compare os planos Consumption e Standard do Logic Apps — quando cada um é mais econômico?',
+      'Quando usar Logic Apps versus Azure Functions para uma automação específica?',
+      'Como o histórico de execuções do Logic Apps ajuda a diagnosticar falhas em automações que rodam sem supervisão?'
+    ],
+    source: 'Cruzar com a documentação oficial da Microsoft sobre Azure Logic Apps (learn.microsoft.com/azure/logic-apps).'
+  },
+  quiz: {
+    q: 'Por que usar um Logic App para automatizar o liga/desliga de uma VM é preferível a rodar um script externo em outra máquina para isso?',
+    options: ['Logic Apps são sempre mais rápidos que scripts', 'Um script externo precisaria de sua própria infraestrutura sempre ativa para funcionar, criando uma dependência circular; Logic Apps são serverless e não exigem infraestrutura própria sempre ligada', 'Scripts externos não podem se conectar a VMs Azure', 'Não há diferença prática real entre as duas abordagens'],
+    correct: 1,
+    explanation: 'Se você usasse um script para ligar/desligar a VM, esse script precisaria rodar em algum lugar sempre disponível — o que anularia parcialmente o objetivo de economizar recursos. Logic Apps no plano Consumption é serverless: não há infraestrutura própria para manter ligada, você só paga pelas execuções pontuais do fluxo.'
+  }
+},
+{
+  id: 'synapse', tag: 'important',
+  title: 'Azure Synapse Analytics — conceitos',
+  eyebrow: 'Aula 4 de 9 · Data Warehousing',
+  sub: 'A plataforma que unifica Data Warehouse e Data Lake no ecossistema Azure',
+  body: `
+<p>Azure Synapse Analytics é uma plataforma de análise que unifica Data Warehousing e Big Data em uma única superfície de serviço — permitindo consultar dados tanto em um Data Warehouse relacional tradicional quanto diretamente em arquivos no Data Lake (ADLS Gen2), sem precisar mover os dados entre sistemas separados.</p>
+<h3>Os dois motores de consulta principais</h3>
+<ul>
+  <li><strong>Dedicated SQL Pool</strong> — um Data Warehouse relacional tradicional, com capacidade de processamento reservada e paga continuamente (independente de uso), otimizado para cargas analíticas pesadas e recorrentes.</li>
+  <li><strong>Serverless SQL Pool</strong> — permite rodar queries SQL diretamente sobre arquivos no Data Lake (Parquet, CSV, JSON) sem precisar carregar os dados em um Data Warehouse antes, cobrando por volume de dados processado por query, não por tempo de infraestrutura reservada.</li>
+</ul>
+<div class="callout tip">💡 Serverless SQL Pool é particularmente relevante para um pipeline como o etransparente: você pode consultar diretamente os arquivos Parquet da camada Gold no ADLS Gen2 via SQL, sem precisar de um processo adicional de carga em um Data Warehouse separado — pagando só pelo volume de dados realmente escaneado em cada query.</div>
+<h3>Synapse Pipelines — orquestração integrada</h3>
+<p>Synapse também inclui uma camada de orquestração de pipelines (tecnicamente baseada no mesmo motor do Azure Data Factory), com interface visual para construir fluxos de ETL/ELT sem escrever código — uma alternativa (ou complemento) ao Airflow para quem quer permanecer inteiramente dentro do ecossistema de ferramentas visuais da Microsoft.</p>
+<h3>Spark Pools — processamento distribuído integrado</h3>
+<p>Para processamento que exige Spark (transformações pesadas, processamento distribuído em grande escala), Synapse oferece Spark Pools gerenciados, eliminando a necessidade de provisionar e manter um cluster Spark separado (como Databricks faria de forma similar).</p>
+<h3>Uma superfície única para múltiplas personas</h3>
+<p>O Synapse Studio (a interface unificada) permite que engenheiros de dados, analistas e cientistas de dados trabalhem na mesma plataforma — engenheiros construindo pipelines, analistas rodando queries SQL, cientistas usando notebooks Spark — tudo compartilhando o mesmo Data Lake subjacente como fonte única de verdade.</p>
+<h3>Quando Synapse faz sentido vs uma stack mais simples</h3>
+<div class="callout warn">⚠️ Para pipelines de porte pequeno a médio (como o seu, rodando uma vez por mês), a combinação Airflow + ADLS Gen2 + Pandas/Spark já cobre boa parte da necessidade sem o custo e complexidade adicional do Synapse. Synapse se justifica mais claramente quando há múltiplas equipes (engenharia, analytics, ciência de dados) precisando de acesso unificado ao mesmo dado, ou quando o volume de consultas analíticas justifica um Data Warehouse dedicado.</div>
+<h3>Como isso aparece em entrevista</h3>
+<p>Mencionar que você entende a diferença entre Dedicated e Serverless SQL Pool — e sabe justificar quando cada um se aplica — demonstra visão além do "eu sei usar Synapse", mostrando que você pensa sobre trade-off de custo e arquitetura, não apenas operação da ferramenta.</p>
+`,
+  recap: [
+    'Synapse unifica Data Warehousing e Big Data, permitindo consultar Data Warehouse e Data Lake na mesma plataforma',
+    'Dedicated SQL Pool é reservado e pago continuamente; Serverless SQL Pool cobra por volume de dados processado por query',
+    'Serverless SQL Pool permite consultar Parquet/CSV/JSON no Data Lake diretamente, sem carga prévia',
+    'Synapse Pipelines oferece orquestração visual; Spark Pools oferecem processamento distribuído gerenciado',
+    'Synapse se justifica mais em cenários multi-equipe ou alto volume analítico — pipelines menores podem não precisar dele'
+  ],
+  nblm: {
+    subject: 'Azure Synapse Analytics: Dedicated vs Serverless SQL Pool, Synapse Pipelines, e quando a plataforma se justifica.',
+    questions: [
+      'Compare Dedicated SQL Pool e Serverless SQL Pool em termos de modelo de custo e caso de uso ideal.',
+      'Como o Serverless SQL Pool permite consultar dados diretamente no Data Lake sem processo de carga prévio?',
+      'Em que cenário um pipeline pequeno (como um projeto pessoal ou de uma ONG) NÃO justificaria adotar Synapse?',
+      'Como Synapse Studio unifica o trabalho de engenheiros, analistas e cientistas de dados em uma única plataforma?'
+    ],
+    source: 'Cruzar com a documentação oficial da Microsoft sobre Azure Synapse Analytics (learn.microsoft.com/azure/synapse-analytics).'
+  },
+  quiz: {
+    q: 'Qual é a principal diferença de modelo de custo entre Dedicated SQL Pool e Serverless SQL Pool no Synapse?',
+    options: ['Não há diferença de custo entre os dois', 'Dedicated é pago continuamente pela capacidade reservada; Serverless cobra por volume de dados processado em cada query', 'Serverless é sempre mais caro que Dedicated', 'Dedicated só pode ser usado com dados no Data Lake'],
+    correct: 1,
+    explanation: 'Dedicated SQL Pool reserva capacidade de processamento que é cobrada continuamente, independente de uso — adequado para cargas analíticas pesadas e recorrentes. Serverless SQL Pool cobra por volume de dados efetivamente escaneado em cada query, sem custo de infraestrutura reservada, adequado para consultas esporádicas diretamente sobre arquivos no Data Lake.'
+  }
+},
+{
+  id: 'wif', tag: 'owned',
+  title: 'GCP Workload Identity Federation',
+  eyebrow: 'Aula 5 de 9 · Autenticação sem credenciais estáticas',
+  sub: 'Como sua VM Azure se autentica no GCP sem nenhuma chave armazenada',
+  body: `
+<p>Workload Identity Federation permite que workloads externos ao Google Cloud (como sua VM Azure) acessem recursos do GCP através de identidades federadas, em vez de chaves de conta de serviço (service account keys) — arquivos de credencial de longa duração que representam um risco de segurança significativo se vazados.</p>
+<h3>O problema que isso resolve</h3>
+<p>Historicamente, para uma aplicação fora do GCP acessar recursos do Google Cloud, era preciso gerar uma chave de conta de serviço: um arquivo JSON com credenciais que, uma vez criado, pode durar anos e concede acesso extenso caso vaze. Chaves de serviço acidentalmente commitadas em repositórios Git, expostas em logs, ou copiadas para máquinas de desenvolvimento são uma das causas mais comuns de vazamento de credenciais em ambientes cloud.</p>
+<h3>Como funciona o mecanismo de troca de token</h3>
+<p>O fluxo segue a especificação OAuth 2.0 Token Exchange: seu workload (a VM Azure) apresenta uma credencial já existente do seu provedor de identidade original (nesse caso, uma identidade gerenciada do Azure/Microsoft Entra ID) para o Security Token Service do Google, que verifica essa identidade e retorna um token federado de curta duração — geralmente válido por apenas uma hora — em troca.</p>
+<pre><code>VM Azure (identidade gerenciada / Entra ID)
+    ↓ apresenta token OIDC
+Security Token Service do Google (verifica o token)
+    ↓ retorna token federado de curta duração
+VM Azure usa o token para acessar recursos GCP
+    (ex: BigQuery, Cloud Storage) via impersonation de uma Service Account</code></pre>
+<h3>Impersonation — o passo intermediário comum</h3>
+<p>Frequentemente, o token federado não acessa recursos GCP diretamente — ele é usado para "impersonar" (assumir temporariamente a identidade de) uma Service Account do GCP com as permissões específicas necessárias. Isso permite manter o princípio de least privilege: a Service Account tem só as permissões que aquele workload específico precisa, e o acesso real é sempre temporário e federado, nunca uma chave permanente.</p>
+<h3>Analogia para explicar o conceito</h3>
+<div class="callout tip">💡 Uma boa analogia: imagine duas empresas no mesmo prédio. Quando alguém da Empresa A precisa de acesso temporário ao andar da Empresa B, não recebe um crachá permanente da Empresa B — mostra seu próprio crachá da Empresa A na recepção, que verifica a identidade e emite um passe de visitante válido só por aquele dia. Workload Identity Federation funciona da mesma forma: sua identidade original é verificada, e você recebe acesso temporário e escopado, nunca uma credencial permanente do outro sistema.</div>
+<h3>Vantagens de segurança sobre chaves estáticas</h3>
+<ul>
+  <li><strong>Sem arquivo para vazar</strong> — não existe uma chave de longa duração armazenada em lugar nenhum.</li>
+  <li><strong>Expiração automática</strong> — tokens federados expiram em cerca de uma hora, limitando drasticamente a janela de exposição em caso de comprometimento.</li>
+  <li><strong>Auditabilidade</strong> — cada troca de token é rastreável de volta à identidade original que a solicitou.</li>
+</ul>
+<h3>Condições de acesso — restringindo quem pode federar</h3>
+<div class="callout warn">⚠️ Uma boa prática de segurança essencial é configurar condições de atributo restritivas — por exemplo, aceitar apenas tokens vindos de uma VM Azure específica (identificada por atributos únicos), não de qualquer identidade genérica do Azure. Sem essa restrição, o escopo de quem pode federar para aquela Service Account fica perigosamente amplo.</div>
+`,
+  recap: [
+    'Workload Identity Federation elimina a necessidade de chaves de conta de serviço estáticas para workloads externos',
+    'Chaves de serviço de longa duração são uma das causas mais comuns de vazamento de credenciais em cloud',
+    'O fluxo troca uma identidade já existente (Entra ID, AWS, etc.) por um token federado de curta duração (~1 hora)',
+    'Impersonation de Service Account é o passo comum que aplica least privilege ao acesso federado',
+    'Condições de atributo restritivas são essenciais para limitar quais identidades específicas podem federar'
+  ],
+  nblm: {
+    subject: 'GCP Workload Identity Federation: eliminação de chaves estáticas, o fluxo de troca de token, e boas práticas de segurança.',
+    questions: [
+      'Explique o fluxo completo de Workload Identity Federation desde a VM Azure até o acesso a um recurso GCP.',
+      'Por que chaves de conta de serviço de longa duração são consideradas um risco de segurança significativo?',
+      'O que é "impersonation" de Service Account nesse contexto, e por que ele reforça o princípio de least privilege?',
+      'Quais condições de atributo devem ser configuradas para evitar que qualquer identidade do provedor externo possa federar indiscriminadamente?'
+    ],
+    source: 'Cruzar com a documentação oficial do Google Cloud sobre Workload Identity Federation (cloud.google.com/iam/docs/workload-identity-federation) e as best practices oficiais associadas.'
+  },
+  quiz: {
+    q: 'Qual é a principal vantagem de segurança do Workload Identity Federation sobre chaves de conta de serviço tradicionais?',
+    options: ['Federation é sempre mais rápida em termos de latência', 'Não existe um arquivo de credencial de longa duração para vazar — o acesso é baseado em tokens federados de curta duração (geralmente ~1 hora)', 'Federation não requer nenhuma configuração de permissões', 'Chaves de serviço não podem ser usadas para acessar Cloud Storage'],
+    correct: 1,
+    explanation: 'O principal ganho de segurança é eliminar o arquivo de credencial permanente. Mesmo que um token federado seja exposto, ele expira rapidamente (tipicamente em uma hora), limitando drasticamente a janela de exploração em comparação com uma chave que pode ser válida por anos.'
+  }
+},
+{
+  id: 's3', tag: 'important',
+  title: 'AWS S3 — equivalente ao ADLS',
+  eyebrow: 'Aula 6 de 9 · Armazenamento cross-cloud',
+  sub: 'O serviço de storage mais usado do mercado — e como ele se compara ao que você já domina',
+  body: `
+<p>Amazon S3 (Simple Storage Service) é o serviço de armazenamento de objetos da AWS, equivalente conceitual ao Azure Blob Storage/ADLS Gen2. Entender S3 é praticamente obrigatório para qualquer entrevista de dados, já que é um dos serviços cloud mais usados no mercado, independente da empresa usar AWS como cloud principal ou não.</p>
+<h3>Buckets — a unidade central de organização</h3>
+<pre><code># Estrutura típica em S3 (usando prefixos, não pastas reais)
+s3://meu-bucket/
+  bronze/ongs/2026/01/dados.json
+  silver/ongs/dados_limpos.parquet
+  gold/score_transparencia.parquet</code></pre>
+<div class="callout warn">⚠️ Diferente do ADLS Gen2, o S3 "clássico" não tem namespace hierárquico nativo — o que parecem ser pastas são, tecnicamente, prefixos no nome do objeto. Ferramentas e o próprio console AWS simulam a experiência de pastas para conveniência visual, mas operações que dependem de hierarquia real de diretórios (como as ACLs por pasta do ADLS Gen2) não têm um equivalente direto e nativo no S3 clássico.</div>
+<h3>Storage Classes — o equivalente aos tiers do Azure</h3>
+<p>S3 oferece classes de armazenamento com trade-offs de custo similares aos tiers Hot/Cool/Archive do Azure: <strong>S3 Standard</strong> para acesso frequente, <strong>S3 Standard-IA</strong> (Infrequent Access) para dados acessados esporadicamente, <strong>S3 Glacier</strong> e <strong>Glacier Deep Archive</strong> para arquivamento de longo prazo com latência de recuperação de minutos a horas.</p>
+<h3>Políticas de acesso — IAM Policies e Bucket Policies</h3>
+<p>O controle de acesso em S3 é feito através de IAM Policies (atribuídas a usuários/roles) e Bucket Policies (atribuídas diretamente ao bucket), escritas em JSON, definindo quem pode fazer o quê em quais recursos:</p>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"AWS": "arn:aws:iam::123456789:role/pipeline-role"},
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::meu-bucket/gold/*"
+  }]
+}</code></pre>
+<h3>Versionamento — proteção contra sobrescrita e exclusão acidental</h3>
+<p>S3 suporta versionamento de objetos — quando ativado, cada sobrescrita ou exclusão preserva a versão anterior, permitindo recuperação em caso de erro de processamento ou exclusão acidental. Isso é particularmente relevante para a camada Bronze de um pipeline, onde a integridade do dado bruto histórico importa.</p>
+<h3>Event Notifications — a base para arquiteturas orientadas a evento</h3>
+<p>S3 pode disparar notificações automáticas (para SQS, SNS, ou diretamente para uma função Lambda) quando um objeto é criado ou modificado — um padrão comum para iniciar processamento assim que um novo arquivo chega, sem depender de um Sensor fazendo polling ativo (relembrando o conceito visto no módulo de Airflow).</p>
+<h3>Traduzindo seu conhecimento Azure para uma entrevista sobre AWS</h3>
+<div class="callout tip">💡 Se perguntarem em entrevista "como você faria isso na AWS" sobre algo que você já fez em Azure, a resposta demonstra domínio quando você consegue mapear diretamente: ADLS Gen2 → S3, Azure Logic Apps → AWS Step Functions/EventBridge, Azure VM → EC2. Não é preciso ter usado a AWS na prática para demonstrar que você entende a equivalência conceitual.</div>
+`,
+  recap: [
+    'S3 é o equivalente conceitual da AWS ao Blob Storage/ADLS Gen2 do Azure',
+    'S3 clássico não tem namespace hierárquico nativo — "pastas" são prefixos simulados no nome do objeto',
+    'Storage Classes (Standard, IA, Glacier) espelham os tiers Hot/Cool/Archive do Azure',
+    'IAM Policies e Bucket Policies (JSON) controlam acesso granular a buckets e objetos',
+    'Event Notifications permitem arquiteturas orientadas a evento sem depender de polling ativo'
+  ],
+  nblm: {
+    subject: 'Amazon S3 comparado ao Azure ADLS Gen2: buckets, storage classes, políticas de acesso e event notifications.',
+    questions: [
+      'Compare a estrutura de "pastas" em S3 clássico com o namespace hierárquico real do ADLS Gen2.',
+      'Mapeie os Storage Classes do S3 (Standard, IA, Glacier) para os tiers equivalentes do Azure Blob Storage.',
+      'Como uma IAM Policy e uma Bucket Policy diferem na forma de conceder acesso a um bucket S3?',
+      'Como Event Notifications do S3 podem substituir um Sensor de polling do Airflow para iniciar processamento?'
+    ],
+    source: 'Cruzar com a documentação oficial da AWS sobre Amazon S3 (docs.aws.amazon.com/s3) e o guia de comparação de serviços cloud da Microsoft (Azure vs AWS services).'
+  },
+  quiz: {
+    q: 'Qual é a principal diferença estrutural entre S3 clássico e ADLS Gen2 em termos de organização de dados?',
+    options: ['S3 não permite armazenar arquivos Parquet', 'S3 clássico não tem namespace hierárquico nativo — "pastas" são prefixos simulados; ADLS Gen2 tem pastas reais como objetos do sistema de arquivos', 'ADLS Gen2 não suporta controle de acesso granular', 'Não há diferença estrutural relevante entre os dois'],
+    correct: 1,
+    explanation: 'Essa é a diferença central: no S3 clássico, o que parece uma estrutura de pastas é, tecnicamente, apenas parte do nome do objeto (prefixo). O ADLS Gen2, com namespace hierárquico ativado, torna pastas objetos reais e atômicos do sistema de arquivos.'
+  }
+},
+{
+  id: 'glue', tag: 'bonus',
+  title: 'AWS Glue / Athena — conceitos básicos',
+  eyebrow: 'Aula 7 de 9 · Serverless analytics na AWS',
+  sub: 'ETL gerenciado e consultas SQL diretas sobre o Data Lake, sem servidor',
+  body: `
+<p>AWS Glue e Amazon Athena formam uma dupla comum no ecossistema de dados serverless da AWS: Glue cuida da catalogação e transformação de dados, Athena permite consultá-los diretamente via SQL — uma combinação conceitualmente parecida com Synapse Serverless SQL Pool do Azure, visto anteriormente neste módulo.</p>
+<h3>AWS Glue Data Catalog — o "dicionário" central dos seus dados</h3>
+<p>O Glue Data Catalog é um repositório centralizado de metadados: ele guarda informação sobre onde os dados estão (localização no S3), qual é o formato (Parquet, CSV, JSON) e qual é o schema (nomes e tipos de coluna) — sem duplicar os dados em si. Um <strong>Crawler</strong> do Glue pode varrer automaticamente um bucket S3 e inferir esse schema, populando o catálogo sem trabalho manual.</p>
+<pre><code>S3 (dados brutos em Parquet)
+    ↓
+Glue Crawler (varre e infere schema)
+    ↓
+Glue Data Catalog (metadados: schema, localização, formato)
+    ↓
+Athena / Glue ETL Jobs consultam usando esse catálogo</code></pre>
+<h3>AWS Glue ETL Jobs — transformação gerenciada e serverless</h3>
+<p>Glue ETL Jobs executam transformações de dados (geralmente em Spark, gerenciado pela AWS) sem que você precise provisionar ou administrar um cluster — você escreve a lógica de transformação (em Python ou Scala) e a AWS cuida da infraestrutura de execução, cobrando por tempo de processamento usado.</p>
+<h3>Amazon Athena — SQL direto sobre o Data Lake</h3>
+<pre><code>SELECT categoria, SUM(valor) as total
+FROM dados_gold
+WHERE ano = 2026
+GROUP BY categoria;</code></pre>
+<p>Athena permite rodar essa query diretamente sobre arquivos Parquet/CSV no S3, usando o schema já catalogado pelo Glue Data Catalog — sem precisar carregar os dados em um banco separado antes. É cobrado por volume de dados escaneado por query, o mesmo modelo do Synapse Serverless SQL Pool.</p>
+<div class="callout tip">💡 Uma otimização de custo importante em Athena: particionar os dados (por exemplo, por ano/mês, como visto na aula de particionamento de tabelas do módulo de SQL) permite que o Athena escaneie só as partições relevantes para uma query filtrada por data, reduzindo drasticamente o volume de dados processado — e, portanto, o custo.</div>
+<h3>Formatos otimizados para Athena</h3>
+<div class="callout warn">⚠️ Athena cobra por volume de dados escaneado, o que torna o formato de arquivo uma decisão de custo direta: formatos colunares e comprimidos como Parquet reduzem drasticamente o volume escaneado em comparação com CSV, porque o Athena só precisa ler as colunas realmente referenciadas na query, não o arquivo inteiro linha por linha.</div>
+<h3>Onde isso se conecta com o que você já sabe</h3>
+<p>A combinação Glue Data Catalog + Athena resolve, na AWS, essencialmente o mesmo problema que Synapse Serverless SQL Pool resolve no Azure: consultar dados no Data Lake via SQL sem processo de carga prévio em um Data Warehouse dedicado. Reconhecer essa equivalência é o tipo de conexão que demonstra domínio conceitual cross-cloud em entrevista.</p>
+`,
+  recap: [
+    'Glue Data Catalog centraliza metadados (schema, localização, formato) sem duplicar os dados em si',
+    'Glue Crawlers varrem o S3 automaticamente e inferem schema, populando o catálogo sem trabalho manual',
+    'Glue ETL Jobs rodam Spark gerenciado sem precisar provisionar cluster próprio',
+    'Athena permite SQL direto sobre arquivos no S3, cobrando por volume de dados escaneado',
+    'Particionamento e formatos colunares (Parquet) reduzem diretamente o custo de queries no Athena'
+  ],
+  nblm: {
+    subject: 'AWS Glue e Athena: catalogação de dados, ETL serverless, e consultas SQL diretas sobre o Data Lake.',
+    questions: [
+      'Explique o papel do Glue Data Catalog e como um Crawler popula esse catálogo automaticamente.',
+      'Como a combinação Glue + Athena se compara ao Azure Synapse Serverless SQL Pool em termos conceituais?',
+      'Por que particionar dados no S3 reduz diretamente o custo de queries no Athena?',
+      'Por que Parquet é mais econômico que CSV para consultas via Athena, do ponto de vista de volume de dados escaneado?'
+    ],
+    source: 'Cruzar com a documentação oficial da AWS sobre AWS Glue (docs.aws.amazon.com/glue) e Amazon Athena (docs.aws.amazon.com/athena).'
+  },
+  quiz: {
+    q: 'Por que particionar dados no S3 por ano/mês reduz o custo de queries no Athena?',
+    options: ['Particionamento não afeta custo no Athena', 'Athena cobra por volume de dados escaneado, e o particionamento permite ignorar partições irrelevantes para uma query filtrada por data, reduzindo o volume total lido', 'Particionamento comprime automaticamente os arquivos', 'Athena só funciona com dados particionados'],
+    correct: 1,
+    explanation: 'O modelo de cobrança do Athena é baseado em volume de dados escaneado por query. Quando os dados estão particionados por data e a query filtra por um período específico, o Athena consegue ignorar completamente as partições fora desse período — o mesmo princípio de partition pruning visto no módulo de SQL, aplicado aqui em um contexto de custo direto.'
+  }
+},
+{
+  id: 'iam', tag: 'critical',
+  title: 'IAM — permissões e roles (Azure + AWS)',
+  eyebrow: 'Aula 8 de 9 · Segurança e controle de acesso',
+  sub: 'O princípio universal que atravessa qualquer cloud — e como cada uma implementa',
+  body: `
+<p>Identity and Access Management (IAM) é o sistema que controla <strong>quem</strong> pode fazer <strong>o quê</strong> em <strong>quais recursos</strong>, em qualquer cloud. O princípio universal por trás de qualquer implementação séria de IAM é o <strong>least privilege</strong> (privilégio mínimo): conceder apenas as permissões estritamente necessárias para uma tarefa específica, nunca acesso amplo "por conveniência".</p>
+<h3>Os três elementos que toda decisão de IAM envolve</h3>
+<ul>
+  <li><strong>Principal</strong> — quem está pedindo acesso (um usuário, uma aplicação, um serviço).</li>
+  <li><strong>Ação</strong> — o que essa entidade quer fazer (ler, escrever, deletar, listar).</li>
+  <li><strong>Recurso</strong> — sobre o quê a ação seria executada (um bucket específico, uma VM específica, um banco de dados específico).</li>
+</ul>
+<h3>IAM no Azure — Role-Based Access Control (RBAC)</h3>
+<p>O Azure usa RBAC: papéis (roles) predefinidos ou customizados são atribuídos a identidades (usuários, grupos, ou identidades gerenciadas) em um <em>escopo</em> específico — que pode ser todo um Subscription, um Resource Group, ou um recurso individual.</p>
+<pre><code># Exemplo conceitual: atribuir o papel "Storage Blob Data Reader"
+# a uma Managed Identity, escopado apenas ao container "gold"
+Principal: Identidade Gerenciada da VM do pipeline
+Role: Storage Blob Data Reader
+Escopo: /storageAccounts/meudatalake/containers/gold</code></pre>
+<h3>IAM na AWS — Policies em JSON</h3>
+<p>A AWS usa políticas escritas em JSON, anexadas a usuários, grupos ou roles, especificando explicitamente ações permitidas ou negadas sobre recursos identificados por ARN (Amazon Resource Name):</p>
+<pre><code>{
+  "Effect": "Allow",
+  "Action": ["s3:GetObject"],
+  "Resource": "arn:aws:s3:::meu-bucket/gold/*"
+}</code></pre>
+<h3>Roles vs Usuários — por que roles são preferíveis para aplicações</h3>
+<div class="callout warn">⚠️ Atribuir permissões diretamente a um usuário (ou pior, hardcoded como credencial em uma aplicação) cria um vínculo frágil e difícil de auditar. Roles (Azure) e IAM Roles (AWS) são identidades "assumíveis" temporariamente por aplicações ou serviços — permitindo que uma VM, uma função serverless, ou um pipeline "assuma" um role com permissões específicas sem que uma credencial de longa duração precise existir, de forma conceitualmente muito próxima ao Workload Identity Federation visto na Aula 5.</div>
+<h3>Managed Identities (Azure) — a evolução natural do RBAC</h3>
+<p>Uma Managed Identity é uma identidade gerenciada automaticamente pelo Azure e atribuída diretamente a um recurso (como uma VM), eliminando completamente a necessidade de armazenar qualquer credencial — o Azure cuida da rotação e da entrega segura do token de autenticação por baixo dos panos.</p>
+<h3>Auditoria — o componente frequentemente esquecido</h3>
+<p>Tanto Azure (via Activity Log e Azure Monitor) quanto AWS (via CloudTrail) mantêm logs de auditoria de quem fez o quê, quando, e usando qual identidade — essencial não só para investigação de incidentes de segurança, mas também para identificar permissões concedidas que nunca são realmente usadas (candidatas a serem revogadas, seguindo o princípio de least privilege de forma contínua, não só na configuração inicial).</p>
+<h3>Erros comuns de configuração de IAM</h3>
+<ul>
+  <li>Conceder permissões amplas demais "para simplificar" durante desenvolvimento, e esquecer de restringir depois em produção.</li>
+  <li>Usar credenciais de usuário pessoal em pipelines automatizados, em vez de roles/identidades de serviço dedicadas.</li>
+  <li>Não revisar periodicamente permissões concedidas — acesso que fez sentido meses atrás pode não ser mais necessário.</li>
+</ul>
+`,
+  recap: [
+    'IAM controla quem (principal) pode fazer o quê (ação) sobre qual recurso, em qualquer cloud',
+    'Azure usa RBAC com roles atribuídos em um escopo (Subscription, Resource Group, recurso individual)',
+    'AWS usa policies em JSON anexadas a usuários, grupos ou roles, referenciando recursos por ARN',
+    'Roles/identidades de serviço são preferíveis a credenciais de usuário para aplicações e pipelines automatizados',
+    'Auditoria contínua (Activity Log, CloudTrail) é essencial para manter least privilege ao longo do tempo, não só na configuração inicial'
+  ],
+  nblm: {
+    subject: 'IAM em Azure e AWS: RBAC, policies JSON, roles vs usuários, e o princípio de least privilege.',
+    questions: [
+      'Compare o modelo RBAC do Azure com o modelo de Policies JSON da AWS — quais são as semelhanças conceituais?',
+      'Por que usar um Role/identidade de serviço é preferível a hardcoded credentials de usuário em uma aplicação automatizada?',
+      'O que é uma Managed Identity no Azure, e como ela elimina a necessidade de armazenar credenciais?',
+      'Como logs de auditoria (Activity Log, CloudTrail) ajudam a manter o princípio de least privilege ao longo do tempo, não só na configuração inicial?'
+    ],
+    source: 'Cruzar com a documentação oficial da Microsoft sobre Azure RBAC (learn.microsoft.com/azure/role-based-access-control) e da AWS sobre IAM (docs.aws.amazon.com/IAM).'
+  },
+  quiz: {
+    q: 'Por que atribuir permissões a um Role/identidade de serviço é geralmente preferível a atribuir diretamente a um usuário ou hardcoded credencial em uma aplicação?',
+    options: ['Roles são sempre mais rápidos em termos de latência de autenticação', 'Roles são identidades assumíveis temporariamente, permitindo que aplicações operem sem uma credencial de longa duração armazenada em lugar nenhum, o que reduz risco de vazamento', 'Usuários não podem ter permissões atribuídas na AWS', 'Não há diferença prática relevante entre as duas abordagens'],
+    correct: 1,
+    explanation: 'Roles/identidades de serviço podem ser "assumidos" temporariamente por uma aplicação ou recurso sem que uma credencial permanente precise ser gerada ou armazenada — reduzindo drasticamente a superfície de risco em comparação com hardcoded credentials ou credenciais de usuário compartilhadas entre pessoas e sistemas.'
+  }
+},
+{
+  id: 'tradeoffs', tag: 'critical',
+  title: 'Trade-offs entre clouds em entrevista',
+  eyebrow: 'Aula 9 de 9 · Comunicação técnica',
+  sub: 'Como responder "qual cloud é melhor" sem cair na armadilha de uma resposta rasa',
+  body: `
+<p>"Qual cloud você prefere?" ou "por que usar Azure em vez de AWS?" são perguntas comuns em entrevista que testam não apenas conhecimento técnico, mas maturidade de raciocínio — a resposta certa quase nunca é "cloud X é melhor", e sim uma análise de trade-offs contextualizados.</p>
+<h3>Por que não existe "a melhor cloud" de forma absoluta</h3>
+<p>As três principais clouds (Azure, AWS, GCP) têm paridade funcional na maior parte dos serviços de dados — todas oferecem storage de objetos, Data Warehouse, orquestração, processamento distribuído. As diferenças reais estão em: maturidade de serviços específicos, integração com ecossistemas existentes, modelo de precificação, e — frequentemente o fator decisivo na prática — o que a equipe já domina.</p>
+<h3>Um roteiro de resposta que demonstra maturidade</h3>
+<p>Ao invés de declarar uma preferência absoluta, um roteiro eficaz reconhece o contexto: <strong>(1)</strong> qual é o cenário de uso, <strong>(2)</strong> quais critérios importam nesse cenário específico, <strong>(3)</strong> como cada opção se sai nesses critérios.</p>
+<div class="callout tip">💡 Exemplo de resposta aplicada: "Não vejo isso como 'melhor ou pior' de forma absoluta — no meu caso, usei Azure no etransparente porque já tinha familiaridade com o ecossistema, e o Data Factory/Synapse tem boa integração com Active Directory, que é comum em ambientes corporativos brasileiros. Para uma empresa que já usa BigQuery para analytics, por exemplo, a decisão penderia naturalmente para GCP, já que BigQuery é particularmente forte em separar armazenamento de computação de forma elástica."</div>
+<h3>Trade-offs reais que valem mencionar</h3>
+<ul>
+  <li><strong>Azure</strong> — integração nativa forte com ecossistema Microsoft (Active Directory/Entra ID, Office, .NET); Synapse combina DW e Data Lake em uma superfície única.</li>
+  <li><strong>AWS</strong> — maior maturidade histórica e variedade de serviços (foi pioneira no mercado cloud); Athena permite SQL direto sobre S3 sem infraestrutura dedicada.</li>
+  <li><strong>GCP</strong> — BigQuery se destaca pela separação extremamente elástica entre armazenamento e computação, com modelo de precificação por dado escaneado; forte em ferramentas de dados e IA nativas.</li>
+</ul>
+<h3>O fator "custo de troca" que raramente é mencionado, mas importa</h3>
+<p>Um ponto de maturidade extra: mencionar que migrar entre clouds tem custo real — não só financeiro, mas de retreinamento de equipe, reescrita de pipelines, e risco operacional durante a transição. Isso explica por que empresas frequentemente permanecem na cloud que já escolheram mesmo quando um concorrente tem uma vantagem pontual em algum serviço específico — a decisão de trocar de cloud raramente é puramente técnica.</p>
+<h3>Como isso se conecta com sua trajetória</h3>
+<p>Você tem experiência prática em Azure e conhecimento conceitual de GCP (via Workload Identity Federation) e AWS (visto neste módulo) — isso já é suficiente para uma resposta de entrevista que demonstra tanto profundidade prática quanto amplitude conceitual, sem precisar fingir expertise igual nas três.</p>
+<h3>Uma armadilha a evitar</h3>
+<div class="callout warn">⚠️ Evite responder apenas com uma lista de features técnicas sem conectar a um critério de decisão real. "AWS tem mais serviços" sozinho não é uma resposta de trade-off — é preciso conectar isso a uma pergunta como "mais serviços resolve qual problema, e a que custo de complexidade?"</div>
+`,
+  recap: [
+    'Não existe "a melhor cloud" de forma absoluta — as três principais têm paridade funcional na maior parte dos serviços',
+    'Um roteiro de resposta maduro considera: cenário de uso → critérios relevantes → como cada opção se sai neles',
+    'Azure: integração Microsoft/Entra ID; AWS: maturidade e variedade histórica; GCP: BigQuery e elasticidade de custo',
+    'O "custo de troca" entre clouds (retreinamento, reescrita, risco operacional) é um fator real raramente mencionado',
+    'Conectar sua experiência real (Azure) com conhecimento conceitual (AWS, GCP) é suficiente para uma resposta forte'
+  ],
+  nblm: {
+    subject: 'Como responder perguntas de trade-off entre clouds (Azure, AWS, GCP) em entrevistas técnicas de dados.',
+    questions: [
+      'Monte um roteiro de resposta para "por que você escolheria Azure em vez de AWS para um projeto novo?"',
+      'Quais são os trade-offs reais e específicos (não genéricos) entre Azure, AWS e GCP para workloads de dados?',
+      'Por que o "custo de troca" entre clouds é um fator relevante que poucos candidatos mencionam em entrevista?',
+      'Como eu conectaria minha experiência prática em Azure com conhecimento conceitual de AWS e GCP de forma convincente em entrevista?'
+    ],
+    source: 'Sem fonte externa formal necessária — esta aula sintetiza os conceitos das aulas anteriores deste módulo em um framework de comunicação para entrevista.'
+  },
+  quiz: {
+    q: 'Qual é o problema com a resposta "AWS é melhor porque tem mais serviços disponíveis" em uma entrevista?',
+    options: ['AWS não tem realmente mais serviços que as outras clouds', 'A resposta lista uma característica técnica sem conectá-la a um critério de decisão real ou trade-off específico do contexto', 'Entrevistadores nunca aceitam respostas sobre AWS', 'Não há problema real com essa resposta'],
+    correct: 1,
+    explanation: 'Uma resposta madura conecta a característica técnica a um raciocínio de decisão: mais serviços resolve qual problema específico, a que custo de complexidade, e em que cenário isso realmente pesa mais que outros fatores (como equipe já familiarizada com outra cloud, ou integração com sistemas existentes).'
+  }
+}
+];
+
+function htmlToMarkdown(html) {
+  let md = html;
+  md = md.replace(/<div class="callout[^"]*">\s*([\s\S]*?)\s*<\/div>/g, (m, p1) => '> ' + p1.replace(/<[^>]+>/g,'').trim() + '\n\n');
+  md = md.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, p1) => '```\n' + p1.trim() + '\n```\n\n');
+  md = md.replace(/<h3>(.*?)<\/h3>/g, '\n### $1\n\n');
+  md = md.replace(/<h4>(.*?)<\/h4>/g, '\n#### $1\n\n');
+  md = md.replace(/<hr>/g, '\n---\n\n');
+  md = md.replace(/<table>[\s\S]*?<\/table>/g, (m) => {
+    let rows = [...m.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map(r => r[1]);
+    let out = '';
+    rows.forEach((r, i) => {
+      let cells = [...r.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)].map(c => c[1].replace(/<[^>]+>/g,'').trim());
+      out += '| ' + cells.join(' | ') + ' |\n';
+      if (i === 0) out += '|' + cells.map(()=>' --- ').join('|') + '|\n';
+    });
+    return out + '\n';
+  });
+  md = md.replace(/<ul>/g, '\n').replace(/<\/ul>/g, '\n');
+  md = md.replace(/<li>\s*([\s\S]*?)\s*<\/li>/g, '- $1\n');
+  md = md.replace(/<p>\s*([\s\S]*?)\s*<\/p>/g, '$1\n\n');
+  md = md.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+  md = md.replace(/<em>(.*?)<\/em>/g, '_$1_');
+  md = md.replace(/<code>(.*?)<\/code>/g, '`$1`');
+  md = md.replace(/<[^>]+>/g, '');
+  md = md.replace(/\n{3,}/g, '\n\n');
+  return md.trim();
+}
+
+function generateLessonMarkdown(lesson, moduleTitle) {
+  let md = `# ${lesson.title}\n\n`;
+  md += `_${lesson.eyebrow} — ${moduleTitle}_\n\n`;
+  md += `> ${lesson.sub}\n\n`;
+  md += '---\n\n';
+  md += htmlToMarkdown(lesson.body);
+  md += '\n\n## Recapitulando\n\n';
+  lesson.recap.forEach(r => md += `- ${r}\n`);
+  md += '\n## Aprofundar no NotebookLM\n\n';
+  md += `**Assunto do notebook:** ${lesson.nblm.subject}\n\n`;
+  md += `**Perguntas-guia para o Audio Overview:**\n\n`;
+  lesson.nblm.questions.forEach(q => md += `- ${q}\n`);
+  md += `\n**Fonte complementar sugerida:** ${lesson.nblm.source}\n\n`;
+  md += '---\n\n';
+  md += `**Teste rápido:** ${lesson.quiz.q}\n\n`;
+  lesson.quiz.options.forEach((o,i) => md += `${i === lesson.quiz.correct ? '- [x]' : '- [ ]'} ${o}\n`);
+  md += `\n> **Explicação:** ${lesson.quiz.explanation}\n`;
+  return md;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return { done: {}, quizResults: {} };
+}
+function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e){} }
+let APP = loadData();
+let currentLesson = 0;
+function showToast(msg, emoji='✅') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${emoji} ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function updateModuleProgress() {
+  const total = LESSONS.length;
+  const done = LESSONS.filter(l => APP.done[l.id]).length;
+  document.getElementById('mod-fill').style.width = Math.round((done/total)*100) + '%';
+  document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
+}
+function renderSidebar() {
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  let html = `<div class="sidebar-title">Módulo 05 · Cloud</div>`;
+  html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
+  html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
+  LESSONS.forEach((l, i) => {
+    const done = !!APP.done[l.id];
+    html += `<div class="toc-item ${currentLesson===i+1?'active':''}" onclick="goTo(${i+1})">
+      <span class="toc-num">${i+1}</span>
+      <span class="toc-check ${done?'done':''}">${done?'✓':''}</span>
+      <span class="toc-text">${l.title}</span>
+      <span class="toc-tag ${l.tag}">${tagLabel[l.tag]}</span>
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); window.scrollTo({top:0,behavior:'smooth'}); }
+function toggleDone(lessonId) {
+  APP.done[lessonId] = !APP.done[lessonId];
+  saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function answerQuiz(lessonIdx, chosen) {
+  const lesson = LESSONS[lessonIdx];
+  const opts = document.querySelectorAll(`#qc-opts-${lesson.id} .qc-opt`);
+  if (opts[0].disabled) return;
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === lesson.quiz.correct) o.classList.add('correct');
+    if (i === chosen && chosen !== lesson.quiz.correct) o.classList.add('wrong');
+  });
+  const ok = chosen === lesson.quiz.correct;
+  APP.quizResults[lesson.id] = ok;
+  saveData();
+  const fb = document.getElementById(`qc-fb-${lesson.id}`);
+  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + lesson.quiz.explanation;
+  fb.className = `qc-fb show ${ok ? 'correct' : 'wrong'}`;
+}
+function exportLessonMD(lessonIdx) {
+  const lesson = LESSONS[lessonIdx];
+  const md = generateLessonMarkdown(lesson, "Cloud (Azure/AWS/GCP)");
+  downloadFile(`cloud_aula${lessonIdx+1}_${lesson.id}_victor_breia.md`, md);
+  showToast('Markdown exportado! Pronto pro NotebookLM.', '📄');
+}
+function exportModuleMD() {
+  let full = `# Cloud (Azure/AWS/GCP)\n\n_Módulo completo — exportado para estudo no NotebookLM_\n\n---\n\n`;
+  LESSONS.forEach((l) => {
+    full += generateLessonMarkdown(l, "Cloud (Azure/AWS/GCP)");
+    full += '\n\n---\n\n';
+  });
+  downloadFile(`cloud_modulo_completo_victor_breia.md`, full);
+  showToast('Markdown do módulo completo exportado!', '📄');
+}
+function renderSummary() {
+  let html = `<div style="margin-bottom:20px">
+    <h2 style="font-size:20px;margin-bottom:6px">Visão geral — Módulo Cloud (Azure/AWS/GCP)</h2>
+    <p style="font-size:13px;color:var(--text2);max-width:620px;line-height:1.6">
+      Este módulo cobre os 9 subtópicos de cloud mais relevantes para entrevistas de dados — sua base
+      sólida em Azure, equivalência conceitual com AWS e GCP, e o framework de resposta para perguntas
+      de trade-off entre clouds. Cada aula tem conteúdo completo, teste de fixação, e seção para o NotebookLM.
+    </p>
+  </div><div class="summary-grid">`;
+  LESSONS.forEach((l, i) => {
+    const d = !!APP.done[l.id];
+    const q = APP.quizResults[l.id];
+    html += `<div class="summary-card" onclick="goTo(${i+1})" style="cursor:pointer">
+      <h4>${i+1}. ${l.title} ${d ? '✅' : ''}</h4>
+      <p>${l.sub}${q !== undefined ? (q ? ' · Quiz: acertou ✅' : ' · Quiz: errou — revisar 🔴') : ''}</p>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+const VIDEO_FOLDER = 'cloud';
+const VIDEO_PREFIX = 'cloud';
+
+function renderVideoBlock(lesson, lessonNum) {
+  if (lesson.video) {
+    const src = lesson.video;
+    return `<div class="video-wrap">
+      <video controls preload="metadata">
+        <source src="${encodeURI(src)}" type="video/mp4">
+        Seu navegador não suporta vídeo HTML5.
+      </video>
+    </div>`;
+  }
+  return `<div class="video-placeholder">
+    <div class="vp-icon">🎬</div>
+    <div class="vp-title">Vídeo ainda não adicionado</div>
+    <div class="vp-sub">Salve como ${VIDEO_FOLDER}/${VIDEO_PREFIX}${lessonNum}.Titulo_Do_Video.mp4</div>
+  </div>`;
+}
+
+function renderContent() {
+  if (currentLesson === 0) { renderSummary(); return; }
+  const lesson = LESSONS[currentLesson - 1];
+  const done = !!APP.done[lesson.id];
+  const idx = currentLesson - 1;
+  const nblmQuestionsHtml = lesson.nblm.questions.map(q => `<li>${q}</li>`).join('');
+  document.getElementById('content').innerHTML = `
+    <div class="lesson-nav">
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson-1})" ${currentLesson<=1?'disabled':''}>← Anterior</button>
+      <span class="lesson-progress-label">Aula ${idx+1} de ${LESSONS.length}</span>
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson+1<=LESSONS.length?currentLesson+1:0})">${currentLesson<LESSONS.length?'Próxima →':'Ver resumo →'}</button>
+    </div>
+    <div class="lesson-card" id="lesson-print-${lesson.id}">
+      <div class="lesson-eyebrow">${lesson.eyebrow}</div>
+      <h2 class="lesson-title">${lesson.title}</h2>
+      <div class="lesson-sub">${lesson.sub}</div>
+      <hr>
+      ${renderVideoBlock(lesson, idx+1)}
+      ${lesson.body}
+      <div class="recap"><div class="rt">Recapitulando</div><ul>${lesson.recap.map(r => `<li>${r}</li>`).join('')}</ul></div>
+      <div class="nblm-box">
+        <div class="nblm-header">🎙️ Aprofundar no NotebookLM</div>
+        <div class="nblm-body">
+          <div class="nblm-field"><div class="nblm-label">Assunto do notebook</div><div class="nblm-value">${lesson.nblm.subject}</div></div>
+          <div class="nblm-field"><div class="nblm-label">Perguntas-guia para o Audio Overview</div><ul class="nblm-questions">${nblmQuestionsHtml}</ul></div>
+          <div class="nblm-field"><div class="nblm-label">Fonte complementar sugerida</div><div class="nblm-value">${lesson.nblm.source}</div></div>
+        </div>
+      </div>
+      <div class="source-box"><strong>Como usar:</strong> exporte esta aula em Markdown, suba no NotebookLM junto com a fonte complementar sugerida, e cole as perguntas-guia no campo de customização do Audio Overview.</div>
+    </div>
+    <div class="mark-bar">
+      <button class="mark-check-btn" onclick="toggleDone('${lesson.id}')"><span class="box ${done?'done':''}">${done?'✓':''}</span>Marcar esta aula como concluída</button>
+      <button class="hdr-btn primary" onclick="exportLessonMD(${idx})">⬇ Exportar esta aula (.md)</button>
+    </div>
+    <div class="quick-check">
+      <div class="qc-title">🧪 Teste rápido de fixação</div>
+      <div class="qc-q">${lesson.quiz.q}</div>
+      ${lesson.quiz.code ? `<div class="test-code">${lesson.quiz.code}</div>` : ''}
+      <div class="qc-opts" id="qc-opts-${lesson.id}">${lesson.quiz.options.map((o,i) => `<button class="qc-opt" onclick="answerQuiz(${idx},${i})">${o}</button>`).join('')}</div>
+      <div class="qc-fb" id="qc-fb-${lesson.id}"></div>
+    </div>
+  `;
+}
+updateModuleProgress();
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>

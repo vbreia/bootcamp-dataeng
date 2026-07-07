@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo 03 — Apache Airflow | Victor Breia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
+:root {
+  --bg:#08080f; --surface:#0f0f18; --surface2:#16161f; --surface3:#1c1c28;
+  --border:#252533; --border2:#2e2e3f;
+  --accent:#10b981; --accent2:#6ee7b7;
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171;
+  --text:#e2e2ee; --text2:#9898b8; --muted:#55556a;
+  --font:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace; --serif:'Source Serif 4',serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); min-height:100vh; }
+.header { padding:22px 20px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:60; }
+.breadcrumb { font-size:11px; color:var(--muted); font-family:var(--mono); margin-bottom:8px; }
+.breadcrumb a { color:var(--text2); text-decoration:none; }
+.breadcrumb a:hover { color:var(--accent2); }
+.header-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+.header h1 { font-size:20px; font-weight:700; }
+.header h1 em { color:var(--accent2); font-style:normal; }
+.header-sub { font-size:12px; color:var(--muted); margin-top:4px; max-width:520px; }
+.hdr-actions { display:flex; gap:8px; flex-shrink:0; }
+.hdr-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.hdr-btn:hover { border-color:var(--accent); color:var(--text); }
+.hdr-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.hdr-btn.primary:hover { background:var(--accent2); border-color:var(--accent2); color:#1a1a1f; }
+.overall-bar { height:3px; background:var(--border2); border-radius:2px; overflow:hidden; margin-top:14px; max-width:520px; }
+.overall-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width .5s ease; }
+.overall-label { font-size:11px; color:var(--muted); margin-top:6px; font-family:var(--mono); }
+.layout { display:grid; grid-template-columns:260px 1fr; gap:0; max-width:1180px; margin:0 auto; align-items:start; }
+@media (max-width:860px) { .layout { grid-template-columns:1fr; } .sidebar { position:static !important; } }
+.sidebar { position:sticky; top:130px; padding:22px 14px 40px 20px; max-height:calc(100vh - 130px); overflow-y:auto; }
+.sidebar-title { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; padding-left:8px; }
+.toc-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; cursor:pointer; margin-bottom:2px; transition:background .15s; border-left:2px solid transparent; }
+.toc-item:hover { background:var(--surface2); }
+.toc-item.active { background:var(--surface2); border-left-color:var(--accent); }
+.toc-num { font-family:var(--mono); font-size:10px; color:var(--muted); width:16px; flex-shrink:0; }
+.toc-check { width:13px; height:13px; border-radius:4px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:8px; }
+.toc-check.done { background:var(--green); border-color:var(--green); color:#000; }
+.toc-text { font-size:12px; color:var(--text2); line-height:1.3; }
+.toc-item.active .toc-text { color:var(--text); font-weight:500; }
+.toc-tag { font-size:9px; padding:1px 5px; border-radius:3px; font-family:var(--mono); margin-left:auto; flex-shrink:0; }
+.toc-tag.critical { background:rgba(248,113,113,.15); color:var(--red); }
+.toc-tag.important { background:rgba(251,191,36,.15); color:var(--yellow); }
+.toc-tag.bonus { background:rgba(163,139,250,.15); color:#a78bfa; }
+.toc-tag.owned { background:rgba(52,211,153,.15); color:var(--green); }
+.toc-divider { height:1px; background:var(--border); margin:14px 8px; }
+.toc-item.summary-item .toc-text { font-weight:600; color:var(--text); }
+.content { padding:24px 24px 80px 20px; min-width:0; }
+.lesson-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap; }
+.lesson-nav-btn { padding:7px 13px; border-radius:7px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; }
+.lesson-nav-btn:hover:not(:disabled) { border-color:var(--accent); color:var(--text); }
+.lesson-nav-btn:disabled { opacity:.35; cursor:not-allowed; }
+.lesson-progress-label { font-size:11px; color:var(--muted); font-family:var(--mono); }
+.lesson-card { background:#fdfcf9; color:#1a1a1f; border-radius:12px; padding:32px 36px; font-family:var(--serif); line-height:1.75; font-size:14.5px; }
+.lesson-eyebrow { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#3d7a5e; margin-bottom:6px; font-weight:500; }
+.lesson-title { font-size:25px; font-weight:700; color:#14141a; margin-bottom:6px; letter-spacing:-.3px; }
+.lesson-sub { font-family:var(--font); font-size:12.5px; color:#6b6b78; margin-bottom:20px; }
+.lesson-card hr { border:none; border-top:1px solid #e5e0d5; margin:20px 0; }
+.lesson-card h3 { font-family:var(--font); font-size:15px; font-weight:700; color:#14141a; margin:22px 0 10px; }
+.lesson-card h4 { font-family:var(--font); font-size:13px; font-weight:600; color:#2a2a30; margin:14px 0 6px; }
+.lesson-card p { margin-bottom:12px; color:#2a2a30; }
+.lesson-card ul, .lesson-card ol { margin:8px 0 14px 20px; }
+.lesson-card li { margin-bottom:6px; color:#2a2a30; }
+.lesson-card strong { color:#14141a; font-weight:700; }
+.lesson-card code { font-family:var(--mono); background:#dcf2e8; color:#0d5e42; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+.lesson-card pre { background:#14141a; color:#d8dce8; border-radius:8px; padding:14px 16px; overflow-x:auto; margin:12px 0 16px; font-family:var(--mono); font-size:12px; line-height:1.6; }
+.lesson-card pre code { background:none; color:inherit; padding:0; }
+.callout { padding:10px 14px; border-radius:0 7px 7px 0; margin:14px 0; font-family:var(--font); font-size:12.5px; border-left:3px solid #6366f1; background:#eef0fb; color:#3a3a5c; }
+.callout.warn { background:#fdf3e7; border-left-color:#d97706; color:#6b4a10; }
+.callout.tip { background:#eafaf3; border-left-color:#10b981; color:#0d5e42; }
+.nblm-box { margin-top:24px; border-radius:10px; overflow:hidden; border:1px solid #d8d0be; }
+.nblm-header { background:#14141a; color:#fff; padding:10px 16px; font-family:var(--font); font-size:12px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.nblm-body { padding:16px; background:#f7f5ee; }
+.nblm-field { margin-bottom:12px; }
+.nblm-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:#8b7a5e; margin-bottom:4px; font-weight:600; }
+.nblm-value { font-family:var(--font); font-size:12.5px; color:#2a2a30; }
+.nblm-questions { list-style:none; margin:0; padding:0; }
+.nblm-questions li { background:#fff; border:1px solid #e5e0d5; border-radius:6px; padding:8px 12px; margin-bottom:6px; font-size:12px; font-family:var(--font); color:#2a2a30; }
+.source-box { margin-top:16px; padding:10px 16px; background:#f2f0e8; border-radius:8px; font-family:var(--font); font-size:11.5px; color:#6b6b78; }
+.source-box strong { color:#3a3a44; }
+.recap { margin-top:18px; padding:14px 16px; background:#14141a; color:#fdfcf9; border-radius:8px; font-family:var(--font); }
+.recap .rt { font-size:12px; font-weight:700; margin-bottom:8px; color:#6ee7b7; text-transform:uppercase; letter-spacing:.06em; }
+.recap ul { margin:0 0 0 16px; }
+.recap li { font-size:12.5px; margin-bottom:5px; color:#e2e2ee; }
+.quick-check { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-top:16px; }
+.qc-title { font-size:13px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.qc-q { font-size:13px; margin-bottom:10px; line-height:1.5; }
+.qc-opts { display:grid; gap:6px; }
+.qc-opt { padding:8px 12px; border-radius:7px; border:1.5px solid var(--border2); background:transparent; color:var(--text); font-family:var(--font); font-size:12px; cursor:pointer; text-align:left; transition:all .15s; }
+.qc-opt:hover:not(:disabled) { border-color:var(--accent); background:rgba(16,185,129,.08); }
+.qc-opt.correct { border-color:var(--green); background:rgba(52,211,153,.1); color:var(--green); }
+.qc-opt.wrong { border-color:var(--red); background:rgba(248,113,113,.1); color:var(--red); }
+.qc-opt:disabled { cursor:default; }
+.qc-fb { margin-top:8px; padding:8px 12px; border-radius:7px; font-size:12px; display:none; }
+.qc-fb.show { display:block; }
+.qc-fb.correct { background:rgba(52,211,153,.08); color:#6ee7b7; border:1px solid rgba(52,211,153,.2); }
+.qc-fb.wrong { background:rgba(248,113,113,.08); color:#fca5a5; border:1px solid rgba(248,113,113,.2); }
+.mark-bar { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; }
+.mark-check-btn { display:flex; align-items:center; gap:8px; background:none; border:none; color:var(--text2); font-family:var(--font); font-size:12px; cursor:pointer; }
+.mark-check-btn .box { width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:10px; }
+.mark-check-btn .box.done { background:var(--green); border-color:var(--green); color:#000; }
+.summary-grid { display:grid; gap:10px; }
+.summary-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+.summary-card h4 { font-size:13px; margin-bottom:4px; }
+.summary-card p { font-size:12px; color:var(--text2); }
+.toast { position:fixed; bottom:20px; right:20px; background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 14px; font-size:12px; display:flex; align-items:center; gap:8px; transform:translateY(60px); opacity:0; transition:all .25s ease; z-index:300; max-width:260px; }
+.toast.show { transform:translateY(0); opacity:1; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.video-wrap { margin-bottom:20px; border-radius:10px; overflow:hidden; background:#000; }
+.video-wrap video { width:100%; display:block; max-height:480px; background:#000; }
+.video-placeholder {
+  margin-bottom:20px; border-radius:10px; border:1.5px dashed var(--border2);
+  background:var(--surface2); padding:28px 20px; text-align:center;
+}
+.video-placeholder .vp-icon { font-size:26px; margin-bottom:8px; }
+.video-placeholder .vp-title { font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
+.video-placeholder .vp-sub { font-family:var(--mono); font-size:11px; color:var(--muted); }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="breadcrumb"><a href="data-engineer-study-system.html">← Voltar ao painel geral</a></div>
+  <div class="header-top">
+    <div>
+      <h1>Módulo 03 · <em>Apache Airflow</em></h1>
+      <div class="header-sub">9 aulas individuais — você já usa em produção, hora de aprofundar os conceitos avançados.</div>
+    </div>
+    <div class="hdr-actions"><button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button></div>
+  </div>
+  <div class="overall-bar"><div class="overall-fill" id="mod-fill" style="width:0%"></div></div>
+  <div class="overall-label" id="mod-label">0 / 9 subtópicos concluídos</div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE_KEY = 'de_module_airflow_v1';
+
+const LESSONS = [
+{
+  id: 'dags', tag: 'owned',
+  title: 'DAGs — estrutura e configuração',
+  eyebrow: 'Aula 1 de 9 · Fundamentos',
+  sub: 'A unidade central do Airflow — um grafo de tarefas escrito em Python',
+  body: `
+<p>Uma DAG (Directed Acyclic Graph) é a unidade central de organização no Airflow: um grafo de tarefas com dependências explícitas, sem ciclos — ou seja, uma task nunca pode depender (direta ou indiretamente) de si mesma. É literalmente um arquivo Python que descreve <em>o quê</em> fazer e <em>em que ordem</em>, sem executar o trabalho pesado ali dentro.</p>
+<h3>Anatomia mínima de uma DAG</h3>
+<pre><code>from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime
+
+def extrair_dados():
+    print("Extraindo...")
+
+with DAG(
+    dag_id="pipeline_etransparente",
+    start_date=datetime(2026, 1, 1),
+    schedule="@monthly",
+    catchup=False,
+    tags=["etransparente", "producao"],
+) as dag:
+    extrair = PythonOperator(
+        task_id="extrair",
+        python_callable=extrair_dados,
+    )</code></pre>
+<h3>Os parâmetros que mais importam</h3>
+<ul>
+  <li><strong>dag_id</strong> — identificador único da DAG dentro do ambiente Airflow. Não pode se repetir.</li>
+  <li><strong>start_date</strong> — a partir de quando o Airflow considera a DAG "ativa" para fins de agendamento. Não é a data em que a DAG começa a rodar imediatamente — é usada para calcular a primeira execução programada.</li>
+  <li><strong>schedule</strong> — a frequência de execução, seja em expressão cron (<code>"0 0 * * *"</code>) ou em atalhos como <code>@daily</code>, <code>@monthly</code>, ou <code>None</code> para DAGs disparadas manualmente/por evento.</li>
+  <li><strong>catchup</strong> — controla se o Airflow deve rodar automaticamente todas as execuções "perdidas" entre <code>start_date</code> e o momento atual. Em pipelines de produção, geralmente se define como <code>False</code> para evitar rodar dezenas de execuções históricas indesejadas ao ativar uma DAG nova.</li>
+</ul>
+<div class="callout warn">⚠️ Um erro clássico: esquecer <code>catchup=False</code> em uma DAG nova com <code>start_date</code> muito antiga. O Airflow tentará disparar todas as execuções entre essa data e hoje, o que pode sobrecarregar o ambiente ou disparar processamentos indevidos.</div>
+<h3>DAG vs DAG Run — uma distinção que confunde iniciantes</h3>
+<p>A <strong>DAG</strong> é a definição — o código Python que descreve a estrutura. O <strong>DAG Run</strong> é uma instância concreta de execução dessa definição, associada a uma data lógica específica. Uma mesma DAG pode ter centenas de DAG Runs ao longo do tempo, cada uma com seu próprio status (running, success, failed) e seu próprio conjunto de Task Instances.</p>
+<h3>Tags — organização em ambientes com muitas DAGs</h3>
+<p>Em ambientes com dezenas ou centenas de DAGs (comum em empresas maiores), <code>tags</code> permitem filtrar e organizar a visualização na UI do Airflow — por projeto, por time responsável, ou por criticidade.</p>
+<h3>Onde colocar a lógica pesada</h3>
+<p>Uma boa prática de design: o arquivo da DAG deve conter apenas a <em>orquestração</em> (quais tasks existem e como se relacionam), não a lógica de negócio em si. Funções de extração, transformação e carga geralmente vivem em módulos Python separados, importados pela DAG — isso facilita testes unitários da lógica sem precisar simular o ambiente Airflow inteiro.</p>
+<pre><code># dag_etransparente.py — só orquestração
+from etl.extract import extrair_dados_ongs
+from etl.transform import processar_bronze_para_silver
+
+with DAG(...) as dag:
+    t1 = PythonOperator(task_id="extrair", python_callable=extrair_dados_ongs)
+    t2 = PythonOperator(task_id="transformar", python_callable=processar_bronze_para_silver)
+    t1 >> t2</code></pre>
+`,
+  recap: [
+    'DAG é um grafo de tasks com dependências, escrito em Python, sem execução de lógica pesada diretamente nela',
+    'start_date define a base de cálculo do agendamento, não necessariamente quando a DAG "começa a rodar"',
+    'catchup=False evita que o Airflow tente rodar todas as execuções históricas perdidas ao ativar uma DAG nova',
+    'DAG é a definição; DAG Run é cada execução concreta associada a uma data lógica',
+    'Boa prática: DAG só orquestra; lógica de negócio vive em módulos Python separados e importados'
+  ],
+  nblm: {
+    subject: 'Estrutura e configuração de DAGs no Apache Airflow: parâmetros centrais e boas práticas de organização.',
+    questions: [
+      'Explique a diferença entre start_date, schedule e catchup com um exemplo prático de cada um.',
+      'Por que é considerada boa prática manter a lógica de negócio fora do arquivo da DAG?',
+      'O que acontece exatamente quando catchup=True e uma DAG nova é ativada com start_date de 6 meses atrás?',
+      'Qual é a diferença conceitual entre uma DAG e uma DAG Run?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre DAGs (airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html).'
+  },
+  quiz: {
+    q: 'Por que "catchup=False" é geralmente configurado em pipelines de produção com start_date antiga?',
+    options: ['Porque catchup=True desabilita o agendamento por completo', 'Para evitar que o Airflow dispare automaticamente todas as execuções históricas entre start_date e o momento atual', 'Porque é obrigatório por padrão em todas as versões do Airflow', 'catchup não tem relação com start_date'],
+    correct: 1,
+    explanation: 'Sem catchup=False, o Airflow tenta preencher retroativamente (rodar) todas as execuções programadas que "deveriam" ter acontecido entre start_date e agora — o que pode ser indesejado ou sobrecarregar o ambiente.'
+  }
+},
+{
+  id: 'operators', tag: 'owned',
+  title: 'Operators (PythonOperator, BashOperator)',
+  eyebrow: 'Aula 2 de 9 · Blocos de construção',
+  sub: 'O template que define o que cada task realmente faz',
+  body: `
+<p>Um Operator é uma classe que funciona como template para um tipo específico de trabalho. Quando você instancia um Operator dentro de uma DAG, essa instância vira uma Task — a unidade real de execução dentro do grafo.</p>
+<h3>PythonOperator — a mais versátil</h3>
+<p>Executa qualquer função Python callable. É o Operator mais usado quando a lógica é customizada e não se encaixa em uma integração pronta.</p>
+<pre><code>from airflow.operators.python import PythonOperator
+
+def processar(**kwargs):
+    print("Processando dados...")
+
+task = PythonOperator(
+    task_id="processar_dados",
+    python_callable=processar,
+)</code></pre>
+<h3>BashOperator — executando comandos de shell</h3>
+<p>Executa um comando de shell diretamente — útil para rodar scripts existentes, comandos de sistema, ou ferramentas de linha de comando (como o Docker CLI) sem precisar reescrever a lógica em Python.</p>
+<pre><code>from airflow.operators.bash import BashOperator
+
+task = BashOperator(
+    task_id="rodar_script_shell",
+    bash_command="python /opt/scripts/processa_dados.py --data {{ ds }}",
+)</code></pre>
+<div class="callout tip">💡 O <code>{{ ds }}</code> acima é um exemplo de templating Jinja, nativo do Airflow — permite injetar a data lógica de execução (e outras variáveis de contexto) diretamente no comando, sem lógica Python adicional.</div>
+<h3>Operators de integração — o ecossistema de Providers</h3>
+<p>Além dos operators genéricos, o Airflow tem um ecossistema de "provider packages" com Operators prontos para integrações específicas: <code>PostgresOperator</code>, operators para Azure Data Lake, GCP BigQuery, AWS S3, entre outros. Usar um Operator de provider em vez de reimplementar a integração em PythonOperator geralmente economiza código e já vem com tratamento de erro testado pela comunidade.</p>
+<h3>Sensor é um caso especial de Operator</h3>
+<p>Sensors (aprofundados em uma aula posterior deste módulo) são tecnicamente um tipo especializado de Operator — a diferença é que eles "esperam" uma condição se tornar verdadeira antes de deixar o fluxo continuar, em vez de simplesmente executar e terminar.</p>
+<h3>Parâmetros comuns a qualquer Operator</h3>
+<ul>
+  <li><strong>task_id</strong> — identificador único da task dentro da DAG.</li>
+  <li><strong>retries</strong> — quantas vezes tentar novamente automaticamente em caso de falha.</li>
+  <li><strong>retry_delay</strong> — tempo de espera entre tentativas.</li>
+  <li><strong>execution_timeout</strong> — tempo máximo antes de considerar a task travada e marcá-la como falha.</li>
+</ul>
+<pre><code>from datetime import timedelta
+
+task = PythonOperator(
+    task_id="extrair_api",
+    python_callable=extrair,
+    retries=3,
+    retry_delay=timedelta(minutes=5),
+    execution_timeout=timedelta(hours=1),
+)</code></pre>
+<h3>Quando escrever um Operator customizado</h3>
+<p>Quando uma mesma lógica de integração se repete em várias DAGs (por exemplo, um padrão específico de upload para o seu Data Lake Azure com validações próprias), vale a pena encapsular isso em uma classe própria que herda de <code>BaseOperator</code> — evitando duplicar a mesma lógica em múltiplos PythonOperators espalhados pelo código.</p>
+`,
+  recap: [
+    'Operator é o template; Task é a instância desse template dentro de uma DAG específica',
+    'PythonOperator executa qualquer função Python; BashOperator executa comandos de shell',
+    'Templating Jinja ({{ ds }}) permite injetar contexto de execução diretamente em parâmetros do Operator',
+    'Provider packages oferecem Operators prontos para integrações comuns (Postgres, Azure, GCP, AWS)',
+    'Parâmetros como retries, retry_delay e execution_timeout tornam tasks mais resilientes a falhas transitórias'
+  ],
+  nblm: {
+    subject: 'Operators no Apache Airflow: PythonOperator, BashOperator, provider packages e configuração de resiliência.',
+    questions: [
+      'Quando devo escolher PythonOperator vs BashOperator vs um Operator de provider específico?',
+      'Explique com um exemplo como o templating Jinja funciona dentro de parâmetros de um Operator.',
+      'Por que retries e retry_delay são importantes em tasks que dependem de APIs externas?',
+      'Quando faz sentido escrever um Operator customizado em vez de usar PythonOperator repetidamente?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre Operators (airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html).'
+  },
+  quiz: {
+    q: 'Qual é a relação correta entre Operator e Task no Airflow?',
+    options: ['São sinônimos, sem diferença', 'Operator é o template/classe; Task é a instância concreta desse template dentro de uma DAG', 'Task é sempre mais genérica que Operator', 'Operator só existe dentro de Sensors'],
+    correct: 1,
+    explanation: 'Um Operator (como PythonOperator) é uma classe que define um tipo de trabalho. Quando você instancia essa classe dentro de uma DAG com um task_id específico, essa instância se torna uma Task.'
+  }
+},
+{
+  id: 'xcoms', tag: 'critical',
+  title: 'XComs — passagem de dados entre tasks',
+  eyebrow: 'Aula 3 de 9 · Comunicação entre tasks',
+  sub: 'Como tasks isoladas — potencialmente em máquinas diferentes — trocam informação',
+  body: `
+<p>Segundo a documentação oficial do Airflow, XComs (abreviação de "cross-communications") são um mecanismo que permite Tasks conversarem entre si — já que, por padrão, Tasks são inteiramente isoladas e podem estar rodando em workers diferentes. Um XCom é identificado por uma chave, além do <code>task_id</code> e <code>dag_id</code> de origem.</p>
+<h3>Push e Pull — a forma tradicional</h3>
+<pre><code>def extract(**kwargs):
+    ti = kwargs['ti']
+    dados = {"pedido_1": 100, "pedido_2": 250}
+    ti.xcom_push(key='dados_extraidos', value=dados)
+
+def transform(**kwargs):
+    ti = kwargs['ti']
+    dados = ti.xcom_pull(task_ids='extract', key='dados_extraidos')
+    total = sum(dados.values())
+    ti.xcom_push(key='total', value=total)</code></pre>
+<p><code>xcom_push</code> grava um valor associado a uma chave; <code>xcom_pull</code> recupera esse valor especificando de qual <code>task_id</code> ele veio. Isso precisa ser feito explicitamente em cada task quando você não usa a TaskFlow API (assunto da última aula deste módulo).</p>
+<h3>A limitação central — e o motivo dela</h3>
+<div class="callout warn">⚠️ A documentação oficial é explícita: XComs são projetados apenas para <strong>pequenas quantidades de dado</strong> — eles são armazenados no banco de dados metadados do próprio Airflow. Nunca use XCom para passar um DataFrame inteiro, um arquivo grande, ou qualquer payload pesado entre tasks.</div>
+<p>O padrão correto para dados grandes: salve o dado em um storage externo (Azure Data Lake, S3, um banco de dados) dentro da task, e passe apenas o <em>caminho/referência</em> daquele dado via XCom para a próxima task ler de lá.</p>
+<pre><code>def extract(**kwargs):
+    ti = kwargs['ti']
+    df = extrair_dados_grandes()
+    path = f"/data/bronze/dados_{kwargs['ds']}.parquet"
+    df.to_parquet(path)
+    ti.xcom_push(key='caminho_arquivo', value=path)  # só o path, não o DataFrame
+
+def transform(**kwargs):
+    ti = kwargs['ti']
+    path = ti.xcom_pull(task_ids='extract', key='caminho_arquivo')
+    df = pd.read_parquet(path)  # a task seguinte lê de onde foi salvo</code></pre>
+<h3>XComs implícitos com return_value</h3>
+<p>Quando uma função de PythonOperator faz <code>return</code> de algum valor, o Airflow automaticamente cria um XCom com a chave especial <code>return_value</code> — não é preciso chamar <code>xcom_push</code> manualmente para isso:</p>
+<pre><code>def extract():
+    return {"total": 350}  # vira automaticamente um XCom com key='return_value'
+
+def transform(**kwargs):
+    ti = kwargs['ti']
+    dados = ti.xcom_pull(task_ids='extract')  # sem especificar key, pega return_value</code></pre>
+<h3>Visualizando XComs na UI</h3>
+<p>A interface web do Airflow tem uma aba dedicada para inspecionar XComs de cada Task Instance — útil para debugar exatamente o que uma task passou adiante, sem precisar adicionar prints ou logs extras.</p>
+<h3>Backends customizados de XCom</h3>
+<p>Para times que trabalham com volumes de dados um pouco maiores mas ainda querem a conveniência do padrão XCom, o Airflow permite configurar um backend customizado que armazena o valor em um storage externo automaticamente, mantendo a mesma API de <code>xcom_push</code>/<code>xcom_pull</code> — mas esse é um ajuste de configuração de ambiente, não do código da DAG em si.</p>
+`,
+  recap: [
+    'XComs permitem tasks isoladas trocarem pequenas quantidades de dado, identificadas por chave + task_id + dag_id',
+    'Nunca use XCom para DataFrames ou arquivos grandes — passe apenas o caminho para um storage externo',
+    'return de uma função em PythonOperator cria automaticamente um XCom com a chave "return_value"',
+    'A UI do Airflow tem uma aba dedicada para inspecionar XComs de cada Task Instance',
+    'Backends customizados de XCom existem para casos que precisam de mais capacidade, mantendo a mesma API'
+  ],
+  nblm: {
+    subject: 'XComs no Apache Airflow: mecanismo de comunicação entre tasks, limitações de tamanho, e o padrão de referência para dados grandes.',
+    questions: [
+      'Por que XComs não devem ser usados para passar DataFrames grandes entre tasks, e qual é o padrão correto para isso?',
+      'Explique a diferença entre usar xcom_push/xcom_pull manualmente e o XCom automático via return_value.',
+      'Como eu inspecionaria os XComs gerados por uma execução específica na UI do Airflow?',
+      'O que é um backend customizado de XCom, e quando isso seria necessário?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre XComs (airflow.apache.org/docs/apache-airflow/stable/core-concepts/xcoms.html).'
+  },
+  quiz: {
+    q: 'Qual é o padrão correto para passar um DataFrame grande entre duas tasks do Airflow?',
+    options: ['Usar xcom_push diretamente com o DataFrame como valor', 'Salvar o DataFrame em um storage externo e passar apenas o caminho/referência via XCom', 'Aumentar o limite de tamanho do XCom na configuração do Airflow', 'Usar BashOperator em vez de PythonOperator'],
+    correct: 1,
+    explanation: 'XComs são armazenados no banco de metadados do Airflow e são projetados para pequenas quantidades de dado. O padrão correto é salvar o dado grande em storage externo (Data Lake, S3, banco) e passar só o path via XCom.'
+  }
+},
+{
+  id: 'connections', tag: 'important',
+  title: 'Connections e Variables',
+  eyebrow: 'Aula 4 de 9 · Configuração e credenciais',
+  sub: 'Como o Airflow centraliza credenciais e parâmetros reutilizáveis entre DAGs',
+  body: `
+<p>Connections e Variables são dois mecanismos do Airflow para evitar hardcode de credenciais e configurações espalhadas pelo código das DAGs — centralizando essa informação em um único lugar, gerenciável pela interface web ou por variáveis de ambiente.</p>
+<h3>Connections — credenciais de sistemas externos</h3>
+<p>Uma Connection armazena os dados necessários para se conectar a um sistema externo: host, login, senha, porta, e parâmetros extras específicos do tipo de conexão (banco de dados, API, cloud). Elas ficam armazenadas de forma criptografada no banco de metadados do Airflow.</p>
+<pre><code>from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+def consultar_banco():
+    hook = PostgresHook(postgres_conn_id="meu_banco_postgres")
+    conn = hook.get_conn()
+    # usa a conexão sem nunca ter escrito senha no código</code></pre>
+<p>O <code>postgres_conn_id</code> é apenas um identificador — a senha, host e demais dados reais ficam configurados na aba "Connections" da UI do Airflow (ou via variáveis de ambiente/secrets backend), nunca no código da DAG.</p>
+<div class="callout tip">💡 Muitos Hooks (a camada que efetivamente conversa com o sistema externo) têm um <code>conn_id</code> padrão — por exemplo, o PostgresHook usa <code>postgres_default</code> se nenhum for especificado. Isso reduz ainda mais a necessidade de configuração repetida.</div>
+<h3>Variables — configuração e parâmetros reutilizáveis</h3>
+<p>Variables armazenam valores de configuração simples — paths, flags, thresholds, nomes de buckets — acessíveis de qualquer DAG através de uma chave.</p>
+<pre><code>from airflow.models import Variable
+
+def processar():
+    limite_score = Variable.get("limite_score_transparencia", default_var=15)
+    caminho_bronze = Variable.get("caminho_storage_bronze")</code></pre>
+<div class="callout warn">⚠️ Cuidado com uma armadilha comum de performance: chamar <code>Variable.get()</code> no nível do módulo (fora de uma função ou task) faz uma consulta ao banco de metadados <strong>toda vez que o Airflow re-parseia o arquivo da DAG</strong> — o que acontece com frequência. Prefira sempre chamar dentro da função que a task executa, não no topo do arquivo.</div>
+<h3>Connections e Variables via variáveis de ambiente</h3>
+<p>Em ambientes que seguem infraestrutura como código (o que é uma boa prática, inclusive para times pequenos), Connections e Variables também podem ser definidas via variáveis de ambiente do sistema operacional, seguindo um padrão de nomenclatura específico do Airflow — isso evita depender exclusivamente de configuração manual na UI, que não fica versionada.</p>
+<h3>Secrets Backends — para ambientes mais maduros</h3>
+<p>Para organizações que já usam um cofre de segredos dedicado (Azure Key Vault, AWS Secrets Manager, HashiCorp Vault), o Airflow suporta configurar um "secrets backend" — fazendo com que Connections e Variables sejam buscadas nesses sistemas externos em vez do banco de metadados interno, centralizando ainda mais a governança de credenciais.</p>
+<h3>Por que isso é cobrado em entrevista</h3>
+<p>Entender Connections e Variables demonstra que você não só sabe escrever uma DAG funcional, mas entende como gerenciar credenciais de forma segura em produção — um ponto frequentemente avaliado em processos que envolvem qualquer nível de responsabilidade sobre infraestrutura.</p>
+`,
+  recap: [
+    'Connections armazenam credenciais de sistemas externos de forma centralizada e criptografada',
+    'Hooks frequentemente têm um conn_id padrão, reduzindo configuração repetida',
+    'Variables armazenam configurações e parâmetros reutilizáveis entre DAGs',
+    'Nunca chame Variable.get() no nível do módulo — sempre dentro da função executada pela task',
+    'Secrets Backends permitem integrar Airflow com cofres de segredos externos (Key Vault, Secrets Manager, Vault)'
+  ],
+  nblm: {
+    subject: 'Connections e Variables no Apache Airflow: gerenciamento centralizado de credenciais e configurações.',
+    questions: [
+      'Explique por que armazenar credenciais em Connections é mais seguro do que hardcode no código da DAG.',
+      'Qual é o problema de performance de chamar Variable.get() fora de uma função de task, e como evitar isso?',
+      'O que é um Secrets Backend e quando uma organização deveria considerar usar um?',
+      'Como Hooks se relacionam com Connections na prática — dê um exemplo com PostgresHook.'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre Connections e Variables (airflow.apache.org/docs/apache-airflow/stable/core-concepts).'
+  },
+  quiz: {
+    q: 'Por que chamar Variable.get() no nível do módulo (fora de uma função) é considerado uma má prática?',
+    options: ['Porque Variable.get() não funciona fora de funções', 'Porque isso gera uma consulta ao banco de metadados toda vez que o Airflow re-parseia o arquivo da DAG, o que acontece com frequência', 'Porque Variables só podem ser lidas dentro de Operators', 'Não há problema real nisso'],
+    correct: 1,
+    explanation: 'O Airflow re-parseia periodicamente os arquivos de DAG para detectar mudanças. Código no nível do módulo executa a cada parse — incluindo chamadas a Variable.get(), que fazem uma consulta ao banco toda vez, gerando carga desnecessária.'
+  }
+},
+{
+  id: 'sensors', tag: 'important',
+  title: 'Sensors — aguardar eventos externos',
+  eyebrow: 'Aula 5 de 9 · Sincronização de fluxos',
+  sub: 'Como fazer uma DAG esperar por algo que ainda não aconteceu',
+  body: `
+<p>Um Sensor é um tipo especializado de Operator que espera uma condição se tornar verdadeira antes de permitir que o fluxo da DAG continue — por exemplo, esperar um arquivo aparecer em um storage, esperar outra DAG terminar, ou esperar uma linha específica aparecer em uma tabela.</p>
+<h3>O padrão básico de um Sensor</h3>
+<pre><code>from airflow.sensors.filesystem import FileSensor
+
+esperar_arquivo = FileSensor(
+    task_id="esperar_arquivo_chegar",
+    filepath="/data/incoming/relatorio.csv",
+    poke_interval=60,     # verifica a cada 60 segundos
+    timeout=3600,         # desiste após 1 hora
+)</code></pre>
+<p><code>poke_interval</code> define de quanto em quanto tempo o Sensor verifica a condição; <code>timeout</code> define depois de quanto tempo total ele desiste e marca a task como falha.</p>
+<h3>O problema do modo poke tradicional</h3>
+<div class="callout warn">⚠️ No modo padrão ("poke"), um Sensor ocupa um slot de worker inteiro durante todo o tempo de espera — mesmo estando ocioso a maior parte do tempo. Em ambientes com muitos Sensors esperando simultaneamente, isso pode esgotar a capacidade de processamento disponível para outras tasks.</div>
+<h3>Deferrable Operators — a solução moderna</h3>
+<p>Versões mais recentes do Airflow suportam Sensors em modo <em>deferrable</em>, que liberam o worker enquanto esperam, delegando a espera para um processo leve chamado Triggerer. Isso permite ter centenas de Sensors aguardando simultaneamente sem consumir recursos de worker proporcionalmente.</p>
+<pre><code>esperar_arquivo = FileSensor(
+    task_id="esperar_arquivo_chegar",
+    filepath="/data/incoming/relatorio.csv",
+    deferrable=True,  # libera o worker durante a espera
+)</code></pre>
+<h3>ExternalTaskSensor — coordenando entre DAGs diferentes</h3>
+<p>Um padrão comum: uma DAG precisa esperar outra DAG (ou uma task específica dela) terminar antes de começar. <code>ExternalTaskSensor</code> resolve isso sem precisar combinar as duas DAGs em uma só:</p>
+<pre><code>from airflow.sensors.external_task import ExternalTaskSensor
+
+esperar_pipeline_bronze = ExternalTaskSensor(
+    task_id="esperar_pipeline_bronze",
+    external_dag_id="pipeline_bronze",
+    external_task_id="finalizar_bronze",
+    timeout=7200,
+)</code></pre>
+<h3>Sensores customizados</h3>
+<p>Quando nenhum Sensor pronto atende a necessidade (por exemplo, esperar uma condição de negócio específica em uma API própria), é possível criar um Sensor customizado herdando de <code>BaseSensorOperator</code> e implementando o método <code>poke()</code>, que retorna verdadeiro ou falso a cada verificação.</p>
+<h3>Alternativa: Sensors vs redesenho do fluxo</h3>
+<div class="callout tip">💡 Antes de adicionar um Sensor, vale considerar se o problema não seria melhor resolvido redesenhando o fluxo — por exemplo, disparando a segunda DAG via evento (usando um trigger externo) em vez de ficar verificando repetidamente uma condição. Sensors são a ferramenta certa quando você realmente não controla quando o evento externo vai acontecer.</div>
+`,
+  recap: [
+    'Sensors são Operators especializados que aguardam uma condição externa antes de continuar o fluxo',
+    'poke_interval define a frequência de verificação; timeout define quando desistir',
+    'Modo poke tradicional ocupa um worker inteiro durante toda a espera — um problema em escala',
+    'Modo deferrable libera o worker durante a espera, delegando para um Triggerer leve',
+    'ExternalTaskSensor coordena dependências entre DAGs diferentes sem uni-las em uma só'
+  ],
+  nblm: {
+    subject: 'Sensors no Apache Airflow: modo poke tradicional, modo deferrable, e coordenação entre DAGs.',
+    questions: [
+      'Explique o problema de escalabilidade do modo poke tradicional em Sensors, com um cenário de 100 Sensors simultâneos.',
+      'Como o modo deferrable resolve esse problema, e o que é um Triggerer?',
+      'Quando usar ExternalTaskSensor em vez de simplesmente combinar duas DAGs em uma só?',
+      'Em que situação seria melhor redesenhar o fluxo com um trigger por evento em vez de usar um Sensor?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre Sensors (airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html).'
+  },
+  quiz: {
+    q: 'Qual é a principal vantagem de um Sensor em modo "deferrable" sobre o modo poke tradicional?',
+    options: ['Ele verifica a condição com mais frequência', 'Ele libera o worker durante a espera, delegando a verificação a um processo leve (Triggerer), economizando recursos', 'Ele nunca falha por timeout', 'Ele não precisa de poke_interval'],
+    correct: 1,
+    explanation: 'No modo poke tradicional, o Sensor ocupa um worker inteiro mesmo estando ocioso a maior parte do tempo. O modo deferrable libera esse worker e delega a espera a um Triggerer, permitindo muito mais Sensors simultâneos sem esgotar a capacidade de processamento.'
+  }
+},
+{
+  id: 'dependencies', tag: 'owned',
+  title: 'Task Dependencies (>>, <<)',
+  eyebrow: 'Aula 6 de 9 · Orquestração de fluxo',
+  sub: 'Como declarar a ordem de execução entre tasks — e os padrões que vão além do linear',
+  body: `
+<p>Dependências entre tasks definem a ordem de execução dentro de uma DAG. O Airflow oferece uma sintaxe visual e intuitiva usando os operadores <code>>></code> (right shift, "depois de") e <code><<</code> (left shift, "antes de") para declarar essas relações.</p>
+<h3>A sintaxe básica</h3>
+<pre><code>extrair >> transformar >> carregar
+# equivalente a:
+# carregar << transformar << extrair</code></pre>
+<p>Isso cria um fluxo linear: <code>carregar</code> só começa depois que <code>transformar</code> termina com sucesso, que por sua vez só começa depois que <code>extrair</code> termina.</p>
+<h3>Fan-out — uma task alimentando várias</h3>
+<pre><code>extrair >> [transformar_bronze, validar_schema]</code></pre>
+<p>Depois que <code>extrair</code> termina, <code>transformar_bronze</code> e <code>validar_schema</code> podem rodar em paralelo — ambas dependem apenas de <code>extrair</code>, não uma da outra.</p>
+<h3>Fan-in — várias tasks convergindo em uma</h3>
+<pre><code>[validar_ongs, validar_score] >> gerar_relatorio_final</code></pre>
+<p><code>gerar_relatorio_final</code> só executa depois que <strong>ambas</strong> <code>validar_ongs</code> e <code>validar_score</code> tiverem terminado com sucesso.</p>
+<h3>Combinando fan-out e fan-in</h3>
+<pre><code>extrair >> [transformar_bronze, validar_schema] >> consolidar >> carregar_gold</code></pre>
+<p>Esse padrão em "diamante" é extremamente comum em pipelines reais: uma extração única, processamento paralelo de validações independentes, e depois convergência para consolidar e prosseguir.</p>
+<h3>set_upstream e set_downstream — a forma explícita</h3>
+<p>Antes da sintaxe com operadores, e ainda útil em casos com lógica condicional complexa, o Airflow também permite declarar dependências chamando métodos diretamente:</p>
+<pre><code>transformar.set_upstream(extrair)
+# equivalente a: extrair >> transformar
+
+carregar.set_downstream(notificar_sucesso)
+# equivalente a: carregar >> notificar_sucesso</code></pre>
+<h3>Trigger Rules — quando o padrão "esperar todos com sucesso" não serve</h3>
+<p>Por padrão, uma task só dispara quando <strong>todas</strong> as tasks upstream tiveram sucesso (<code>trigger_rule="all_success"</code>). Isso pode ser customizado para cenários específicos:</p>
+<pre><code>notificar_erro = PythonOperator(
+    task_id="notificar_erro",
+    python_callable=enviar_alerta,
+    trigger_rule="one_failed",  # dispara assim que UMA upstream falha
+)</code></pre>
+<div class="callout tip">💡 <code>one_failed</code> é o padrão clássico para tasks de alerta/notificação de erro — elas devem disparar assim que algo falhar, sem esperar todas as outras tasks terminarem. <code>one_success</code> é o inverso, útil quando qualquer um de múltiplos caminhos alternativos já é suficiente para prosseguir.</div>
+<h3>Ciclos são proibidos — e o Airflow valida isso</h3>
+<p>Como o nome DAG indica ("Directed Acyclic Graph"), o Airflow rejeita qualquer configuração de dependências que crie um ciclo (A depende de B, que depende de A) — isso é detectado na hora do parse do arquivo, antes mesmo de tentar executar.</p>
+`,
+  recap: [
+    '>> declara "depois de"; << declara "antes de" — ambos criam a mesma relação de dependência',
+    'Fan-out: uma task alimentando uma lista de tasks paralelas independentes entre si',
+    'Fan-in: uma lista de tasks convergindo para uma única task subsequente',
+    'trigger_rule customiza quando uma task dispara — one_failed para alertas, one_success para caminhos alternativos',
+    'DAGs não podem ter ciclos — o Airflow valida e rejeita isso no parse do arquivo'
+  ],
+  nblm: {
+    subject: 'Dependências entre tasks no Apache Airflow: sintaxe >> e <<, fan-out, fan-in, e trigger rules.',
+    questions: [
+      'Desenhe (em texto) um exemplo de padrão "diamante" combinando fan-out e fan-in em um pipeline real.',
+      'Quando eu usaria trigger_rule="one_failed" em vez do padrão all_success?',
+      'Por que o Airflow rejeita configurações de dependência que criam ciclos?',
+      'Compare a sintaxe >> / << com set_upstream/set_downstream — quando cada uma é mais legível?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre Tasks e Trigger Rules (airflow.apache.org/docs/apache-airflow/stable/core-concepts/tasks.html).'
+  },
+  quiz: {
+    q: 'Em qual cenário trigger_rule="one_failed" é a escolha certa?',
+    options: ['Para uma task que processa dados normalmente no fluxo principal', 'Para uma task de notificação/alerta que deve disparar assim que qualquer task upstream falhar, sem esperar as demais', 'Para garantir que uma task sempre execute, independente de tudo', 'Trigger rules não afetam quando uma task dispara'],
+    correct: 1,
+    explanation: 'one_failed é o padrão clássico para alertas de erro: a task de notificação deve rodar assim que UMA dependência falhar, não esperando o resto do fluxo terminar (que pode nem terminar, já que algo falhou).'
+  }
+},
+{
+  id: 'backfill', tag: 'important',
+  title: 'Backfill e re-execução de runs',
+  eyebrow: 'Aula 7 de 9 · Reprocessamento',
+  sub: 'Como reprocessar dados históricos depois de corrigir um bug ou mudar uma regra',
+  body: `
+<p>Backfill é o processo de rodar (ou re-rodar) execuções passadas de uma DAG para datas lógicas específicas — essencial quando você corrige um bug de processamento, muda uma regra de negócio, ou precisa popular histórico de uma DAG nova a partir de uma data anterior.</p>
+<h3>Por que isso é uma necessidade recorrente em produção</h3>
+<p>Imagine que você descobre, três semanas depois, que uma regra de cálculo de score de transparência tinha um bug para ONGs sem CNPJ registrado. Corrigir o código resolve o problema dali para frente — mas os dados das últimas três semanas ainda refletem o cálculo errado. Backfill é o mecanismo que permite reprocessar exatamente esse período com a lógica corrigida.</p>
+<h3>Rodando backfill via CLI</h3>
+<pre><code>airflow dags backfill \\
+  --start-date 2026-01-01 \\
+  --end-date 2026-01-21 \\
+  pipeline_etransparente</code></pre>
+<p>Isso instrui o Airflow a criar e executar DAG Runs para cada data lógica no intervalo especificado, usando a versão atual (corrigida) do código da DAG.</p>
+<h3>Backfill via interface web</h3>
+<p>A UI do Airflow também permite selecionar uma ou mais execuções passadas e disparar a re-execução diretamente, sem precisar acessar linha de comando — útil para reprocessamentos pontuais de poucas datas.</p>
+<h3>O pré-requisito: idempotência</h3>
+<div class="callout warn">⚠️ Backfill só é seguro se o pipeline for idempotente — ou seja, rodar a mesma data lógica múltiplas vezes deve produzir o mesmo resultado final, sem duplicar dados. Se sua task de carga faz um <code>INSERT</code> puro sem verificar duplicidade, rodar backfill duas vezes para a mesma data vai duplicar registros.</div>
+<p>Padrões comuns para garantir idempotência: usar <code>UPSERT</code> (inserir ou atualizar) em vez de <code>INSERT</code> puro, ou sobrescrever a partição inteira correspondente àquela data lógica a cada execução, em vez de apenas adicionar linhas.</p>
+<h3>max_active_runs — controlando o paralelismo do backfill</h3>
+<p>Ao rodar backfill para um intervalo longo (por exemplo, um ano inteiro), o Airflow pode tentar disparar muitas DAG Runs em paralelo, sobrecarregando recursos externos (bancos de dados, APIs com rate limit). O parâmetro <code>max_active_runs</code> na definição da DAG limita quantas execuções simultâneas são permitidas.</p>
+<pre><code>with DAG(
+    dag_id="pipeline_etransparente",
+    max_active_runs=2,  # no máximo 2 execuções simultâneas, mesmo em backfill
+    ...
+) as dag:</code></pre>
+<h3>Re-executando uma única Task Instance com falha</h3>
+<p>Nem toda re-execução precisa ser um backfill completo. Quando apenas uma task específica falhou dentro de uma DAG Run (por exemplo, por uma instabilidade temporária de rede), a UI do Airflow permite "limpar" (clear) apenas aquela Task Instance, fazendo com que ela — e as tasks downstream dela — sejam re-executadas, sem reprocessar a DAG inteira do zero.</p>
+`,
+  recap: [
+    'Backfill reprocessa execuções passadas com a versão atual (corrigida) do código da DAG',
+    'Pode ser disparado via CLI (airflow dags backfill) ou pela interface web',
+    'Backfill só é seguro se o pipeline for idempotente — rodar a mesma data 2x não deve duplicar dados',
+    'UPSERT ou sobrescrita de partição inteira são padrões comuns para garantir idempotência',
+    'max_active_runs limita paralelismo durante backfill, evitando sobrecarga de recursos externos'
+  ],
+  nblm: {
+    subject: 'Backfill e reprocessamento no Apache Airflow: quando usar, como garantir idempotência, e controle de paralelismo.',
+    questions: [
+      'Explique com um cenário real (bug de cálculo descoberto depois) por que backfill é necessário em produção.',
+      'O que significa idempotência em um pipeline de dados, e por que ela é pré-requisito para backfill seguro?',
+      'Compare UPSERT vs sobrescrita de partição inteira como estratégias de idempotência.',
+      'Por que max_active_runs é importante ao rodar backfill para um intervalo longo de tempo?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre Backfill (airflow.apache.org/docs/apache-airflow/stable/core-concepts/backfill.html).'
+  },
+  quiz: {
+    q: 'Por que idempotência é um pré-requisito para rodar backfill com segurança?',
+    options: ['Porque o Airflow exige isso tecnicamente para permitir o comando', 'Porque, sem idempotência, rodar a mesma data lógica múltiplas vezes pode duplicar dados em vez de simplesmente corrigi-los', 'Idempotência só importa para DAGs com Sensors', 'Não há relação entre os dois conceitos'],
+    correct: 1,
+    explanation: 'Se uma task de carga faz INSERT puro sem controle de duplicidade, rodar backfill para uma data que já tinha sido processada antes vai gerar registros duplicados em vez de corrigir os existentes — por isso o pipeline precisa ser desenhado para produzir o mesmo resultado final independente de quantas vezes rodar a mesma data.'
+  }
+},
+{
+  id: 'docker', tag: 'owned',
+  title: 'Airflow com Docker Compose',
+  eyebrow: 'Aula 8 de 9 · Infraestrutura',
+  sub: 'Como os componentes do Airflow se conectam em um ambiente containerizado',
+  body: `
+<p>Rodar Airflow via Docker Compose é o padrão mais comum para ambientes de desenvolvimento e para instalações de produção de porte pequeno a médio — como no seu pipeline-etransparente, rodando em uma VM Azure. Entender os componentes por trás do Compose ajuda a debugar problemas de infraestrutura, não só de código da DAG.</p>
+<h3>Os componentes centrais que o Compose orquestra</h3>
+<ul>
+  <li><strong>Webserver</strong> — serve a interface web onde você visualiza DAGs, logs, e dispara execuções manuais.</li>
+  <li><strong>Scheduler</strong> — o processo que efetivamente decide quando cada DAG Run e Task Instance deve começar, com base no schedule e nas dependências.</li>
+  <li><strong>Metadata Database</strong> — geralmente PostgreSQL, armazena o estado de tudo: DAGs, execuções, XComs, Connections, Variables.</li>
+  <li><strong>Worker(s)</strong> — os processos que efetivamente executam o código das tasks (no executor Celery ou Kubernetes; no executor local mais simples, essa função fica dentro do próprio Scheduler).</li>
+  <li><strong>Triggerer</strong> — processo leve responsável por gerenciar Sensors e Operators em modo deferrable (visto na Aula 5).</li>
+</ul>
+<h3>Um docker-compose.yaml simplificado</h3>
+<pre><code>services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+
+  airflow-webserver:
+    image: apache/airflow:2.9.0
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    ports:
+      - "8080:8080"
+    command: webserver
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.0
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    command: scheduler</code></pre>
+<h3>Volumes — onde suas DAGs realmente vivem</h3>
+<p>O código das suas DAGs não fica "dentro" da imagem Docker do Airflow — ele é montado como um volume, geralmente mapeando uma pasta local <code>./dags</code> para <code>/opt/airflow/dags</code> dentro do container. Isso permite editar o código da DAG localmente e ver a mudança refletida sem precisar reconstruir a imagem.</p>
+<pre><code>volumes:
+  - ./dags:/opt/airflow/dags
+  - ./logs:/opt/airflow/logs
+  - ./plugins:/opt/airflow/plugins</code></pre>
+<h3>Variáveis de ambiente AIRFLOW__ — configuração via env vars</h3>
+<p>O Airflow permite configurar praticamente qualquer parâmetro através de variáveis de ambiente seguindo o padrão <code>AIRFLOW__SECAO__CHAVE</code> — isso é o que torna a configuração via Docker Compose prática, sem precisar editar arquivos de configuração dentro do container.</p>
+<h3>Debugando problemas comuns de infraestrutura</h3>
+<div class="callout warn">⚠️ Um problema comum: a DAG aparece na UI mas nunca executa. Isso geralmente indica que o Scheduler não está rodando, travou, ou não consegue se conectar ao Metadata Database — vale checar os logs do container do scheduler antes de suspeitar de um bug na própria DAG.</div>
+<h3>Liga/desliga automático — sua própria otimização de custo</h3>
+<p>Como você já implementa no pipeline-etransparente com Azure Logic Apps: como o Airflow via Docker Compose roda continuamente enquanto os containers estiverem ativos, automatizar o desligamento da VM/containers fora das janelas de processamento é uma otimização de custo real, especialmente quando o processamento acontece apenas periodicamente (como uma vez por mês).</p>
+`,
+  recap: [
+    'Webserver, Scheduler, Metadata Database, Workers e Triggerer são os componentes centrais orquestrados pelo Compose',
+    'O código das DAGs vive em um volume montado, não dentro da imagem Docker — permite edição sem rebuild',
+    'Configuração via variáveis de ambiente AIRFLOW__SECAO__CHAVE é o padrão prático em ambientes containerizados',
+    'DAG na UI mas nunca executando geralmente indica problema no Scheduler ou na conexão com o Metadata Database',
+    'Desligar containers/VM fora das janelas de processamento é uma otimização de custo real para pipelines periódicos'
+  ],
+  nblm: {
+    subject: 'Apache Airflow rodando via Docker Compose: componentes, volumes, configuração via variáveis de ambiente.',
+    questions: [
+      'Explique o papel de cada componente (Webserver, Scheduler, Metadata Database, Worker, Triggerer) em um Airflow via Docker Compose.',
+      'Por que o código das DAGs é montado como volume em vez de ficar dentro da imagem Docker?',
+      'Como o padrão AIRFLOW__SECAO__CHAVE de variáveis de ambiente simplifica a configuração em containers?',
+      'Quais são os primeiros passos de debug quando uma DAG aparece na UI mas nunca executa?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre instalação via Docker (airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose).'
+  },
+  quiz: {
+    q: 'Por que o código das DAGs geralmente é montado como um volume Docker em vez de ser copiado para dentro da imagem?',
+    options: ['Porque volumes são mais rápidos para o Airflow ler', 'Porque isso permite editar o código da DAG localmente e ver a mudança refletida sem precisar reconstruir a imagem', 'Porque a imagem oficial do Airflow não permite adicionar arquivos', 'Não há diferença prática entre as duas abordagens'],
+    correct: 1,
+    explanation: 'Montar as DAGs como volume desacopla o ciclo de vida do código do ciclo de vida da imagem — você edita o arquivo Python localmente e o Scheduler detecta a mudança no próximo parse, sem precisar rebuildar e reiniciar containers.'
+  }
+},
+{
+  id: 'taskflow', tag: 'bonus',
+  title: 'TaskFlow API (@task decorator)',
+  eyebrow: 'Aula 9 de 9 · Airflow moderno',
+  sub: 'A forma mais pythônica de escrever DAGs, introduzida no Airflow 2.0',
+  body: `
+<p>A TaskFlow API, introduzida no Airflow 2.0, elimina boa parte do boilerplate de escrever DAGs com PythonOperator tradicional — especialmente a passagem manual de dados via <code>xcom_push</code>/<code>xcom_pull</code> e a declaração explícita de dependências.</p>
+<h3>O antes e depois</h3>
+<pre><code>-- ANTES (PythonOperator tradicional)
+def extract(**kwargs):
+    ti = kwargs['ti']
+    dados = {"pedido_1": 100, "pedido_2": 250}
+    ti.xcom_push(key='dados', value=dados)
+
+def transform(**kwargs):
+    ti = kwargs['ti']
+    dados = ti.xcom_pull(task_ids='extract', key='dados')
+    total = sum(dados.values())
+    ti.xcom_push(key='total', value=total)
+
+extract_task = PythonOperator(task_id='extract', python_callable=extract)
+transform_task = PythonOperator(task_id='transform', python_callable=transform)
+extract_task >> transform_task</code></pre>
+<pre><code># DEPOIS (TaskFlow API)
+from airflow.sdk import task
+
+@task
+def extract():
+    return {"pedido_1": 100, "pedido_2": 250}
+
+@task
+def transform(dados: dict):
+    return sum(dados.values())
+
+dados = extract()
+total = transform(dados)</code></pre>
+<p>Repare que não há nenhuma chamada explícita a XCom, e a dependência entre <code>extract</code> e <code>transform</code> é inferida automaticamente pelo simples fato de <code>transform(dados)</code> usar o retorno de <code>extract()</code> como argumento.</p>
+<h3>Como isso funciona por baixo dos panos</h3>
+<p>Quando você chama uma função decorada com <code>@task</code> dentro do arquivo da DAG, o Airflow não executa a função imediatamente — ele retorna um objeto especial (<code>XComArg</code>) que representa "o resultado futuro dessa task". Passar esse objeto como argumento para outra task decorada automaticamente: (1) transporta o valor via XCom nos bastidores, e (2) declara a dependência entre as duas tasks, sem precisar de <code>>></code> explícito.</p>
+<h3>multiple_outputs — separando um dicionário em XComs individuais</h3>
+<pre><code>@task(multiple_outputs=True)
+def compose_email(external_ip):
+    return {
+        'subject': f'Servidor conectado de {external_ip}',
+        'body': f'IP externo: {external_ip}'
+    }
+
+email_info = compose_email(get_ip())
+# email_info['subject'] e email_info['body'] acessam XComs SEPARADOS</code></pre>
+<p>Sem <code>multiple_outputs=True</code>, o dicionário inteiro vira um único XCom que precisa ser acessado como um todo. Com essa flag, cada chave do dicionário retornado vira seu próprio XCom individual, facilitando referenciar valores específicos nas tasks seguintes.</p>
+<h3>Misturando TaskFlow com Operators tradicionais</h3>
+<p>Você não precisa escolher um ou outro — é comum misturar tasks decoradas com <code>@task</code> e Operators tradicionais na mesma DAG, especialmente quando uma integração específica só existe como Operator pronto (por exemplo, um Operator de provider para upload em cloud):</p>
+<pre><code>@task
+def gerar_relatorio():
+    return "/data/relatorio_final.csv"
+
+caminho = gerar_relatorio()
+
+enviar = BashOperator(
+    task_id="enviar_relatorio",
+    bash_command=f"aws s3 cp {{{{ ti.xcom_pull(task_ids='gerar_relatorio') }}}} s3://bucket/",
+)
+caminho >> enviar</code></pre>
+<h3>Quando ainda vale usar PythonOperator tradicional</h3>
+<div class="callout tip">💡 A TaskFlow API brilha em pipelines onde o fluxo principal é passar dados de uma função Python para outra. Para lógica mais complexa com múltiplos parâmetros de configuração do Operator (retries customizados por task, trigger_rule específico, etc.), a sintaxe tradicional às vezes ainda é mais explícita e fácil de ler — a escolha não é uma regra rígida, é sobre o que deixa o código mais claro no seu contexto.</div>
+`,
+  recap: [
+    'TaskFlow API (@task) elimina o boilerplate de xcom_push/xcom_pull manual e declaração explícita de dependências',
+    'Passar o retorno de uma task decorada como argumento de outra automaticamente cria a dependência e transporta via XCom',
+    'multiple_outputs=True separa um dicionário retornado em XComs individuais, facilitando acesso por chave',
+    'É comum e válido misturar tasks TaskFlow com Operators tradicionais na mesma DAG',
+    'A escolha entre TaskFlow e PythonOperator tradicional não é uma regra rígida — depende do que deixa o fluxo mais legível'
+  ],
+  nblm: {
+    subject: 'TaskFlow API no Apache Airflow: o decorator @task, XComs implícitos, e integração com Operators tradicionais.',
+    questions: [
+      'Reescreva um exemplo de PythonOperator tradicional com xcom_push/xcom_pull manual usando a TaskFlow API.',
+      'Como o Airflow infere a dependência entre tasks quando uso a TaskFlow API, sem >> explícito?',
+      'Quando multiple_outputs=True é útil, e o que aconteceria sem essa flag?',
+      'Em que cenários ainda faz sentido usar PythonOperator tradicional em vez da TaskFlow API?'
+    ],
+    source: 'Cruzar com a documentação oficial do Apache Airflow sobre TaskFlow (airflow.apache.org/docs/apache-airflow/stable/core-concepts/taskflow.html) e o tutorial oficial da TaskFlow API.'
+  },
+  quiz: {
+    q: 'Como a TaskFlow API declara a dependência entre duas tasks, sem usar >> explicitamente?',
+    options: ['Ela não declara — dependências ainda precisam ser explícitas com >>', 'Automaticamente, quando o retorno de uma task decorada é passado como argumento para outra task decorada', 'Através de um arquivo de configuração separado', 'Usando apenas a ordem em que as funções são definidas no arquivo'],
+    correct: 1,
+    explanation: 'Quando você chama transform(dados) onde "dados" é o retorno de extract(), o Airflow reconhece essa relação através do objeto XComArg retornado por extract() e automaticamente declara transform como downstream de extract.'
+  }
+}
+];
+
+function htmlToMarkdown(html) {
+  let md = html;
+  md = md.replace(/<div class="callout[^"]*">\s*([\s\S]*?)\s*<\/div>/g, (m, p1) => '> ' + p1.replace(/<[^>]+>/g,'').trim() + '\n\n');
+  md = md.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (m, p1) => '```python\n' + p1.trim() + '\n```\n\n');
+  md = md.replace(/<h3>(.*?)<\/h3>/g, '\n### $1\n\n');
+  md = md.replace(/<h4>(.*?)<\/h4>/g, '\n#### $1\n\n');
+  md = md.replace(/<hr>/g, '\n---\n\n');
+  md = md.replace(/<ul>/g, '\n').replace(/<\/ul>/g, '\n');
+  md = md.replace(/<li>\s*([\s\S]*?)\s*<\/li>/g, '- $1\n');
+  md = md.replace(/<p>\s*([\s\S]*?)\s*<\/p>/g, '$1\n\n');
+  md = md.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+  md = md.replace(/<em>(.*?)<\/em>/g, '_$1_');
+  md = md.replace(/<code>(.*?)<\/code>/g, '`$1`');
+  md = md.replace(/<[^>]+>/g, '');
+  md = md.replace(/\n{3,}/g, '\n\n');
+  return md.trim();
+}
+
+function generateLessonMarkdown(lesson, moduleTitle) {
+  let md = `# ${lesson.title}\n\n`;
+  md += `_${lesson.eyebrow} — ${moduleTitle}_\n\n`;
+  md += `> ${lesson.sub}\n\n`;
+  md += '---\n\n';
+  md += htmlToMarkdown(lesson.body);
+  md += '\n\n## Recapitulando\n\n';
+  lesson.recap.forEach(r => md += `- ${r}\n`);
+  md += '\n## Aprofundar no NotebookLM\n\n';
+  md += `**Assunto do notebook:** ${lesson.nblm.subject}\n\n`;
+  md += `**Perguntas-guia para o Audio Overview:**\n\n`;
+  lesson.nblm.questions.forEach(q => md += `- ${q}\n`);
+  md += `\n**Fonte complementar sugerida:** ${lesson.nblm.source}\n\n`;
+  md += '---\n\n';
+  md += `**Teste rápido:** ${lesson.quiz.q}\n\n`;
+  lesson.quiz.options.forEach((o,i) => md += `${i === lesson.quiz.correct ? '- [x]' : '- [ ]'} ${o}\n`);
+  md += `\n> **Explicação:** ${lesson.quiz.explanation}\n`;
+  return md;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e){}
+  return { done: {}, quizResults: {} };
+}
+function saveData() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e){} }
+let APP = loadData();
+let currentLesson = 0;
+function showToast(msg, emoji='✅') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${emoji} ${msg}`;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function updateModuleProgress() {
+  const total = LESSONS.length;
+  const done = LESSONS.filter(l => APP.done[l.id]).length;
+  document.getElementById('mod-fill').style.width = Math.round((done/total)*100) + '%';
+  document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
+}
+function renderSidebar() {
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  let html = `<div class="sidebar-title">Módulo 03 · Airflow</div>`;
+  html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
+  html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
+  LESSONS.forEach((l, i) => {
+    const done = !!APP.done[l.id];
+    html += `<div class="toc-item ${currentLesson===i+1?'active':''}" onclick="goTo(${i+1})">
+      <span class="toc-num">${i+1}</span>
+      <span class="toc-check ${done?'done':''}">${done?'✓':''}</span>
+      <span class="toc-text">${l.title}</span>
+      <span class="toc-tag ${l.tag}">${tagLabel[l.tag]}</span>
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); window.scrollTo({top:0,behavior:'smooth'}); }
+function toggleDone(lessonId) {
+  APP.done[lessonId] = !APP.done[lessonId];
+  saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function answerQuiz(lessonIdx, chosen) {
+  const lesson = LESSONS[lessonIdx];
+  const opts = document.querySelectorAll(`#qc-opts-${lesson.id} .qc-opt`);
+  if (opts[0].disabled) return;
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === lesson.quiz.correct) o.classList.add('correct');
+    if (i === chosen && chosen !== lesson.quiz.correct) o.classList.add('wrong');
+  });
+  const ok = chosen === lesson.quiz.correct;
+  APP.quizResults[lesson.id] = ok;
+  saveData();
+  const fb = document.getElementById(`qc-fb-${lesson.id}`);
+  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + lesson.quiz.explanation;
+  fb.className = `qc-fb show ${ok ? 'correct' : 'wrong'}`;
+}
+function exportLessonMD(lessonIdx) {
+  const lesson = LESSONS[lessonIdx];
+  const md = generateLessonMarkdown(lesson, "Apache Airflow");
+  downloadFile(`airflow_aula${lessonIdx+1}_${lesson.id}_victor_breia.md`, md);
+  showToast('Markdown exportado! Pronto pro NotebookLM.', '📄');
+}
+function exportModuleMD() {
+  let full = `# Apache Airflow\n\n_Módulo completo — exportado para estudo no NotebookLM_\n\n---\n\n`;
+  LESSONS.forEach((l) => {
+    full += generateLessonMarkdown(l, "Apache Airflow");
+    full += '\n\n---\n\n';
+  });
+  downloadFile(`airflow_modulo_completo_victor_breia.md`, full);
+  showToast('Markdown do módulo completo exportado!', '📄');
+}
+function renderSummary() {
+  let html = `<div style="margin-bottom:20px">
+    <h2 style="font-size:20px;margin-bottom:6px">Visão geral — Módulo Apache Airflow</h2>
+    <p style="font-size:13px;color:var(--text2);max-width:620px;line-height:1.6">
+      Este módulo cobre os 9 subtópicos de Airflow do fundamento (DAGs, Operators) ao avançado
+      (TaskFlow API, Sensors deferrable). Você já usa Airflow em produção — o foco aqui é aprofundar
+      os conceitos que fazem a diferença em entrevista e em pipelines mais robustos.
+    </p>
+  </div><div class="summary-grid">`;
+  LESSONS.forEach((l, i) => {
+    const d = !!APP.done[l.id];
+    const q = APP.quizResults[l.id];
+    html += `<div class="summary-card" onclick="goTo(${i+1})" style="cursor:pointer">
+      <h4>${i+1}. ${l.title} ${d ? '✅' : ''}</h4>
+      <p>${l.sub}${q !== undefined ? (q ? ' · Quiz: acertou ✅' : ' · Quiz: errou — revisar 🔴') : ''}</p>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+const VIDEO_FOLDER = 'airflow';
+const VIDEO_PREFIX = 'air';
+
+function renderVideoBlock(lesson, lessonNum) {
+  if (lesson.video) {
+    const src = lesson.video;
+    return `<div class="video-wrap">
+      <video controls preload="metadata">
+        <source src="${encodeURI(src)}" type="video/mp4">
+        Seu navegador não suporta vídeo HTML5.
+      </video>
+    </div>`;
+  }
+  return `<div class="video-placeholder">
+    <div class="vp-icon">🎬</div>
+    <div class="vp-title">Vídeo ainda não adicionado</div>
+    <div class="vp-sub">Salve como ${VIDEO_FOLDER}/${VIDEO_PREFIX}${lessonNum}.Titulo_Do_Video.mp4</div>
+  </div>`;
+}
+
+function renderContent() {
+  if (currentLesson === 0) { renderSummary(); return; }
+  const lesson = LESSONS[currentLesson - 1];
+  const done = !!APP.done[lesson.id];
+  const idx = currentLesson - 1;
+  const nblmQuestionsHtml = lesson.nblm.questions.map(q => `<li>${q}</li>`).join('');
+  document.getElementById('content').innerHTML = `
+    <div class="lesson-nav">
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson-1})" ${currentLesson<=1?'disabled':''}>← Anterior</button>
+      <span class="lesson-progress-label">Aula ${idx+1} de ${LESSONS.length}</span>
+      <button class="lesson-nav-btn" onclick="goTo(${currentLesson+1<=LESSONS.length?currentLesson+1:0})">${currentLesson<LESSONS.length?'Próxima →':'Ver resumo →'}</button>
+    </div>
+    <div class="lesson-card" id="lesson-print-${lesson.id}">
+      <div class="lesson-eyebrow">${lesson.eyebrow}</div>
+      <h2 class="lesson-title">${lesson.title}</h2>
+      <div class="lesson-sub">${lesson.sub}</div>
+      <hr>
+      ${renderVideoBlock(lesson, idx+1)}
+      ${lesson.body}
+      <div class="recap"><div class="rt">Recapitulando</div><ul>${lesson.recap.map(r => `<li>${r}</li>`).join('')}</ul></div>
+      <div class="nblm-box">
+        <div class="nblm-header">🎙️ Aprofundar no NotebookLM</div>
+        <div class="nblm-body">
+          <div class="nblm-field"><div class="nblm-label">Assunto do notebook</div><div class="nblm-value">${lesson.nblm.subject}</div></div>
+          <div class="nblm-field"><div class="nblm-label">Perguntas-guia para o Audio Overview</div><ul class="nblm-questions">${nblmQuestionsHtml}</ul></div>
+          <div class="nblm-field"><div class="nblm-label">Fonte complementar sugerida</div><div class="nblm-value">${lesson.nblm.source}</div></div>
+        </div>
+      </div>
+      <div class="source-box"><strong>Como usar:</strong> exporte esta aula em Markdown, suba no NotebookLM junto com a fonte complementar sugerida, e cole as perguntas-guia no campo de customização do Audio Overview.</div>
+    </div>
+    <div class="mark-bar">
+      <button class="mark-check-btn" onclick="toggleDone('${lesson.id}')"><span class="box ${done?'done':''}">${done?'✓':''}</span>Marcar esta aula como concluída</button>
+      <button class="hdr-btn primary" onclick="exportLessonMD(${idx})">⬇ Exportar esta aula (.md)</button>
+    </div>
+    <div class="quick-check">
+      <div class="qc-title">🧪 Teste rápido de fixação</div>
+      <div class="qc-q">${lesson.quiz.q}</div>
+      ${lesson.quiz.code ? `<div class="test-code">${lesson.quiz.code}</div>` : ''}
+      <div class="qc-opts" id="qc-opts-${lesson.id}">${lesson.quiz.options.map((o,i) => `<button class="qc-opt" onclick="answerQuiz(${idx},${i})">${o}</button>`).join('')}</div>
+      <div class="qc-fb" id="qc-fb-${lesson.id}"></div>
+    </div>
+  `;
+}
+updateModuleProgress();
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>
