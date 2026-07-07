@@ -1061,7 +1061,7 @@ const VIDEO_PREFIX = 'python';
 
 function renderVideoBlock(lesson, lessonNum) {
   if (lesson.video) {
-    const src = lesson.video;
+    const src = decodeURI(lesson.video);
     return `<div class="video-wrap">
       <video controls preload="metadata">
         <source src="${encodeURI(src)}" type="video/mp4">
