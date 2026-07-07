@@ -219,6 +219,20 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* name modal */
+.name-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center}
+.modal-box{background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center}
+.modal-box h2{color:var(--text);margin:0 0 8px;font-size:1.3rem}
+.modal-box p{color:var(--text2);margin:0 0 20px;font-size:.9rem}
+.modal-box input{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:8px;background:var(--surface3);color:var(--text);font:var(--font);font-size:.95rem;outline:none;box-sizing:border-box}
+.modal-box input:focus{border-color:var(--accent)}
+.modal-box button{margin-top:16px;padding:10px 28px;border:none;border-radius:8px;background:var(--accent);color:#fff;font:var(--font);font-size:.95rem;font-weight:600;cursor:pointer}
+.modal-box button:hover{opacity:.9}
+.user-greet{color:var(--text2);font-size:.85rem;margin-top:4px}
+.user-greet strong{color:var(--text)}
+.user-edit{color:var(--accent);cursor:pointer;margin-left:6px;font-size:.75rem;text-decoration:none;border-bottom:1px dashed var(--accent)}
+.user-edit:hover{opacity:.8}
 </style>
 </head>
 <body>
@@ -226,8 +240,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 <div class="header">
   <div class="header-row">
     <div>
-      <h1>Victor Breia · <em>Data Engineer</em></h1>
+      <h1>Bootcamp Engenharia de Dados - <em>Voluntários Etransparente.org</em></h1>
       <div class="header-sub">Sistema de estudos local · Aulas completas + testes · Estágio → Jr → Pleno</div>
+      <div class="user-greet" id="user-greeting"></div>
     </div>
     <div class="header-stats">
       <div class="stat-pill"><strong id="hdr-pct">0%</strong>progresso</div>
@@ -236,8 +251,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
   </div>
   <div class="overall-bar"><div class="overall-bar-fill" id="overall-fill" style="width:0%"></div></div>
   <div class="header-actions">
-    <button class="hdr-btn" onclick="exportData()">⬇ Exportar backup</button>
-    <button class="hdr-btn" onclick="showImport()">⬆ Importar backup</button>
+    <button class="hdr-btn" onclick="exportBackup()">⬇ Exportar backup</button>
+    <button class="hdr-btn" onclick="importBackup()">⬆ Importar backup</button>
     <button class="hdr-btn danger" onclick="showReset()">⚠ Resetar dados</button>
   </div>
   <div class="nav">
@@ -252,18 +267,6 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 <div class="main" id="main-content"></div>
 <div class="toast" id="toast"></div>
 
-<div class="modal-overlay" id="modal-import">
-  <div class="modal">
-    <h3>⬆ Importar backup</h3>
-    <p>Cole o conteúdo do arquivo JSON exportado anteriormente:</p>
-    <textarea id="import-json" placeholder='{"checks":{...}}'></textarea>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('modal-import')">Cancelar</button>
-      <button class="btn primary" onclick="importData()">Importar</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modal-reset">
   <div class="modal">
     <h3>⚠ Resetar todos os dados</h3>
@@ -275,7 +278,61 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
   </div>
 </div>
 
+<div class="name-modal-overlay" id="name-modal" style="display:none">
+  <div class="modal-box">
+    <h2>Bem-vindo ao seu sistema de estudos!</h2>
+    <p>Como você se chama?</p>
+    <input type="text" id="name-input" placeholder="Seu nome" maxlength="40" autocomplete="off" onkeydown="handleNameKeydown(event)">
+    <button onclick="saveUserName()">Começar</button>
+  </div>
+</div>
+
 <script>
+// ─── Nome do usuário ─────────────────────────────────────────────────────
+function initUserName() {
+  const name = localStorage.getItem('de_user_name');
+  if (name) {
+    updateGreeting(name.split(' ')[0]);
+  } else {
+    document.getElementById('name-modal').style.display = 'flex';
+    document.getElementById('name-input').focus();
+  }
+}
+
+function openNameModal() {
+  const input = document.getElementById('name-input');
+  input.value = localStorage.getItem('de_user_name') || '';
+  document.getElementById('name-modal').style.display = 'flex';
+  input.focus();
+  input.select();
+}
+
+function saveUserName() {
+  const input = document.getElementById('name-input');
+  const name = input.value.trim();
+  if (!name) {
+    input.style.borderColor = 'var(--red)';
+    input.focus();
+    return;
+  }
+  input.style.borderColor = '';
+  const firstName = name.split(' ')[0];
+  localStorage.setItem('de_user_name', name);
+  document.getElementById('name-modal').style.display = 'none';
+  updateGreeting(firstName);
+}
+
+function updateGreeting(name) {
+  const el = document.getElementById('user-greeting');
+  if (el) {
+    el.innerHTML = `Olá, <strong>${name}</strong>! <a class="user-edit" onclick="openNameModal()">editar nome</a>`;
+  }
+}
+
+function handleNameKeydown(e) {
+  if (e.key === 'Enter') saveUserName();
+}
+
 const STORAGE_KEY = 'de_study_local_v2';
 
 // ─── CONTEÚDO DAS AULAS (apostila por tema) ───────────────────────────────────
@@ -729,7 +786,7 @@ process: `
 const TOPICS = [
   { id: 'sql', icon: '🗄️', color: '#ef4444', title: 'SQL Avançado', sub: 'Filtro #1 em qualquer processo seletivo de dados',
     subtopics: [
-      { text: 'SELECT, WHERE, GROUP BY, ORDER BY', tag: 'owned' },
+      { text: 'SELECT, WHERE, GROUP BY, ORDER BY', tag: 'important' },
       { text: 'JOINs (INNER, LEFT, RIGHT, FULL, CROSS)', tag: 'critical' },
       { text: 'Window Functions (ROW_NUMBER, RANK, LAG, LEAD)', tag: 'critical' },
       { text: 'CTEs (WITH ... AS)', tag: 'critical' },
@@ -752,14 +809,14 @@ const TOPICS = [
   },
   { id: 'python', icon: '🐍', color: '#3b82f6', title: 'Python para Dados', sub: 'Pandas, APIs, automação e tratamento de dados',
     subtopics: [
-      { text: 'Pandas — leitura/escrita (CSV, JSON, Parquet)', tag: 'owned' },
+      { text: 'Pandas — leitura/escrita (CSV, JSON, Parquet)', tag: 'important' },
       { text: 'Pandas — merge, groupby, pivot_table', tag: 'critical' },
       { text: 'Pandas — apply, map, lambda', tag: 'critical' },
       { text: 'Tratamento de nulos e casting de tipos', tag: 'critical' },
       { text: 'Requests — consumo de APIs REST', tag: 'important' },
       { text: 'Variáveis de ambiente (.env / os.environ)', tag: 'important' },
       { text: 'Logging e tratamento de exceções', tag: 'important' },
-      { text: 'NumPy básico para transformações', tag: 'owned' },
+      { text: 'NumPy básico para transformações', tag: 'important' },
       { text: 'PySpark — RDD vs DataFrame', tag: 'bonus' },
     ],
     defaultSources: [
@@ -774,7 +831,7 @@ const TOPICS = [
   },
   { id: 'modeling', icon: '🏗️', color: '#8b5cf6', title: 'Modelagem de Dados', sub: 'Fundamentos que diferenciam engenheiros de analistas',
     subtopics: [
-      { text: 'Medallion Architecture (Bronze/Silver/Gold)', tag: 'owned' },
+      { text: 'Medallion Architecture (Bronze/Silver/Gold)', tag: 'important' },
       { text: 'Star Schema — fatos e dimensões', tag: 'critical' },
       { text: 'Snowflake Schema — quando usar vs Star', tag: 'important' },
       { text: 'SCD Tipo 1, 2 e 3', tag: 'important' },
@@ -794,14 +851,14 @@ const TOPICS = [
   },
   { id: 'airflow', icon: '🌬️', color: '#10b981', title: 'Apache Airflow', sub: 'Você já usa em produção — aprofunde os conceitos avançados',
     subtopics: [
-      { text: 'DAGs — estrutura e configuração', tag: 'owned' },
-      { text: 'Operators (PythonOperator, BashOperator)', tag: 'owned' },
+      { text: 'DAGs — estrutura e configuração', tag: 'important' },
+      { text: 'Operators (PythonOperator, BashOperator)', tag: 'important' },
       { text: 'XComs — passagem de dados entre tasks', tag: 'critical' },
       { text: 'Connections e Variables', tag: 'important' },
       { text: 'Sensors — aguardar eventos externos', tag: 'important' },
-      { text: 'Task Dependencies (>>, <<)', tag: 'owned' },
+      { text: 'Task Dependencies (>>, <<)', tag: 'important' },
       { text: 'Backfill e re-execução de runs', tag: 'important' },
-      { text: 'Airflow com Docker Compose', tag: 'owned' },
+      { text: 'Airflow com Docker Compose', tag: 'important' },
       { text: 'TaskFlow API (@task decorator)', tag: 'bonus' },
     ],
     defaultSources: [
@@ -816,11 +873,11 @@ const TOPICS = [
   },
   { id: 'cloud', icon: '☁️', color: '#0ea5e9', title: 'Cloud — Azure + AWS/GCP', sub: 'Azure em produção · Equivalência cross-cloud para entrevistas',
     subtopics: [
-      { text: 'Azure Data Lake Gen2 — estrutura e ACL', tag: 'owned' },
-      { text: 'Azure VM — configuração e custo', tag: 'owned' },
-      { text: 'Azure Logic Apps — automação de fluxos', tag: 'owned' },
+      { text: 'Azure Data Lake Gen2 — estrutura e ACL', tag: 'important' },
+      { text: 'Azure VM — configuração e custo', tag: 'important' },
+      { text: 'Azure Logic Apps — automação de fluxos', tag: 'important' },
       { text: 'Azure Synapse Analytics — conceitos', tag: 'important' },
-      { text: 'GCP Workload Identity Federation', tag: 'owned' },
+      { text: 'GCP Workload Identity Federation', tag: 'important' },
       { text: 'AWS S3 — equivalente ao ADLS', tag: 'important' },
       { text: 'AWS Glue / Athena — conceitos básicos', tag: 'bonus' },
       { text: 'IAM — permissões e roles (Azure + AWS)', tag: 'critical' },
@@ -866,27 +923,74 @@ function buildDefaultData() {
   const checks = {}, sources = {};
   TOPICS.forEach(t => {
     sources[t.id] = t.defaultSources.map(s => ({ ...s, custom: false }));
-    t.subtopics.forEach((s, i) => { checks[`${t.id}_${i}`] = s.tag === 'owned'; });
+    t.subtopics.forEach((s, i) => { checks[`${t.id}_${i}`] = false; });
   });
   return { checks, sources, testHistory: {}, totalTests: 0 };
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(APP, null, 2)], { type: 'application/json' });
+// ─── Backup completo (todas as chaves) ────────────────────────────────────
+const BACKUP_KEYS = [
+  'de_user_name',
+  'de_study_local_v2',
+  'de_module_sql_v1',
+  'de_module_modelagem_v1',
+  'de_module_airflow_v1',
+  'de_module_python_v1',
+  'de_module_cloud_v1',
+  'de_module_processos_v1'
+];
+
+function exportBackup() {
+  const data = {};
+  BACKUP_KEYS.forEach(function(key) {
+    const val = localStorage.getItem(key);
+    if (val !== null) data[key] = val;
+  });
+  const name = (localStorage.getItem('de_user_name') || 'usuario').split(' ')[0]
+    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  const date = new Date().toISOString().split('T')[0];
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `de_study_backup_${new Date().toISOString().slice(0,10)}.json`;
-  a.click(); URL.revokeObjectURL(url);
+  a.href = url;
+  a.download = 'bootcamp-etransparente-backup-' + name + '-' + date + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
   showToast('Backup exportado!', '⬇');
 }
-function showImport() { document.getElementById('import-json').value = ''; document.getElementById('modal-import').classList.add('show'); }
-function importData() {
-  try {
-    const parsed = JSON.parse(document.getElementById('import-json').value.trim());
-    if (!parsed.checks || !parsed.sources) throw new Error('Formato inválido');
-    APP = parsed; saveData(); closeModal('modal-import'); renderTopics();
-    showToast('Dados importados com sucesso!', '✅');
-  } catch(e) { showToast('JSON inválido. Verifique o arquivo.', '⚠️'); }
+
+function importBackup() {
+  document.getElementById('import-file-input').click();
+}
+
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      let count = 0;
+      BACKUP_KEYS.forEach(function(key) {
+        if (data[key] !== undefined) {
+          localStorage.setItem(key, data[key]);
+          count++;
+        }
+      });
+      if (count === 0) {
+        showToast('Erro: nenhuma chave reconhecida no arquivo.', '❌');
+        return;
+      }
+      showToast(count + ' dados importados! Recarregando...', '✅');
+      setTimeout(function() { location.reload(); }, 1500);
+    } catch (err) {
+      showToast('Erro: arquivo invalido. Verifique o JSON.', '❌');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 }
 function showReset() { document.getElementById('modal-reset').classList.add('show'); }
 function resetData() { APP = buildDefaultData(); saveData(); closeModal('modal-reset'); renderTopics(); showToast('Dados resetados.', '🔄'); }
@@ -1086,8 +1190,8 @@ function renderLinksView() {
 
 function toggleTopic(id) { document.getElementById(`card_${id}`).classList.toggle('open'); }
 
-const tagLabel = { critical: '🔴 crítico', important: '🟡 importante', bonus: '🔵 bônus', owned: '✅ já tenho' };
-const tagClass = { critical: 'stag-critical', important: 'stag-important', bonus: 'stag-bonus', owned: 'stag-owned' };
+const tagLabel = { critical: '🔴 crítico', important: '🟡 importante', bonus: '🔵 bônus' };
+const tagClass = { critical: 'stag-critical', important: 'stag-important', bonus: 'stag-bonus' };
 
 function htmlToMarkdown(html) {
   let md = html;
@@ -1229,6 +1333,8 @@ TOPICS.forEach(t => {
 });
 
 renderTopics();
+initUserName();
 </script>
+<input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(event)">
 </body>
 </html>

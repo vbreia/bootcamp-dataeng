@@ -127,6 +127,19 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); min-hei
 .video-placeholder .vp-title { font-family:var(--font); font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
 .video-placeholder .vp-sub { font-family:var(--mono); font-size:11px; color:var(--muted); }
 
+/* name modal */
+.name-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center}
+.modal-box{background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center}
+.modal-box h2{color:var(--text);margin:0 0 8px;font-size:1.3rem}
+.modal-box p{color:var(--text2);margin:0 0 20px;font-size:.9rem}
+.modal-box input{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:8px;background:var(--surface3);color:var(--text);font:var(--font);font-size:.95rem;outline:none;box-sizing:border-box}
+.modal-box input:focus{border-color:var(--accent)}
+.modal-box button{margin-top:16px;padding:10px 28px;border:none;border-radius:8px;background:var(--accent);color:#fff;font:var(--font);font-size:.95rem;font-weight:600;cursor:pointer}
+.modal-box button:hover{opacity:.9}
+.user-greet{color:var(--text2);font-size:.85rem;margin-top:4px}
+.user-greet strong{color:var(--text)}
+.user-edit{color:var(--accent);cursor:pointer;margin-left:6px;font-size:.75rem;text-decoration:none;border-bottom:1px dashed var(--accent)}
+.user-edit:hover{opacity:.8}
 </style>
 </head>
 <body>
@@ -136,8 +149,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); min-hei
     <div>
       <h1>Módulo 02 · <em>Modelagem de Dados</em></h1>
       <div class="header-sub">7 aulas individuais — do Star Schema à Medallion Architecture. O que separa engenheiros de analistas.</div>
+      <div class="user-greet" id="user-greeting"></div>
     </div>
-    <div class="hdr-actions"><button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button></div>
+    <div class="hdr-actions">
+      <button class="hdr-btn" onclick="exportModuleMD()">⬇ Exportar módulo completo (.md)</button>
+      <button class="hdr-btn" onclick="exportBackup()">⬇ Exportar backup</button>
+      <button class="hdr-btn" onclick="importBackup()">⬆ Importar backup</button>
+    </div>
   </div>
   <div class="overall-bar"><div class="overall-fill" id="mod-fill" style="width:0%"></div></div>
   <div class="overall-label" id="mod-label">0 / 7 subtópicos concluídos</div>
@@ -147,8 +165,128 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); min-hei
   <div class="content" id="content"></div>
 </div>
 <div class="toast" id="toast"></div>
+
+<div class="name-modal-overlay" id="name-modal" style="display:none">
+  <div class="modal-box">
+    <h2>Bem-vindo ao seu sistema de estudos!</h2>
+    <p>Como você se chama?</p>
+    <input type="text" id="name-input" placeholder="Seu nome" maxlength="40" autocomplete="off" onkeydown="handleNameKeydown(event)">
+    <button onclick="saveUserName()">Começar</button>
+  </div>
+</div>
+
 <script>
+// ─── Nome do usuário ─────────────────────────────────────────────────────
+function initUserName() {
+  const name = localStorage.getItem('de_user_name');
+  if (name) {
+    updateGreeting(name.split(' ')[0]);
+  } else {
+    document.getElementById('name-modal').style.display = 'flex';
+    document.getElementById('name-input').focus();
+  }
+}
+
+function openNameModal() {
+  const input = document.getElementById('name-input');
+  input.value = localStorage.getItem('de_user_name') || '';
+  document.getElementById('name-modal').style.display = 'flex';
+  input.focus();
+  input.select();
+}
+
+function saveUserName() {
+  const input = document.getElementById('name-input');
+  const name = input.value.trim();
+  if (!name) {
+    input.style.borderColor = 'var(--red)';
+    input.focus();
+    return;
+  }
+  input.style.borderColor = '';
+  const firstName = name.split(' ')[0];
+  localStorage.setItem('de_user_name', name);
+  document.getElementById('name-modal').style.display = 'none';
+  updateGreeting(firstName);
+}
+
+function updateGreeting(name) {
+  const el = document.getElementById('user-greeting');
+  if (el) {
+    el.innerHTML = `Olá, <strong>${name}</strong>! <a class="user-edit" onclick="openNameModal()">editar nome</a>`;
+  }
+}
+
+function handleNameKeydown(e) {
+  if (e.key === 'Enter') saveUserName();
+}
+
 const STORAGE_KEY = 'de_module_modelagem_v1';
+
+// ─── Backup completo (todas as chaves) ────────────────────────────────────
+const BACKUP_KEYS = [
+  'de_user_name',
+  'de_study_local_v2',
+  'de_module_sql_v1',
+  'de_module_modelagem_v1',
+  'de_module_airflow_v1',
+  'de_module_python_v1',
+  'de_module_cloud_v1',
+  'de_module_processos_v1'
+];
+
+function exportBackup() {
+  const data = {};
+  BACKUP_KEYS.forEach(function(key) {
+    const val = localStorage.getItem(key);
+    if (val !== null) data[key] = val;
+  });
+  const name = (localStorage.getItem('de_user_name') || 'usuario').split(' ')[0]
+    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  const date = new Date().toISOString().split('T')[0];
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bootcamp-etransparente-backup-' + name + '-' + date + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup exportado!', '⬇');
+}
+
+function importBackup() {
+  document.getElementById('import-file-input').click();
+}
+
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      let count = 0;
+      BACKUP_KEYS.forEach(function(key) {
+        if (data[key] !== undefined) {
+          localStorage.setItem(key, data[key]);
+          count++;
+        }
+      });
+      if (count === 0) {
+        showToast('Erro: nenhuma chave reconhecida no arquivo.', '❌');
+        return;
+      }
+      showToast(count + ' dados importados! Recarregando...', '✅');
+      setTimeout(function() { location.reload(); }, 1500);
+    } catch (err) {
+      showToast('Erro: arquivo invalido. Verifique o JSON.', '❌');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
 
 const LESSONS = [
 {
@@ -694,7 +832,7 @@ function renderVideoBlock(lesson, lessonNum) {
   return `<div class="video-placeholder">
     <div class="vp-icon">🎬</div>
     <div class="vp-title">Vídeo ainda não adicionado</div>
-    <div class="vp-sub">Salve como ${VIDEO_FOLDER}/${VIDEO_PREFIX}${lessonNum}.Titulo_Do_Video.mp4</div>
+    <div class="vp-sub">Vídeo ainda não adicionado — suba no Blob Storage e cole a URL completa no campo video: desta aula</div>
   </div>`;
 }
 
@@ -744,6 +882,8 @@ function renderContent() {
 updateModuleProgress();
 renderSidebar();
 renderContent();
+initUserName();
 </script>
+<input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImportFile(event)">
 </body>
 </html>
