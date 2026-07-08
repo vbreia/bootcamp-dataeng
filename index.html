@@ -54,6 +54,9 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 
 .topic-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
 .topic-card.open { border-color: var(--accent); }
+.topic-card.complete { border-color: var(--green); background: rgba(52,211,153,0.04); }
+.topic-card.complete .topic-icon { background: rgba(52,211,153,0.18) !important; color: var(--green) !important; }
+.topic-card.complete .skill-pct { color: var(--green); }
 .topic-header { display: flex; align-items: center; gap: 12px; padding: 13px 16px; cursor: pointer; user-select: none; }
 .topic-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
 .topic-meta { flex: 1; min-width: 0; }
@@ -1039,6 +1042,8 @@ function toggleCheck(topicId, idx) {
   const pctEl = document.getElementById(`pct_${topicId}`);
   if (bar) { bar.style.width = pct + '%'; bar.style.background = barColor(pct); }
   if (pctEl) pctEl.textContent = pct + '%';
+  const card = document.getElementById(`card_${topicId}`);
+  if (card) card.className = 'topic-card' + (pct === 100 ? ' complete' : '');
   updateHeader();
   showToast(APP.checks[key] ? 'Subtópico concluído!' : 'Desmarcado', APP.checks[key] ? '✅' : '↩️');
 }
@@ -1268,7 +1273,7 @@ function renderTopics() {
       : '<div class="empty">Nenhuma fonte.</div>';
 
     return `
-    <div class="topic-card" id="card_${topic.id}">
+    <div class="topic-card${pct === 100 ? ' complete' : ''}" id="card_${topic.id}">
       <div class="topic-header" onclick="toggleTopic('${topic.id}')">
         <div class="topic-icon" style="background:${topic.color}18;color:${topic.color}">${topic.icon}</div>
         <div class="topic-meta">
@@ -1290,8 +1295,8 @@ function renderTopics() {
         ${topic.id === 'python' ? `<div style="margin:14px 0 0"><a href="modulo-04-python.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none">📘 Abrir módulo completo (9 aulas individuais) →</a></div>` : ''}
         ${topic.id === 'cloud' ? `<div style="margin:14px 0 0"><a href="modulo-05-cloud.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--accent);color:#fff;border-radius:7px;font-size:12px;font-weight:600;text-decoration:none">📘 Abrir módulo completo (9 aulas individuais) →</a></div>` : ''}
         <div class="body-tabs">
-          <button class="body-tab" id="tb-${topic.id}-lesson" onclick="switchTab('${topic.id}','lesson')">📖 Aula</button>
-          <button class="body-tab active" id="tb-${topic.id}-subtopics" onclick="switchTab('${topic.id}','subtopics')">📋 Subtópicos</button>
+          <button class="body-tab" id="tb-${topic.id}-lesson" onclick="switchTab('${topic.id}','lesson')">📖 Introdução do módulo</button>
+          <button class="body-tab active" id="tb-${topic.id}-subtopics" onclick="switchTab('${topic.id}','subtopics')">📋 Aula</button>
           <button class="body-tab" id="tb-${topic.id}-sources" onclick="switchTab('${topic.id}','sources')">🔗 Fontes</button>
           <button class="body-tab" id="tb-${topic.id}-test" onclick="switchTab('${topic.id}','test')">🧪 Testar</button>
           <button class="body-tab" id="tb-${topic.id}-history" onclick="switchTab('${topic.id}','history')">📊 Histórico</button>
