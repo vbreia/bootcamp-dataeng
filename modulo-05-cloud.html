@@ -871,6 +871,10 @@ function renderSidebar() {
 }
 function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); window.scrollTo({top:0,behavior:'smooth'}); }
 function toggleDone(lessonId) {
+  if (APP.quizResults[lessonId] !== true) {
+    showToast('Responda o teste rápido corretamente primeiro!', '📝');
+    return;
+  }
   APP.done[lessonId] = !APP.done[lessonId];
   saveData(); updateModuleProgress(); renderSidebar(); renderContent();
   syncToHub();
@@ -898,8 +902,19 @@ function answerQuiz(lessonIdx, chosen) {
   APP.quizResults[lesson.id] = ok;
   saveData();
   const fb = document.getElementById(`qc-fb-${lesson.id}`);
-  fb.textContent = (ok ? '✅ Correto! ' : '❌ Incorreto. ') + lesson.quiz.explanation;
-  fb.className = `qc-fb show ${ok ? 'correct' : 'wrong'}`;
+  if (ok) {
+    fb.innerHTML = '✅ Correto! ' + lesson.quiz.explanation;
+    fb.className = 'qc-fb show correct';
+  } else {
+    fb.innerHTML = '❌ Incorreto. ' + lesson.quiz.explanation + '<br><br><button class="hdr-btn" onclick="resetQuiz(' + lessonIdx + ')">Responder novamente</button>';
+    fb.className = 'qc-fb show wrong';
+  }
+}
+function resetQuiz(lessonIdx) {
+  const lesson = LESSONS[lessonIdx];
+  delete APP.quizResults[lesson.id];
+  saveData();
+  renderContent();
 }
 function exportLessonMD(lessonIdx) {
   const lesson = LESSONS[lessonIdx];
