@@ -1,6 +1,6 @@
 # Data Engineer Study System
 
-Sistema de estudos local (100% HTML/CSS/JS estático, sem backend) para preparação de Victor Breia em vagas de Data Engineer (Estágio → Jr → Pleno). Construído para uso pessoal, com progresso salvo em `localStorage` do navegador, exportação de aulas em Markdown (para NotebookLM), e vídeos gravados localmente embutidos por aula.
+Sistema de estudos local (100% HTML/CSS/JS estático, sem backend) para preparação em vagas de Data Engineer (Estágio → Jr → Pleno). Construído para uso pessoal, com progresso salvo em `localStorage` do navegador, exportação de aulas em Markdown (para NotebookLM), e vídeos gravados localmente embutidos por aula.
 
 ## Objetivo do sistema
 
@@ -138,7 +138,7 @@ Cada módulo tem uma cor de destaque (`--accent`) diferente, usada no header, ac
 
 ## Contexto do usuário (para calibrar tom e exemplos)
 
-Victor Breia é estudante de Engenharia de Software/Dados no Brasil, com dois projetos reais em produção:
+O usuário é estudante de Engenharia de Software/Dados no Brasil, com dois projetos reais em produção:
 - **pipeline-etransparente** — pipeline ETL open source (Python, Airflow, Docker, Azure VM, ADLS Gen2, arquitetura Medallion) que monitora transparência de ONGs brasileiras
 - **Automação de Parcerias (IDC)** — sistema event-driven em Google Apps Script para o Instituto de Direito Coletivo
 

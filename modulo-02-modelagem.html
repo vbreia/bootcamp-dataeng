@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Módulo 02 — Modelagem de Dados | Victor Breia</title>
+<title>Módulo 02 — Modelagem de Dados | Etransparente Bootcamp</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap');
 :root {
@@ -294,6 +294,7 @@ const LESSONS = [
   title: 'Medallion Architecture (Bronze/Silver/Gold)',
   eyebrow: 'Aula 1 de 7 · Arquitetura de camadas',
   sub: 'O padrão que organiza um Data Lake em estágios de confiabilidade crescente',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/modelagem/modelagem1.Arquitetura_Medallion.mp4',
   body: `
 <p>Medallion Architecture é um padrão de organização de dados dentro de um Data Lake em três camadas progressivas de qualidade e confiabilidade, popularizado pela comunidade Databricks/Spark, mas aplicável em qualquer stack — incluindo Azure Data Lake com Airflow, como no seu pipeline-etransparente.</p>
 <h3>As três camadas, em detalhe</h3>
@@ -345,6 +346,7 @@ const LESSONS = [
   title: 'Star Schema — fatos e dimensões',
   eyebrow: 'Aula 2 de 7 · Modelagem dimensional',
   sub: 'O modelo mais usado em Data Warehousing — e por que ele existe',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/modelagem/modelagem2.Modelo_Star_Schema.mp4',
   body: `
 <p>Star Schema é o modelo dimensional mais usado em Data Warehousing, formalizado por Ralph Kimball. A ideia central: separar <strong>o que aconteceu</strong> (fato) de <strong>o contexto sobre quem/onde/quando/como</strong> (dimensão) — permitindo consultas analíticas rápidas e intuitivas.</p>
 <h3>Tabela Fato</h3>
@@ -449,6 +451,7 @@ dim_marca: id_marca | nome_marca</code></pre>
   title: 'SCD Tipo 1, 2 e 3',
   eyebrow: 'Aula 4 de 7 · Histórico de dimensões',
   sub: 'O que fazer quando um atributo de dimensão muda com o tempo',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/modelagem/modelagem4.SCD__Evolução_dos_Dados.mp4',
   body: `
 <p>Slowly Changing Dimensions (SCD) resolve um problema muito comum: o que fazer quando um atributo de uma dimensão muda — por exemplo, um cliente muda de cidade, ou um produto muda de categoria. A resposta depende de uma pergunta de negócio: você precisa saber o valor histórico (como era antes) ou só o valor atual importa?</p>
 <h3>SCD Tipo 1 — sobrescrever</h3>
@@ -505,6 +508,7 @@ GROUP BY dc.cidade;</code></pre>
   title: 'Normalização (1FN, 2FN, 3FN)',
   eyebrow: 'Aula 5 de 7 · Fundamentos de modelagem relacional',
   sub: 'Como sistemas transacionais evitam redundância — e por que Data Warehouses fazem o oposto',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/modelagem/modelagem5.Modelagem_e_Normalização.mp4',
   body: `
 <p>Normalização é o processo de organizar tabelas em um banco relacional para reduzir redundância de dados, principalmente em sistemas transacionais (OLTP) como o backend de um e-commerce ou de um sistema de cadastro. As três primeiras formas normais são a base conceitual mais cobrada.</p>
 <h3>Primeira Forma Normal (1FN)</h3>
@@ -570,6 +574,7 @@ cidade: id_cidade, nome_cidade, estado</code></pre>
   title: 'Data Vault 2.0 — conceitos básicos',
   eyebrow: 'Aula 6 de 7 · Modelagem avançada',
   sub: 'Uma alternativa ao Star Schema para ambientes com múltiplas fontes e mudanças frequentes de escopo',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/modelagem/modelagem6.Desvendando_Data_Vault_2.mp4',
   body: `
 <p>Data Vault 2.0 é uma metodologia de modelagem de dados voltada para Data Warehouses que precisam integrar múltiplas fontes de dados heterogêneas e evoluir rapidamente sem quebrar o histórico já carregado. É um tema mais avançado — mencionar que você conhece o conceito já demonstra visão além do Star Schema tradicional.</p>
 <h3>O problema que o Data Vault resolve</h3>
@@ -620,6 +625,7 @@ link_cliente_pedido: hash_key_cliente | hash_key_pedido | data_carga</code></pre
   title: 'Explicar escolhas de modelagem em entrevista',
   eyebrow: 'Aula 7 de 7 · Comunicação técnica',
   sub: 'De nada adianta saber modelar se você não consegue justificar a escolha para quem está avaliando',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/modelagem/modelagem7.Traduzindo_Modelos.mp4',
   body: `
 <p>Em processos seletivos de nível jr a pleno, raramente pedem para você desenhar um modelo do zero sob pressão de tempo — mas é muito comum pedirem para você <strong>explicar e justificar</strong> escolhas de modelagem já feitas em um projeto seu, ou reagir a um modelo hipotético proposto pelo entrevistador. Comunicar bem essas escolhas é uma habilidade tão importante quanto saber fazer a modelagem em si.</p>
 <h3>O roteiro de resposta que funciona</h3>
@@ -783,7 +789,7 @@ function downloadFile(filename, content) {
 function exportLessonMD(lessonIdx) {
   const lesson = LESSONS[lessonIdx];
   const md = generateLessonMarkdown(lesson, "Modelagem de Dados");
-  downloadFile(`modelagem_aula${lessonIdx+1}_${lesson.id}_victor_breia.md`, md);
+  downloadFile(`modelagem_aula${lessonIdx+1}_${lesson.id}.md`, md);
   showToast('Markdown exportado! Pronto pro NotebookLM.', '📄');
 }
 function exportModuleMD() {
@@ -792,7 +798,7 @@ function exportModuleMD() {
     full += generateLessonMarkdown(l, "Modelagem de Dados");
     full += '\n\n---\n\n';
   });
-  downloadFile(`modelagem_modulo_completo_victor_breia.md`, full);
+  downloadFile(`modelagem_modulo_completo.md`, full);
   showToast('Markdown do modulo completo exportado!', '📄');
 }
 function renderSummary() {
