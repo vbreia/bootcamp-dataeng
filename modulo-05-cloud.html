@@ -290,7 +290,7 @@ function handleImportFile(e) {
 
 const LESSONS = [
 {
-  id: 'adls', tag: 'owned',
+  id: 'adls', tag: 'important',
   title: 'Azure Data Lake Gen2 — estrutura e ACL',
   eyebrow: 'Aula 1 de 9 · Armazenamento',
   sub: 'A base do seu Data Lake — como ela combina o melhor de dois mundos',
@@ -342,7 +342,7 @@ container/
   }
 },
 {
-  id: 'vm', tag: 'owned',
+  id: 'vm', tag: 'important',
   title: 'Azure VM — configuração e custo',
   eyebrow: 'Aula 2 de 9 · Computação',
   sub: 'A infraestrutura que roda seu Airflow — e como pensar em custo de forma consciente',
@@ -392,7 +392,7 @@ container/
   }
 },
 {
-  id: 'logicapps', tag: 'owned',
+  id: 'logicapps', tag: 'important',
   title: 'Azure Logic Apps — automação de fluxos',
   eyebrow: 'Aula 3 de 9 · Automação sem servidor',
   sub: 'O serviço low-code que conecta sistemas sem escrever integração do zero',
@@ -496,7 +496,7 @@ Action 3: Desligar a VM (Stop/Deallocate)</code></pre>
   }
 },
 {
-  id: 'wif', tag: 'owned',
+  id: 'wif', tag: 'important',
   title: 'GCP Workload Identity Federation',
   eyebrow: 'Aula 5 de 9 · Autenticação sem credenciais estáticas',
   sub: 'Como sua VM Azure se autentica no GCP sem nenhuma chave armazenada',
@@ -854,7 +854,7 @@ function updateModuleProgress() {
   document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
 }
 function renderSidebar() {
-  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus' };
   let html = `<div class="sidebar-title">Módulo 05 · Cloud</div>`;
   html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
   html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
@@ -873,7 +873,17 @@ function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); wind
 function toggleDone(lessonId) {
   APP.done[lessonId] = !APP.done[lessonId];
   saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  syncToHub();
   showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function syncToHub() {
+  try {
+    const raw = localStorage.getItem('de_study_local_v2');
+    if (!raw) return;
+    const hub = JSON.parse(raw);
+    LESSONS.forEach((l, i) => { hub.checks[`cloud_${i}`] = !!APP.done[l.id]; });
+    localStorage.setItem('de_study_local_v2', JSON.stringify(hub));
+  } catch(e) {}
 }
 function answerQuiz(lessonIdx, chosen) {
   const lesson = LESSONS[lessonIdx];

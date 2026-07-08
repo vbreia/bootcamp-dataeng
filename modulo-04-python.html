@@ -287,7 +287,7 @@ function handleImportFile(e) {
 
 const LESSONS = [
 {
-  id: 'io', tag: 'owned',
+  id: 'io', tag: 'important',
   video: 'https://etransparentebootcamp.blob.core.windows.net/videos/python/python1.Fundamentos_de_I_O_em_Pandas.mp4',
   title: 'Pandas — leitura/escrita (CSV, JSON, Parquet)',
   eyebrow: 'Aula 1 de 9 · Fundamentos',
@@ -792,7 +792,7 @@ def validar_dados(df):
   }
 },
 {
-  id: 'numpy', tag: 'owned',
+  id: 'numpy', tag: 'important',
   video: 'https://etransparentebootcamp.blob.core.windows.net/videos/python/Python8.Desvendando_o_Pandas.mp4',
   title: 'NumPy básico para transformações',
   eyebrow: 'Aula 8 de 9 · Computação numérica',
@@ -983,7 +983,7 @@ function updateModuleProgress() {
   document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
 }
 function renderSidebar() {
-  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus' };
   let html = `<div class="sidebar-title">Módulo 04 · Python</div>`;
   html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
   html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
@@ -1002,7 +1002,17 @@ function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); wind
 function toggleDone(lessonId) {
   APP.done[lessonId] = !APP.done[lessonId];
   saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  syncToHub();
   showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function syncToHub() {
+  try {
+    const raw = localStorage.getItem('de_study_local_v2');
+    if (!raw) return;
+    const hub = JSON.parse(raw);
+    LESSONS.forEach((l, i) => { hub.checks[`python_${i}`] = !!APP.done[l.id]; });
+    localStorage.setItem('de_study_local_v2', JSON.stringify(hub));
+  } catch(e) {}
 }
 function answerQuiz(lessonIdx, chosen) {
   const lesson = LESSONS[lessonIdx];

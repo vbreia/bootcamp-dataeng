@@ -287,7 +287,7 @@ function handleImportFile(e) {
 
 const LESSONS = [
 {
-  id: 'dags', tag: 'owned',
+  id: 'dags', tag: 'important',
   title: 'DAGs — estrutura e configuração',
   eyebrow: 'Aula 1 de 9 · Fundamentos',
   sub: 'A unidade central do Airflow — um grafo de tarefas escrito em Python',
@@ -360,7 +360,7 @@ with DAG(...) as dag:
   }
 },
 {
-  id: 'operators', tag: 'owned',
+  id: 'operators', tag: 'important',
   title: 'Operators (PythonOperator, BashOperator)',
   eyebrow: 'Aula 2 de 9 · Blocos de construção',
   sub: 'O template que define o que cada task realmente faz',
@@ -625,7 +625,7 @@ esperar_pipeline_bronze = ExternalTaskSensor(
   }
 },
 {
-  id: 'dependencies', tag: 'owned',
+  id: 'dependencies', tag: 'important',
   title: 'Task Dependencies (>>, <<)',
   eyebrow: 'Aula 6 de 9 · Orquestração de fluxo',
   sub: 'Como declarar a ordem de execução entre tasks — e os padrões que vão além do linear',
@@ -742,7 +742,7 @@ carregar.set_downstream(notificar_sucesso)
   }
 },
 {
-  id: 'docker', tag: 'owned',
+  id: 'docker', tag: 'important',
   title: 'Airflow com Docker Compose',
   eyebrow: 'Aula 8 de 9 · Infraestrutura',
   sub: 'Como os componentes do Airflow se conectam em um ambiente containerizado',
@@ -979,7 +979,7 @@ function updateModuleProgress() {
   document.getElementById('mod-label').textContent = `${done} / ${total} subtópicos concluídos`;
 }
 function renderSidebar() {
-  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus', owned:'tenho' };
+  const tagLabel = { critical:'crítico', important:'importante', bonus:'bônus' };
   let html = `<div class="sidebar-title">Módulo 03 · Airflow</div>`;
   html += `<div class="toc-item summary-item ${currentLesson===0?'active':''}" onclick="goTo(0)"><span class="toc-num">—</span><span class="toc-text">Visão geral do módulo</span></div>`;
   html += `<div class="toc-divider"></div><div class="sidebar-title">Aulas</div>`;
@@ -998,7 +998,17 @@ function goTo(idx) { currentLesson = idx; renderSidebar(); renderContent(); wind
 function toggleDone(lessonId) {
   APP.done[lessonId] = !APP.done[lessonId];
   saveData(); updateModuleProgress(); renderSidebar(); renderContent();
+  syncToHub();
   showToast(APP.done[lessonId] ? 'Aula marcada como concluída!' : 'Desmarcada', APP.done[lessonId] ? '✅' : '↩️');
+}
+function syncToHub() {
+  try {
+    const raw = localStorage.getItem('de_study_local_v2');
+    if (!raw) return;
+    const hub = JSON.parse(raw);
+    LESSONS.forEach((l, i) => { hub.checks[`airflow_${i}`] = !!APP.done[l.id]; });
+    localStorage.setItem('de_study_local_v2', JSON.stringify(hub));
+  } catch(e) {}
 }
 function answerQuiz(lessonIdx, chosen) {
   const lesson = LESSONS[lessonIdx];
