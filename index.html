@@ -82,7 +82,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); min-
 
 .subtopics { display: grid; gap: 5px; }
 .subtopic { display: flex; align-items: center; gap: 9px; padding: 8px 11px; background: var(--surface2); border-radius: 7px; border: 1px solid var(--border); }
-.subtopic-check { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--border2); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; transition: all 0.15s; }
+.subtopic-check { width: 15px; height: 15px; border-radius: 4px; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; }
 .subtopic-check.checked { background: var(--green); border-color: var(--green); color: #000; }
 .subtopic-text { flex: 1; font-size: 12px; }
 .subtopic-text.done { color: var(--muted); text-decoration: line-through; }
@@ -1257,7 +1257,7 @@ function renderTopics() {
     const subtopicsHtml = topic.subtopics.map((s, i) => {
       const done = APP.checks[`${topic.id}_${i}`];
       return `<div class="subtopic">
-        <div class="subtopic-check ${done ? 'checked' : ''}" id="chk_${topic.id}_${i}" onclick="toggleCheck('${topic.id}',${i})">${done ? '✓' : ''}</div>
+        <div class="subtopic-check ${done ? 'checked' : ''}">${done ? '✓' : ''}</div>
         <div class="subtopic-text ${done ? 'done' : ''}" id="txt_${topic.id}_${i}">${s.text}</div>
         <span class="stag ${tagClass[s.tag]}">${tagLabel[s.tag]}</span>
       </div>`;
