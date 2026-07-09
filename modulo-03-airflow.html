@@ -291,6 +291,7 @@ const LESSONS = [
   title: 'DAGs — estrutura e configuração',
   eyebrow: 'Aula 1 de 9 · Fundamentos',
   sub: 'A unidade central do Airflow — um grafo de tarefas escrito em Python',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow1.Dominando_as_DAGs_do_Airflow.mp4',
   body: `
 <p>Uma DAG (Directed Acyclic Graph) é a unidade central de organização no Airflow: um grafo de tarefas com dependências explícitas, sem ciclos — ou seja, uma task nunca pode depender (direta ou indiretamente) de si mesma. É literalmente um arquivo Python que descreve <em>o quê</em> fazer e <em>em que ordem</em>, sem executar o trabalho pesado ali dentro.</p>
 <h3>Anatomia mínima de uma DAG</h3>
@@ -364,6 +365,7 @@ with DAG(...) as dag:
   title: 'Operators (PythonOperator, BashOperator)',
   eyebrow: 'Aula 2 de 9 · Blocos de construção',
   sub: 'O template que define o que cada task realmente faz',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow2.Guia_Apache_Airflow.mp4',
   body: `
 <p>Um Operator é uma classe que funciona como template para um tipo específico de trabalho. Quando você instancia um Operator dentro de uma DAG, essa instância vira uma Task — a unidade real de execução dentro do grafo.</p>
 <h3>PythonOperator — a mais versátil</h3>
@@ -438,6 +440,7 @@ task = PythonOperator(
   title: 'XComs — passagem de dados entre tasks',
   eyebrow: 'Aula 3 de 9 · Comunicação entre tasks',
   sub: 'Como tasks isoladas — potencialmente em máquinas diferentes — trocam informação',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow3.Domine_Airflow_XComs.mp4',
   body: `
 <p>Segundo a documentação oficial do Airflow, XComs (abreviação de "cross-communications") são um mecanismo que permite Tasks conversarem entre si — já que, por padrão, Tasks são inteiramente isoladas e podem estar rodando em workers diferentes. Um XCom é identificado por uma chave, além do <code>task_id</code> e <code>dag_id</code> de origem.</p>
 <h3>Push e Pull — a forma tradicional</h3>
@@ -508,6 +511,7 @@ def transform(**kwargs):
   title: 'Connections e Variables',
   eyebrow: 'Aula 4 de 9 · Configuração e credenciais',
   sub: 'Como o Airflow centraliza credenciais e parâmetros reutilizáveis entre DAGs',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow4.Credenciais_no_Airflow.mp4',
   body: `
 <p>Connections e Variables são dois mecanismos do Airflow para evitar hardcode de credenciais e configurações espalhadas pelo código das DAGs — centralizando essa informação em um único lugar, gerenciável pela interface web ou por variáveis de ambiente.</p>
 <h3>Connections — credenciais de sistemas externos</h3>
@@ -564,6 +568,7 @@ def processar():
   title: 'Sensors — aguardar eventos externos',
   eyebrow: 'Aula 5 de 9 · Sincronização de fluxos',
   sub: 'Como fazer uma DAG esperar por algo que ainda não aconteceu',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow5.Sensores_Apache_Airflow.mp4',
   body: `
 <p>Um Sensor é um tipo especializado de Operator que espera uma condição se tornar verdadeira antes de permitir que o fluxo da DAG continue — por exemplo, esperar um arquivo aparecer em um storage, esperar outra DAG terminar, ou esperar uma linha específica aparecer em uma tabela.</p>
 <h3>O padrão básico de um Sensor</h3>
@@ -629,6 +634,7 @@ esperar_pipeline_bronze = ExternalTaskSensor(
   title: 'Task Dependencies (>>, <<)',
   eyebrow: 'Aula 6 de 9 · Orquestração de fluxo',
   sub: 'Como declarar a ordem de execução entre tasks — e os padrões que vão além do linear',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow6.Airflow__Dependências.mp4',
   body: `
 <p>Dependências entre tasks definem a ordem de execução dentro de uma DAG. O Airflow oferece uma sintaxe visual e intuitiva usando os operadores <code>>></code> (right shift, "depois de") e <code><<</code> (left shift, "antes de") para declarar essas relações.</p>
 <h3>A sintaxe básica</h3>
@@ -692,6 +698,7 @@ carregar.set_downstream(notificar_sucesso)
   title: 'Backfill e re-execução de runs',
   eyebrow: 'Aula 7 de 9 · Reprocessamento',
   sub: 'Como reprocessar dados históricos depois de corrigir um bug ou mudar uma regra',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow7.Airflow_Backfills.mp4',
   body: `
 <p>Backfill é o processo de rodar (ou re-rodar) execuções passadas de uma DAG para datas lógicas específicas — essencial quando você corrige um bug de processamento, muda uma regra de negócio, ou precisa popular histórico de uma DAG nova a partir de uma data anterior.</p>
 <h3>Por que isso é uma necessidade recorrente em produção</h3>
@@ -746,6 +753,7 @@ carregar.set_downstream(notificar_sucesso)
   title: 'Airflow com Docker Compose',
   eyebrow: 'Aula 8 de 9 · Infraestrutura',
   sub: 'Como os componentes do Airflow se conectam em um ambiente containerizado',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow8.Airflow_com_Docker_Compose.mp4',
   body: `
 <p>Rodar Airflow via Docker Compose é o padrão mais comum para ambientes de desenvolvimento e para instalações de produção de porte pequeno a médio — como no seu pipeline-etransparente, rodando em uma VM Azure. Entender os componentes por trás do Compose ajuda a debugar problemas de infraestrutura, não só de código da DAG.</p>
 <h3>Os componentes centrais que o Compose orquestra</h3>
@@ -824,6 +832,7 @@ carregar.set_downstream(notificar_sucesso)
   title: 'TaskFlow API (@task decorator)',
   eyebrow: 'Aula 9 de 9 · Airflow moderno',
   sub: 'A forma mais pythônica de escrever DAGs, introduzida no Airflow 2.0',
+  video: 'https://etransparentebootcamp.blob.core.windows.net/videos/airflow/Airflow9.Dominando_o_Airflow.mp4',
   body: `
 <p>A TaskFlow API, introduzida no Airflow 2.0, elimina boa parte do boilerplate de escrever DAGs com PythonOperator tradicional — especialmente a passagem manual de dados via <code>xcom_push</code>/<code>xcom_pull</code> e a declaração explícita de dependências.</p>
 <h3>O antes e depois</h3>
